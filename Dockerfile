@@ -17,7 +17,6 @@ COPY apps/frontend/package.json ./apps/frontend/package.json
 # Install openssl
 RUN apt-get update -y && apt-get install -y openssl
 
-
 # Install dependencies including devDependencies (needed for build)
 RUN npm install
 

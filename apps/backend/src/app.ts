@@ -19,7 +19,7 @@ app.use(express.json());      // 解析 JSON Request Body
 app.use(morgan('dev'));       // 記錄 HTTP Log
 
 // 測試路由 1: Health Check
-app.get('/', (req: Request, res: Response) => {
+app.get('/api/health', (req: Request, res: Response) => {
     res.send('✅ Shopping Mall API is Running!');
 });
 
