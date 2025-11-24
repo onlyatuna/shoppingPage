@@ -1,69 +1,47 @@
-# ------------ Base ------------
-FROM node:20 AS base
+# 使用 Node 20 (Slim 版本體積小且相容性好)
+FROM node:20-slim
+
+# 安裝 OpenSSL (Prisma 需要)
+RUN apt-get update -y && apt-get install -y openssl ca-certificates
+
 WORKDIR /app
 
-# ------------ Install deps using workspaces ------------
-FROM base AS deps
-
-# Copy root package.json and lockfile
+# 1. 複製設定檔
 COPY package.json package-lock.json ./
+COPY apps/backend/package.json ./apps/backend/
+COPY apps/frontend/package.json ./apps/frontend/
+# 如果有 packages/shared 也要加
+# COPY packages/shared/package.json ./packages/shared/
 
-# Copy workspace package.json files to install dependencies
-# We need to preserve the directory structure for workspaces to work
-COPY packages/shared/package.json ./packages/shared/package.json
-COPY apps/backend/package.json ./apps/backend/package.json
-COPY apps/frontend/package.json ./apps/frontend/package.json
+# 2. 安裝所有依賴
+RUN npm ci
 
-# Install openssl
-RUN apt-get update -y && apt-get install -y openssl
-
-# Install dependencies including devDependencies (needed for build)
-RUN npm install
-
-# ------------ Build backend ------------
-FROM deps AS build
-
-# Copy source code
+# 3. 複製所有原始碼
 COPY . .
 
-# Build shared package
-WORKDIR /app/packages/shared
-RUN npm run build
-
-# Generate Prisma Client
+# 4. 生成 Prisma Client (後端資料庫型別)
 WORKDIR /app/apps/backend
 RUN npx prisma generate
 
-# Build backend
-RUN npm run build
+# ---------------------------------------------------
+# 👇👇👇 修正重點：明確執行前端與後端的 Build 👇👇👇
+# ---------------------------------------------------
 
-# ------------ Final runtime ------------
-FROM node:20-slim AS runner
 WORKDIR /app
 
-# Install production dependencies only
-# We do this in a separate step or copy from build if we want to be minimal
-# For simplicity and correctness with workspaces, we'll copy the necessary parts
+# 5. 強制 Build 前端
+# 這會執行 apps/frontend/package.json 裡的 "build" 指令
+# 如果這裡記憶體不足(Killed)，請參考下方的記憶體解法
+RUN npm run build --workspace=apps/frontend
 
-# Copy package.json files again for production install
-COPY package.json package-lock.json ./
-COPY packages/shared/package.json ./packages/shared/package.json
-COPY apps/backend/package.json ./apps/backend/package.json
+# 6. 強制 Build 後端
+RUN npm run build --workspace=apps/backend
 
-# Install ONLY production dependencies
-RUN npm install --omit=dev
+# ---------------------------------------------------
 
-# Copy built artifacts
-COPY --from=build /app/apps/backend/dist ./apps/backend/dist
-COPY --from=build /app/packages/shared/dist ./packages/shared/dist
-
-# Copy Prisma generated client
-COPY --from=build /app/apps/backend/node_modules/.prisma ./apps/backend/node_modules/.prisma
-COPY --from=build /app/apps/backend/node_modules/@prisma ./apps/backend/node_modules/@prisma
-
-# Set working directory to backend
-WORKDIR /app/apps/backend
-
+# 7. 設定環境變數
+ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["node", "dist/app.js"]
+# 8. 啟動 (先 Migrate DB 再啟動 Server)
+CMD ["sh", "-c", "cd apps/backend && npx prisma migrate deploy && node dist/app.js"]
