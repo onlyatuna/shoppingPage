@@ -14,7 +14,7 @@ COPY apps/frontend/package.json ./apps/frontend/
 # COPY packages/shared/package.json ./packages/shared/
 
 # 2. 安裝所有依賴
-RUN npm ci
+RUN rm -f package-lock.json && npm install
 
 # 3. 複製所有原始碼
 COPY . .
