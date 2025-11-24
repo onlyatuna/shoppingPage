@@ -62,7 +62,8 @@ if (process.env.NODE_ENV === 'production') {
     app.use(express.static(frontendDist));
 
     // 所有不符合 API 的請求，都回傳 index.html (讓 React Router 接手)
-    app.get('/:catchAll*', (req, res) => {
+    // 使用 middleware 而非 wildcard route，避免 path-to-regexp 語法問題
+    app.use((req, res) => {
         res.sendFile(path.join(frontendDist, 'index.html'));
     });
 }
