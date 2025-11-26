@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { useAuthStore } from '../store/authStore';
 
@@ -51,6 +51,13 @@ export default function LoginPage() {
                     登入
                 </button>
             </form>
+            {/* [新增] 註冊連結 */}
+            <div className="mt-6 text-center text-sm text-gray-500">
+                還沒有帳號？{' '}
+                <Link to="/register" className="text-black font-bold hover:underline">
+                    註冊新帳號
+                </Link>
+            </div>
         </div>
     );
 }

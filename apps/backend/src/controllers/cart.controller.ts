@@ -50,10 +50,17 @@ export const updateItem = async (req: Request, res: Response) => {
 export const removeItem = async (req: Request, res: Response) => {
     try {
         const userId = req.user!.userId;
+        // 1. 確保將 params.id 轉為數字
         const itemId = Number(req.params.id);
+
+        // 2. 簡單防呆
+        if (isNaN(itemId)) {
+            throw new Error('無效的 Item ID');
+        }
 
         await CartService.removeItem(userId, itemId);
 
+        // 3. 刪除後，通常回傳最新的購物車狀態給前端更新 (或是回傳成功訊息)
         const updatedCart = await CartService.getCart(userId);
         res.json({ status: 'success', data: updatedCart });
     } catch (error: any) {

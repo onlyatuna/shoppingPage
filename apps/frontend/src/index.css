@@ -1,3 +1,73 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+
+    /* wrapper */
+    .marquee-wrapper {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        background-color: #e5e7eb;
+    }
+
+    /* track: 垂直排列、無縫滾動 */
+    .marquee-track {
+        animation: marquee-up-pause 15s ease-in-out infinite;
+    }
+
+    /* item 高度固定，確保兩個副本高度一致以達無縫 */
+    .marquee-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 2.5rem;
+        line-height: 1;
+        font-size: 0.95rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        white-space: nowrap;
+    }
+
+    /* 暫停動畫（hover 或用 JS 切換到 paused） */
+    .marquee-track--paused,
+    .marquee-wrapper:hover .marquee-track {
+        animation-play-state: paused;
+    }
+
+    /* keyframes（向上無縫） */
+    @keyframes marquee-up-pause {
+
+        0%,
+        10% {
+            transform: translateY(0);
+        }
+
+        20%,
+        30% {
+            transform: translateY(-2.5rem);
+        }
+
+        40%,
+        50% {
+            transform: translateY(-5rem);
+        }
+
+        60%,
+        70% {
+            transform: translateY(-7.5rem);
+        }
+
+        80%,
+        90% {
+            transform: translateY(-10rem);
+        }
+
+        100% {
+            transform: translateY(-12.5rem);
+        }
+
+        /* 滾完一輪 */
+    }
+}

@@ -1,23 +1,32 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import apiClient from './api/client';
+import { User } from './types';
+import { useAuthStore } from './store/authStore';
+import { Toaster } from 'sonner';
 import Navbar from './components/Navbar';
+import Marquee from './components/Marquee';
+
 import HomePage from './pages/HomePage';
+import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import CartPage from './pages/CartPage';
-import { useAuthStore } from './store/authStore';
 import OrdersPage from './pages/OrdersPage';
-import { Toaster } from 'sonner';
+import ProfilePage from './pages/ProfilePage';
 
+import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import PaymentCallbackPage from './pages/PaymentCallbackPage';
 
 // 保護路由：只有 Admin 能進
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     const { user, token } = useAuthStore();
 
     if (!token) return <Navigate to="/login" replace />;
-    if (user?.role !== 'ADMIN') {
-        return <div className="p-10 text-center text-red-500">權限不足：您不是管理員</div>;
+    if (user?.role !== 'ADMIN' && user?.role !== 'DEVELOPER') {
+        return <div className="p-10 text-center text-red-500">權限不足</div>;
     }
 
     return <>{children}</>;
@@ -33,6 +42,45 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+    const { token, setAuth, logout, isInitialized, setInitialized } = useAuthStore();
+
+    // 🔄 核心邏輯：App 啟動時檢查身分
+    useEffect(() => {
+        const initAuth = async () => {
+            // 1. 如果沒有 Token，直接標記初始化完成 (視為未登入狀態)
+            if (!token) {
+                setInitialized(true);
+                return;
+            }
+
+            try {
+                // 2. 有 Token，嘗試去後端換取使用者資料
+                const res = await apiClient.get<{ data: User }>('/users/profile');
+
+                // 3. 成功：把資料塞回 Store
+                setAuth(res.data.data);
+            } catch (error) {
+                // 4. 失敗 (例如 Token 過期)：執行登出清理
+                console.error('Token 無效或過期', error);
+                logout();
+            }
+        };
+
+        initAuth();
+    }, []); // 空陣列表示只在元件掛載時執行一次
+
+    // ⏳ (選用) 加上一個全域 Loading 畫面
+    // 避免在檢查 Token 的短短 0.x 秒內，畫面閃爍顯示「登入」按鈕
+    if (!isInitialized) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <div className="w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-500">正在驗證身分...</p>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900">
             <Toaster position="top-center" richColors />
@@ -41,6 +89,13 @@ function App() {
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+
+                    <Route path="/profile" element={
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
+                    } />
 
                     {/* 購物車路由 (受保護) */}
                     <Route path="/cart" element={
@@ -55,6 +110,9 @@ function App() {
                             <OrdersPage />
                         </ProtectedRoute>
                     } />
+
+                    {/* 支付回調路由 */}
+                    <Route path="/payment/callback" element={<PaymentCallbackPage />} />
 
                     {/* 後台商品管理路由 */}
                     <Route path="/admin/products" element={
@@ -73,6 +131,12 @@ function App() {
                     <Route path="/admin/orders" element={
                         <AdminRoute>
                             <AdminOrdersPage />
+                        </AdminRoute>} />
+
+                    {/* 後台使用者管理路由 */}
+                    <Route path="/admin/users" element={
+                        <AdminRoute>
+                            <AdminUsersPage />
                         </AdminRoute>} />
                 </Routes>
             </div>

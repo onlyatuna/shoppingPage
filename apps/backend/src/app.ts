@@ -3,12 +3,15 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { prisma } from './utils/prisma';
 import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
 import productRoutes from './routes/product.routes';
 import cartRoutes from './routes/cart.routes';
 import orderRoutes from './routes/order.routes';
 import categoryRoutes from './routes/category.routes';
 import uploadRoutes from './routes/upload.routes';
+import paymentRoutes from './routes/payment.routes';
 import path from 'path';
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +55,8 @@ app.use(`${apiV1Prefix}/cart`, cartRoutes);
 app.use(`${apiV1Prefix}/orders`, orderRoutes);
 app.use(`${apiV1Prefix}/categories`, categoryRoutes);
 app.use(`${apiV1Prefix}/upload`, uploadRoutes);
+app.use(`${apiV1Prefix}/users`, userRoutes);
+app.use(`${apiV1Prefix}/payment`, paymentRoutes);
 
 // 2. [新增] 部署設定：託管前端靜態檔案
 // 注意：我們假設 Docker 會把前端 build 好的 dist 複製到後端同一層級的 client/dist

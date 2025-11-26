@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Package, CheckCircle, Clock, XCircle, Truck } from 'lucide-react';
 import apiClient from '../api/client';
 import { Order, OrderStatus } from '../types';
+import { toast } from 'sonner';
 
 // 狀態對應的顏色與 Icon 輔助函式
 const getStatusConfig = (status: OrderStatus) => {
@@ -34,18 +35,17 @@ export default function OrdersPage() {
         },
     });
 
-    // 2. 模擬付款 Mutation (這是額外功能，讓你測試狀態變化)
-    const payOrderMutation = useMutation({
+    const requestPaymentMutation = useMutation({
         mutationFn: async (orderId: string) => {
-            // 假設後端有實作這個 PATCH 路由，如果沒有，請參考下方的「補充後端」
-            return apiClient.patch(`/orders/${orderId}/pay`);
+            const res = await apiClient.post('/payment/line-pay/request', { orderId });
+            return res.data.data; // 預期拿到 { paymentUrl: '...' }
         },
-        onSuccess: () => {
-            alert('付款成功！');
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
+        onSuccess: (data) => {
+            // 直接導轉到 LINE Pay 付款頁面
+            window.location.href = data.paymentUrl;
         },
-        onError: () => {
-            alert('付款功能尚未實作，請在後端新增路由');
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || '付款請求失敗');
         }
     });
 
@@ -120,11 +120,11 @@ export default function OrdersPage() {
                                 {order.status === 'PENDING' && (
                                     <div className="mt-4 flex justify-end pt-4 border-t">
                                         <button
-                                            onClick={() => payOrderMutation.mutate(order.id)}
-                                            disabled={payOrderMutation.isPending}
-                                            className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 disabled:opacity-50"
+                                            onClick={() => requestPaymentMutation.mutate(order.id)}
+                                            disabled={requestPaymentMutation.isPending}
+                                            className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 disabled:opacity-50 flex items-center gap-2"
                                         >
-                                            {payOrderMutation.isPending ? '處理中...' : '前往付款'}
+                                            LINE Pay 付款
                                         </button>
                                     </div>
                                 )}

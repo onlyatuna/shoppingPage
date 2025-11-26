@@ -6,6 +6,7 @@ import apiClient from '../api/client';
 import { Cart } from '../types';
 import CheckoutModal from '../components/CheckoutModal';
 import { Skeleton } from '../components/ui/Skeleton';
+import { toast } from 'sonner';
 
 export default function CartPage() {
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -34,12 +35,20 @@ export default function CartPage() {
     // 3. 刪除商品 Mutation
     const removeItemMutation = useMutation({
         mutationFn: async (id: number) => {
+            // API 路徑應該是 /cart/items/:id (這裡的 id 是 CartItem 的 id)
             return apiClient.delete(`/cart/items/${id}`);
         },
         onSuccess: () => {
+            // 成功後重新撈取資料
             queryClient.invalidateQueries({ queryKey: ['cart'] });
+            // 可以加個提示
+            toast.success('商品已移除');
         },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || '刪除失敗');
+        }
     });
+
 
     // --- 處理載入與空狀態 ---
 
@@ -141,12 +150,24 @@ export default function CartPage() {
 
                             {/* 刪除按鈕 */}
                             <button
-                                onClick={() => {
-                                    if (confirm('確定要移除此商品嗎？')) {
-                                        removeItemMutation.mutate(item.id);
-                                    }
+                                onClick={(e) => {
+                                    e.stopPropagation();
+
+                                    // 使用 Sonner 的自訂 UI
+                                    toast('移除商品', {
+                                        description: `確定要移除 ${item.product.name} 嗎？`,
+                                        action: {
+                                            label: '移除',
+                                            onClick: () => removeItemMutation.mutate(item.id),
+                                        },
+                                        cancel: {
+                                            label: '取消',
+                                            onClick: () => { },
+                                        },
+                                    });
                                 }}
                                 className="text-gray-400 hover:text-red-500 p-2"
+                                disabled={removeItemMutation.isPending}
                             >
                                 <Trash2 size={20} />
                             </button>
