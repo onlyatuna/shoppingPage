@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Package, CheckCircle, Clock, XCircle, Truck } from 'lucide-react';
 import apiClient from '../api/client';
 import { Order, OrderStatus } from '../types';
@@ -23,7 +23,7 @@ const getStatusConfig = (status: OrderStatus) => {
 };
 
 export default function OrdersPage() {
-    const queryClient = useQueryClient();
+    // const queryClient = useQueryClient();
 
     // 1. 撈取訂單列表
     const { data: orders, isLoading } = useQuery({

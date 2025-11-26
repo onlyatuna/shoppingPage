@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Search, Package, DollarSign, Layers } from 'lucide-react';
+import { Edit, Plus, Search, Package, DollarSign, Layers } from 'lucide-react';
 import apiClient from '../../api/client';
 import { Product } from '../../types';
 import ProductFormModal from '../../components/ProductFormModal';

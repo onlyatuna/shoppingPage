@@ -5,7 +5,6 @@ import { User } from './types';
 import { useAuthStore } from './store/authStore';
 import { Toaster } from 'sonner';
 import Navbar from './components/Navbar';
-import Marquee from './components/Marquee';
 
 import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';

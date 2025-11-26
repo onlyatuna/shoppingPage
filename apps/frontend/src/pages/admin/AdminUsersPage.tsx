@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, Shield, User as UserIcon, Code, MoreVertical } from 'lucide-react';
+import { Trash2, Shield, Code } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
