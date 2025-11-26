@@ -7,7 +7,7 @@ import { useAuthStore } from '../store/authStore';
 
 export default function ProfilePage() {
     const { user, login } = useAuthStore(); // 為了更新 Store 中的 user info
-    const { register, handleSubmit, reset, setValue } = useForm();
+    const { register, handleSubmit, setValue } = useForm();
 
     // 1. 取得最新個人資料 (確保資料同步)
     useQuery({

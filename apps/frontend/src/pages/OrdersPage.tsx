@@ -23,7 +23,6 @@ const getStatusConfig = (status: OrderStatus) => {
 };
 
 export default function OrdersPage() {
-    // const queryClient = useQueryClient();
 
     // 1. 撈取訂單列表
     const { data: orders, isLoading } = useQuery({
