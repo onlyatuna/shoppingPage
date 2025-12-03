@@ -225,19 +225,21 @@ export class PaymentService {
         }
 
         try {
-            // ✅ 這裡使用 URLSearchParams 是正確的
-            const queryParams = new URLSearchParams();
+            // [修正] 改用普通物件傳遞，讓攔截器去處理轉換
+            const queryParams: any = {};
 
             if (params.transactionId) {
-                queryParams.append('transactionId[]', params.transactionId);
+                // 注意 key 要加上 []
+                queryParams['transactionId[]'] = params.transactionId;
             }
 
             if (params.orderId) {
-                queryParams.append('orderId[]', params.orderId);
+                queryParams['orderId[]'] = params.orderId;
             }
 
+            // 這裡傳入普通物件
             const res = await linePayClient.get('/v3/payments', {
-                params: queryParams, // 傳給攔截器處理
+                params: queryParams,
                 timeout: 20000,
             });
 

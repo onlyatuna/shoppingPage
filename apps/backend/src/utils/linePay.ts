@@ -6,12 +6,6 @@ export const linePayClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    // 防止 Axios 自動對 params 進行編碼，我們在攔截器自己處理
-    paramsSerializer: {
-        encode: (params) => {
-            return params.toString();
-        }
-    }
 });
 
 export function createLinePaySignature(uri: string, bodyStr: string, nonce: string) {
@@ -30,32 +24,36 @@ linePayClient.interceptors.request.use((config) => {
     const nonce = crypto.randomUUID();
     const channelId = process.env.LINE_PAY_CHANNEL_ID as string;
 
-    // --- [關鍵修正] 處理 Query String ---
+    // --- [關鍵修正] 手動處理 Query String ---
     if (config.params) {
         let queryString = '';
 
-        // 判斷傳進來的是不是已經是 URLSearchParams 物件
+        // 1. 產生 Query String
         if (config.params instanceof URLSearchParams) {
             queryString = config.params.toString();
         } else {
-            // 如果是普通物件，轉成 URLSearchParams 字串
             queryString = new URLSearchParams(config.params).toString();
         }
 
+        // 2. [重要] 把編碼過的括號轉回來 (%5B -> [, %5D -> ])
+        // LINE Pay 簽章通常預期看到原始的 []
+        queryString = queryString
+            .replace(/%5B/g, '[')
+            .replace(/%5D/g, ']');
+
         if (queryString) {
-            // 手動拼接到 URL 後面
+            // 3. 手動拼接到 URL
             config.url = `${config.url}?${queryString}`;
         }
 
-        // ⚠️ 非常重要：清空 params
-        // 這樣 Axios 就不會再次處理它，確保送出的 URL 跟我們簽章的一模一樣
+        // 4. 清空 params，阻止 Axios 再次處理
         config.params = {};
     }
 
     const bodyStr = config.data ? JSON.stringify(config.data) : '';
-    const uri = config.url as string; // 這時候 uri 已經包含 query string 了
 
-    const signature = createLinePaySignature(uri, bodyStr, nonce);
+    // 5. 使用處理過的 config.url (已包含 query string) 進行簽章
+    const signature = createLinePaySignature(config.url as string, bodyStr, nonce);
 
     config.headers['X-LINE-ChannelId'] = channelId;
     config.headers['X-LINE-Authorization-Nonce'] = nonce;
