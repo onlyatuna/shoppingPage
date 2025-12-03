@@ -7,7 +7,6 @@ import { Toaster } from 'sonner';
 import Navbar from './components/Navbar';
 
 import HomePage from './pages/HomePage';
-import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';

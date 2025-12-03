@@ -32,3 +32,53 @@ export const confirmLinePay = async (req: Request, res: Response) => {
         res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
     }
 };
+
+export const checkLinePayStatus = async (req: Request, res: Response) => {
+    try {
+        const { transactionId } = req.params;
+
+        if (!transactionId) {
+            throw new Error('缺少 transactionId');
+        }
+
+        const result = await PaymentService.checkPaymentStatus(transactionId);
+
+        res.json({
+            status: 'success',
+            data: result
+        });
+    } catch (error: any) {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+    }
+};
+
+export const captureLinePay = async (req: Request, res: Response) => {
+    try {
+        const { orderId } = req.body;
+        if (!orderId) throw new Error('缺少 orderId');
+
+        const result = await PaymentService.capturePayment(orderId);
+        res.json({ status: 'success', message: '請款成功', data: result });
+    } catch (error: any) {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+    }
+};
+
+// --- [新增] 查詢付款明細 ---
+export const getLinePayDetails = async (req: Request, res: Response) => {
+    try {
+        // 從 Query String 取得參數
+        // 例如: /api/v1/payment/line-pay/details?orderId=uuid...
+        const transactionId = req.query.transactionId as string;
+        const orderId = req.query.orderId as string;
+
+        const result = await PaymentService.getPaymentDetails({ transactionId, orderId });
+
+        res.json({
+            status: 'success',
+            data: result
+        });
+    } catch (error: any) {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+    }
+};

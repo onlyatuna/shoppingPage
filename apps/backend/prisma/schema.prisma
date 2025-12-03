@@ -22,7 +22,8 @@ enum Role {
 
 enum OrderStatus {
   PENDING     // 待付款
-  PAID        // 已付款/待出貨
+  AUTHORIZED  // [新增] 已授權 (錢被圈存，尚未扣款)
+  PAID        // 已付款 (錢已扣除)
   SHIPPED     // 已出貨
   COMPLETED   // 已完成
   CANCELLED   // 已取消

@@ -14,22 +14,28 @@ export class PaymentService {
         if (!order || order.userId !== userId) throw new Error('訂單不存在');
         if (order.status !== 'PENDING') throw new Error('訂單狀態不正確');
 
-        // 2. 組合 LINE Pay 需要的 Request Body
-        // 注意：amount 必須是整數
-        const amount = parseInt(order.totalAmount.toString());
+        // 2. 建構 Products 列表 (並做防呆處理)
+        const linePayProducts = order.items.map(item => ({
+            name: item.product.name.substring(0, 80), // 截斷名稱，防止過長導致 API 錯誤
+            quantity: item.quantity,
+            price: parseInt(item.price.toString()), // 確保是整數
+        }));
+
+        // 3. [關鍵優化] 重新計算總金額
+        // LINE Pay 要求：amount 必須嚴格等於所有 product (price * quantity) 的總和
+        // 我們不直接用 order.totalAmount，而是重新算一次，避免資料庫小數點誤差導致 1106 錯誤
+        const calculatedAmount = linePayProducts.reduce((sum, product) => {
+            return sum + (product.price * product.quantity);
+        }, 0);
 
         const packages = [{
             id: order.id,
-            amount: amount,
-            products: order.items.map(item => ({
-                name: item.product.name,
-                quantity: item.quantity,
-                price: parseInt(item.price.toString()),
-            }))
+            amount: calculatedAmount,
+            products: linePayProducts
         }];
 
         const orderBody = {
-            amount,
+            amount: calculatedAmount,
             currency: 'TWD',
             orderId: order.id, // 商店的訂單編號
             packages,
@@ -39,25 +45,27 @@ export class PaymentService {
             },
         };
 
-        // 3. 打 LINE Pay API
+        // 4. 打 LINE Pay API
         try {
+            // Debug 用：印出送出的資料，方便出錯時檢查
+            console.log('🔵 LINE Pay Request Body:', JSON.stringify(orderBody, null, 2));
+
             const res = await linePayClient.post('/v3/payments/request', orderBody);
 
             if (res.data.returnCode !== '0000') {
+                console.error('LINE Pay Response Error:', res.data);
                 throw new Error(`LINE Pay Error: ${res.data.returnMessage}`);
             }
 
-            // 4. 重要：暫存 transactionId 到資料庫 (Confirm 時會用到)
-            // 此時訂單狀態還是 PENDING，但多了一個 paymentId
+            // 5. 暫存 transactionId
             await prisma.order.update({
                 where: { id: order.id },
                 data: {
                     paymentId: res.data.info.transactionId.toString(),
-                    paymentData: res.data // 存 log
+                    paymentData: res.data
                 }
             });
 
-            // 回傳跳轉網址給前端
             return { paymentUrl: res.data.info.paymentUrl.web };
 
         } catch (error: any) {
@@ -72,17 +80,16 @@ export class PaymentService {
         const order = await prisma.order.findUnique({ where: { id: orderId } });
         if (!order) throw new Error('訂單不存在');
 
+        // [開發環境容錯] ID 不符時自動修正
         if (order.paymentId && order.paymentId !== transactionId) {
             console.warn(`⚠️ 交易編號不符 (可能是重複請求導致): DB=${order.paymentId}, Req=${transactionId}`);
             console.warn('👉 將強制使用當前請求的 Transaction ID 進行確認');
 
-            // 強制更新 DB 為當前的 ID，讓流程可以跑下去
             await prisma.order.update({
                 where: { id: orderId },
                 data: { paymentId: transactionId }
             });
         }
-        // 如果是 null，也補填進去
         else if (!order.paymentId) {
             await prisma.order.update({
                 where: { id: orderId },
@@ -90,7 +97,7 @@ export class PaymentService {
             });
         }
 
-        // 如果資料庫已經紀錄為 PAID，直接回傳成功 (冪等性)
+        // 冪等性檢查
         if (order.status === 'PAID') return order;
 
         const amount = parseInt(order.totalAmount.toString());
@@ -100,22 +107,24 @@ export class PaymentService {
             const res = await linePayClient.post(`/v3/payments/${transactionId}/confirm`, {
                 amount,
                 currency: 'TWD',
+            }, {
+                timeout: 40000 // [修改] 官方建議 Confirm 至少 40秒
             });
 
-            // [修改重點開始] -------------------------------------------------
+            // 處理 LINE Pay 回傳結果
             if (res.data.returnCode !== '0000') {
-                // 👇👇👇 必須有這段 👇👇👇
+                // 如果是 1172 (已付款)，我們不拋錯，而是繼續往下執行「更新 DB 狀態」
+                // 這樣能確保即使第一次請求超時，第二次重試也能正確把 DB 改成 PAID
                 if (res.data.returnCode === '1172') {
-                    console.log('⚠️ LINE Pay 提示已付款過 (1172)，視為成功');
-                    return order;
+                    console.log('⚠️ LINE Pay 提示已付款過 (1172)，視為成功，繼續更新訂單狀態...');
+                } else {
+                    console.error('LINE Pay Confirm Failed:', res.data);
+                    throw new Error(`LINE Pay Confirm Error: ${res.data.returnMessage}`);
                 }
-                // 👆👆👆 必須有這段 👆👆👆
-
-                throw new Error(`LINE Pay Confirm Error: ${res.data.returnMessage}`);
             }
-            // [修改重點結束] -------------------------------------------------
 
             // 3. 更新訂單狀態為 PAID
+            // 無論是 0000 還是 1172，只要到了這一步，都代表錢已經付了，必須更新 DB
             const updatedOrder = await prisma.order.update({
                 where: { id: orderId },
                 data: {
@@ -127,13 +136,117 @@ export class PaymentService {
             return updatedOrder;
 
         } catch (error: any) {
-            // 印出詳細錯誤以便除錯
             console.error('LinePay Confirm Logic Error:', error.response?.data || error.message);
-            // 如果是我們自己拋出的 Error，直接往上拋
             if (error.message.includes('LINE Pay Confirm Error')) {
                 throw error;
             }
             throw new Error('LINE Pay 確認失敗');
+        }
+    }
+
+    // --- 步驟 3: 請款 (Capture) ---
+    // 僅在使用「分開請款」模式時需要呼叫此 API
+    static async capturePayment(orderId: string) {
+        // 1. 找訂單
+        const order = await prisma.order.findUnique({ where: { id: orderId } });
+        if (!order) throw new Error('訂單不存在');
+        if (!order.paymentId) throw new Error('無交易編號');
+
+        // 只有狀態是 AUTHORIZED 的訂單才需要執行 Capture
+        // (請確保你的 prisma schema 有加入 AUTHORIZED 狀態)
+        if (order.status !== 'AUTHORIZED') {
+            throw new Error(`訂單狀態非 AUTHORIZED，無法請款 (目前狀態: ${order.status})`);
+        }
+
+        const amount = parseInt(order.totalAmount.toString());
+
+        // 2. 打 LINE Pay Capture API
+        try {
+            // POST /v3/payments/authorizations/{transactionId}/capture
+            const res = await linePayClient.post(`/v3/payments/authorizations/${order.paymentId}/capture`, {
+                amount,
+                currency: 'TWD',
+            }, {
+                timeout: 60000 // [重要] 官方建議 Capture 至少 60秒
+            });
+
+            if (res.data.returnCode !== '0000') {
+                // 1172 代表已請款過，視為成功
+                if (res.data.returnCode === '1172') {
+                    console.log(`⚠️ 訂單 ${orderId} 重複請款 (1172)，視為成功`);
+                } else {
+                    throw new Error(`LINE Pay Capture Error: ${res.data.returnMessage}`);
+                }
+            }
+
+            // 3. 更新為 PAID
+            const updatedOrder = await prisma.order.update({
+                where: { id: orderId },
+                data: {
+                    status: 'PAID', // 真正收到錢了
+                    paymentData: res.data // 更新最新的交易資訊
+                }
+            });
+
+            return updatedOrder;
+
+        } catch (error: any) {
+            console.error('LinePay Capture Error:', error.response?.data || error.message);
+            throw new Error('請款失敗');
+        }
+    }
+
+    // --- [新增] 查詢付款狀態 ---
+    static async checkPaymentStatus(transactionId: string) {
+        try {
+            // LINE Pay API: GET /v3/payments/requests/{transactionId}/check
+            const res = await linePayClient.get(`/v3/payments/requests/${transactionId}/check`, {
+                timeout: 20000, // 官方建議：Read Timeout 至少 20 秒
+            });
+
+            // 回傳完整的 LINE Pay 回應 (包含 returnCode 和 returnMessage)
+            return res.data;
+
+        } catch (error: any) {
+            console.error('Check Status Error:', error.response?.data || error.message);
+            throw new Error('無法查詢付款狀態');
+        }
+    }
+
+    // --- [新增] 查詢付款明細 (Get Payment Details) ---
+    /**
+     * 查詢已授權或已請款的交易明細
+     * @param params 包含 transactionId 或 orderId (至少擇一)
+     */
+    static async getPaymentDetails(params: { transactionId?: string; orderId?: string }) {
+        // 1. 防呆檢查：兩者不能同時為空
+        if (!params.transactionId && !params.orderId) {
+            throw new Error('查詢參數錯誤：必須提供 transactionId 或 orderId');
+        }
+
+        try {
+            // 2. 呼叫 LINE Pay API
+            // GET /v3/payments
+            const res = await linePayClient.get('/v3/payments', {
+                params: {
+                    // Axios 會自動處理 Query String
+                    ...(params.transactionId && { 'transactionId[]': params.transactionId }),
+                    ...(params.orderId && { 'orderId[]': params.orderId }),
+                },
+                timeout: 20000, // 官方要求：Read Timeout 至少 20 秒
+            });
+
+            // 3. 檢查回傳結果
+            if (res.data.returnCode !== '0000') {
+                // 如果查無資料，LINE Pay 可能會回傳非 0000 的代碼
+                throw new Error(`LINE Pay 查詢失敗: ${res.data.returnMessage}`);
+            }
+
+            return res.data.info; // 回傳 info 內的詳細資料
+
+        } catch (error: any) {
+            console.error('Get Payment Details Error:', error.response?.data || error.message);
+            throw new Error('無法取得付款明細');
         }
     }
 }
