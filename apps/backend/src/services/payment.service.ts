@@ -229,11 +229,11 @@ export class PaymentService {
             const queryParts: string[] = [];
 
             if (params.transactionId) {
-                // LINE Pay 要求 [] 不編碼
-                queryParts.push(`transactionId[]=${params.transactionId}`);
+                // LINE Pay API requires array parameters. using encoded brackets to ensure signature match.
+                queryParts.push(`transactionId%5B%5D=${params.transactionId}`);
             }
             if (params.orderId) {
-                queryParts.push(`orderId[]=${params.orderId}`);
+                queryParts.push(`orderId%5B%5D=${params.orderId}`);
             }
 
             if (queryParts.length > 0) {

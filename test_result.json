@@ -1,0 +1,7 @@
+[
+  "[Test] Calling get with url: /v3/payments?orderId%5B%5D=12345",
+  "[Interceptor] config.url: /v3/payments?orderId%5B%5D=12345",
+  "[Sign] URI: /v3/payments?orderId%5B%5D=12345",
+  "[Sign] EncryptText: test-channel-secret/v3/payments?orderId%5B%5D=12345test-nonce",
+  "[Adapter] Final URL: /v3/payments?orderId%5B%5D=12345"
+]
