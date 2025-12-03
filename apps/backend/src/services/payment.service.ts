@@ -224,20 +224,24 @@ export class PaymentService {
         }
 
         try {
-            // [修正] 使用普通物件，Key 包含 []
-            const queryParams: Record<string, string> = {};
+            // [關鍵] 自己手動拼接 URL
+            let url = '/v3/payments';
+            const queryParts: string[] = [];
 
             if (params.transactionId) {
-                queryParams['transactionId[]'] = params.transactionId;
+                // LINE Pay 要求 [] 不編碼
+                queryParts.push(`transactionId[]=${params.transactionId}`);
             }
-
             if (params.orderId) {
-                queryParams['orderId[]'] = params.orderId;
+                queryParts.push(`orderId[]=${params.orderId}`);
             }
 
-            // 將普通物件傳給 Axios，攔截器會把它轉成 URLSearchParams 字串
-            const res = await linePayClient.get('/v3/payments', {
-                params: queryParams,
+            if (queryParts.length > 0) {
+                url += `?${queryParts.join('&')}`;
+            }
+
+            // 直接呼叫拼接好的 URL，不使用 params
+            const res = await linePayClient.get(url, {
                 timeout: 20000,
             });
 
