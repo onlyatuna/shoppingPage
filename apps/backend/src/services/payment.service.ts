@@ -225,15 +225,20 @@ export class PaymentService {
         }
 
         try {
-            // 2. 呼叫 LINE Pay API
-            // GET /v3/payments
+            // ✅ 這裡使用 URLSearchParams 是正確的
+            const queryParams = new URLSearchParams();
+
+            if (params.transactionId) {
+                queryParams.append('transactionId[]', params.transactionId);
+            }
+
+            if (params.orderId) {
+                queryParams.append('orderId[]', params.orderId);
+            }
+
             const res = await linePayClient.get('/v3/payments', {
-                params: {
-                    // Axios 會自動處理 Query String
-                    ...(params.transactionId && { 'transactionId[]': params.transactionId }),
-                    ...(params.orderId && { 'orderId[]': params.orderId }),
-                },
-                timeout: 20000, // 官方要求：Read Timeout 至少 20 秒
+                params: queryParams, // 傳給攔截器處理
+                timeout: 20000,
             });
 
             // 3. 檢查回傳結果

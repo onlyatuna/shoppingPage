@@ -6,11 +6,14 @@ export const linePayClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    // 防止 Axios 自動對 params 進行編碼，我們在攔截器自己處理
+    paramsSerializer: {
+        encode: (params) => {
+            return params.toString();
+        }
+    }
 });
 
-/**
- * 產生 LINE Pay HMAC-SHA256 簽章
- */
 export function createLinePaySignature(uri: string, bodyStr: string, nonce: string) {
     const channelSecret = process.env.LINE_PAY_CHANNEL_SECRET as string;
     const encryptText = `${channelSecret}${uri}${bodyStr}${nonce}`;
@@ -23,38 +26,37 @@ export function createLinePaySignature(uri: string, bodyStr: string, nonce: stri
     return signature;
 }
 
-// Axios Interceptor: 自動加上簽章 Header
 linePayClient.interceptors.request.use((config) => {
     const nonce = crypto.randomUUID();
     const channelId = process.env.LINE_PAY_CHANNEL_ID as string;
 
-    // 1. 處理 URI 與 Query String
-    // [關鍵修正] 我們手動把 params 拼接到 url，並清空 params
-    // 這樣可以確保 Axios 發送的網址跟我們簽章的網址 100% 一致
-    let uri = config.url as string;
-
+    // --- [關鍵修正] 處理 Query String ---
     if (config.params) {
-        const searchParams = new URLSearchParams(config.params);
-        const queryString = searchParams.toString();
+        let queryString = '';
 
-        if (queryString) {
-            // 將 Query String 拼接到 URI
-            uri += `?${queryString}`;
+        // 判斷傳進來的是不是已經是 URLSearchParams 物件
+        if (config.params instanceof URLSearchParams) {
+            queryString = config.params.toString();
+        } else {
+            // 如果是普通物件，轉成 URLSearchParams 字串
+            queryString = new URLSearchParams(config.params).toString();
         }
 
-        // [重要] 更新 config.url 並清空 params
-        // 這樣 Axios 就不會再對 params 做二次處理
-        config.url = uri;
+        if (queryString) {
+            // 手動拼接到 URL 後面
+            config.url = `${config.url}?${queryString}`;
+        }
+
+        // ⚠️ 非常重要：清空 params
+        // 這樣 Axios 就不會再次處理它，確保送出的 URL 跟我們簽章的一模一樣
         config.params = {};
     }
 
-    // 2. 處理 Body (GET 請求 body 為空字串，POST 為 JSON)
     const bodyStr = config.data ? JSON.stringify(config.data) : '';
+    const uri = config.url as string; // 這時候 uri 已經包含 query string 了
 
-    // 3. 計算簽章 (使用最終的 uri)
     const signature = createLinePaySignature(uri, bodyStr, nonce);
 
-    // 4. 設定 Header
     config.headers['X-LINE-ChannelId'] = channelId;
     config.headers['X-LINE-Authorization-Nonce'] = nonce;
     config.headers['X-LINE-Authorization'] = signature;
