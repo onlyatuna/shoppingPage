@@ -15,7 +15,8 @@ export class ProductService {
 
         // 建立查詢條件
         const where: Prisma.ProductWhereInput = {
-            isActive: true, // 只顯示上架商品 (後台管理可能需要看 false 的，這邊先做前台邏輯)
+            isActive: true, // 只顯示上架商品
+            deletedAt: null, // [新增] 排除已刪除
             AND: [
                 // 搜尋名稱
                 search ? { name: { contains: search } } : {},
@@ -53,15 +54,16 @@ export class ProductService {
             where: { id },
             include: { category: true },
         });
-        if (!product) throw new Error('找不到該商品');
+        if (!product || product.deletedAt) throw new Error('找不到該商品'); // [新增] 檢查是否已刪除
         return product;
     }
 
     // [新增] 給後台用：撈出所有商品 (包含下架)，並支援搜尋
     static async findAllAdmin(search?: string) {
-        const where: Prisma.ProductWhereInput = search
-            ? { name: { contains: search } }
-            : {};
+        const where: Prisma.ProductWhereInput = {
+            deletedAt: null, // [新增] 排除已刪除
+            ...(search ? { name: { contains: search } } : {})
+        };
 
         return prisma.product.findMany({
             where,
@@ -101,7 +103,10 @@ export class ProductService {
     static async delete(id: number) {
         return prisma.product.update({
             where: { id },
-            data: { isActive: false },
+            data: {
+                isActive: false,
+                deletedAt: new Date() // [新增] 設定刪除時間
+            },
         });
     }
 }

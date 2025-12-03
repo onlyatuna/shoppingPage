@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Search, Package, DollarSign, Layers } from 'lucide-react';
+import { Edit, Plus, Search, Package, DollarSign, Layers, Trash2 } from 'lucide-react';
 import apiClient from '../../api/client';
 import { Product } from '../../types';
 import ProductFormModal from '../../components/ProductFormModal';
@@ -41,6 +41,23 @@ export default function AdminProductsPage() {
         },
         onError: (err: any) => alert(err.response?.data?.message || '新增失敗')
     });
+
+    const deleteProductMutation = useMutation({
+        mutationFn: async (id: number) => {
+            return apiClient.delete(`/products/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+        },
+        onError: (err: any) => alert(err.response?.data?.message || '刪除失敗')
+    });
+
+    const handleDelete = (product: Product) => {
+        if (window.confirm(`確定要刪除 "${product.name}" 嗎？\n此動作無法復原 (但訂單紀錄會保留)`)) {
+            deleteProductMutation.mutate(product.id);
+        }
+    };
 
     const toggleActive = (product: Product) => {
         updateProductMutation.mutate({
@@ -129,9 +146,12 @@ export default function AdminProductsPage() {
                                         <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${product.isActive ? 'translate-x-6' : 'translate-x-0'}`} />
                                     </button>
                                 </td>
-                                <td className="p-4">
+                                <td className="p-4 flex gap-2">
                                     <button onClick={() => openEditModal(product)} className="p-2 text-gray-600 hover:bg-gray-200 rounded">
                                         <Edit size={18} />
+                                    </button>
+                                    <button onClick={() => handleDelete(product)} className="p-2 text-red-500 hover:bg-red-50 rounded">
+                                        <Trash2 size={18} />
                                     </button>
                                 </td>
                             </tr>
@@ -176,12 +196,20 @@ export default function AdminProductsPage() {
                                 >
                                     {product.isActive ? '下架' : '上架'}
                                 </button>
-                                <button
-                                    onClick={() => openEditModal(product)}
-                                    className="flex items-center gap-1 text-xs bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200"
-                                >
-                                    <Edit size={14} /> 編輯
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => openEditModal(product)}
+                                        className="flex items-center gap-1 text-xs bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200"
+                                    >
+                                        <Edit size={14} /> 編輯
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(product)}
+                                        className="flex items-center gap-1 text-xs bg-red-50 text-red-500 px-3 py-1.5 rounded hover:bg-red-100"
+                                    >
+                                        <Trash2 size={14} /> 刪除
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
