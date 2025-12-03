@@ -230,17 +230,15 @@ export class PaymentService {
 
             if (params.transactionId) {
                 // LINE Pay API requires array parameters. using encoded brackets to ensure signature match.
-                queryParts.push(`transactionId%5B%5D=${params.transactionId}`);
+                queryParts.push(`transactionId[]=${params.transactionId}`);
             }
             if (params.orderId) {
-                queryParts.push(`orderId%5B%5D=${params.orderId}`);
+                queryParts.push(`orderId[]=${params.orderId}`);
             }
 
             if (queryParts.length > 0) {
                 url += `?${queryParts.join('&')}`;
             }
-
-            // 直接呼叫拼接好的 URL，不使用 params
             const res = await linePayClient.get(url, {
                 timeout: 20000,
             });

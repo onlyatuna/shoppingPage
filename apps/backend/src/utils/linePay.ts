@@ -33,6 +33,7 @@ export function createLinePaySignature(uri: string, bodyStr: string, nonce: stri
 linePayClient.interceptors.request.use((config) => {
     const nonce = crypto.randomUUID();
     const channelId = process.env.LINE_PAY_CHANNEL_ID as string;
+    const channelSecret = process.env.LINE_PAY_CHANNEL_SECRET as string;
 
     const bodyStr = config.method?.toUpperCase() === 'GET' ? '' : (config.data ? JSON.stringify(config.data) : '');
     const uri = config.url as string;
@@ -42,6 +43,9 @@ linePayClient.interceptors.request.use((config) => {
     // Debug Log
     console.log(`📡 [LINE Pay] ${config.method?.toUpperCase()} ${uri}`);
     console.log(`   Body: '${bodyStr}'`);
+    console.log(`   Nonce: ${nonce}`);
+    console.log(`   Signature Base: ${channelSecret}${uri}${bodyStr}${nonce}`);
+    console.log(`   Signature: ${signature}`);
 
     config.headers['X-LINE-ChannelId'] = channelId;
     config.headers['X-LINE-Authorization-Nonce'] = nonce;
