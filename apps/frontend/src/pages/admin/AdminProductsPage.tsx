@@ -160,6 +160,7 @@ export default function AdminProductsPage() {
                 </table>
             </div>
 
+
             {/* --- Mobile View (Cards) --- */}
             <div className="md:hidden grid grid-cols-1 gap-4">
                 {products?.map((product) => (
