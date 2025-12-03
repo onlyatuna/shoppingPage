@@ -224,8 +224,8 @@ export class PaymentService {
         }
 
         try {
-            // 這裡使用普通物件即可，攔截器會幫忙轉
-            const queryParams: any = {};
+            // [修正] 使用普通物件，Key 包含 []
+            const queryParams: Record<string, string> = {};
 
             if (params.transactionId) {
                 queryParams['transactionId[]'] = params.transactionId;
@@ -235,22 +235,21 @@ export class PaymentService {
                 queryParams['orderId[]'] = params.orderId;
             }
 
-            // 傳入 params
+            // 將普通物件傳給 Axios，攔截器會把它轉成 URLSearchParams 字串
             const res = await linePayClient.get('/v3/payments', {
                 params: queryParams,
                 timeout: 20000,
             });
-            // 3. 檢查回傳結果
+
             if (res.data.returnCode !== '0000') {
-                // 如果查無資料，LINE Pay 可能會回傳非 0000 的代碼
                 throw new Error(`LINE Pay 查詢失敗: ${res.data.returnMessage}`);
             }
 
-            return res.data.info; // 回傳 info 內的詳細資料
+            return res.data.info;
 
         } catch (error: any) {
             console.error('Get Payment Details Error:', error.response?.data || error.message);
-            throw new Error('無法取得付款明細');
+            throw error;
         }
     }
 }

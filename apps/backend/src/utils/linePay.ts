@@ -24,8 +24,9 @@ linePayClient.interceptors.request.use((config) => {
     const nonce = crypto.randomUUID();
     const channelId = process.env.LINE_PAY_CHANNEL_ID as string;
 
-    // 1. 處理 Query String
+    // --- [關鍵修正] 手動處理 Query String ---
     if (config.params) {
+        // 1. 強制轉為 URLSearchParams 字串 (這會產生標準的 %5B%5D 編碼)
         let queryString = '';
         if (config.params instanceof URLSearchParams) {
             queryString = config.params.toString();
@@ -33,14 +34,16 @@ linePayClient.interceptors.request.use((config) => {
             queryString = new URLSearchParams(config.params).toString();
         }
 
+        // 2. 手動拼接到 URL 後面
         if (queryString) {
             config.url = `${config.url}?${queryString}`;
         }
+
+        // 3. ⚠️ 清空 params，確保 Axios 不會再次處理它
         config.params = {};
     }
 
-    // 2. [關鍵修正] 處理 Body
-    // 如果是 GET，強制 bodyStr 為空字串，不管 config.data 是什麼
+    // 4. 處理 Body (GET 請求強制為空字串)
     let bodyStr = '';
     if (config.method?.toUpperCase() === 'GET') {
         bodyStr = '';
@@ -48,15 +51,12 @@ linePayClient.interceptors.request.use((config) => {
         bodyStr = config.data ? JSON.stringify(config.data) : '';
     }
 
+    // 5. 使用最終的 URI (含 Query String) 進行簽章
     const uri = config.url as string;
     const signature = createLinePaySignature(uri, bodyStr, nonce);
 
-    // [Debug Log] 印出簽名細節，方便除錯
-    console.log('🔍 [LINE Pay Sign Debug]');
-    console.log(`   Method: ${config.method?.toUpperCase()}`);
-    console.log(`   URI: ${uri}`);
-    console.log(`   Body: '${bodyStr}'`); // 檢查這裡是不是空的
-    console.log(`   Nonce: ${nonce}`);
+    // [Debug Log] 方便除錯
+    console.log(`📡 [LINE Pay] ${config.method?.toUpperCase()} ${uri}`);
 
     config.headers['X-LINE-ChannelId'] = channelId;
     config.headers['X-LINE-Authorization-Nonce'] = nonce;
