@@ -29,14 +29,22 @@ export function createLinePaySignature(uri: string, bodyStr: string, nonce: stri
     return signature;
 }
 
-// 攔截器現在變得很簡單
+// 攔截器
 linePayClient.interceptors.request.use((config) => {
     const nonce = crypto.randomUUID();
     const channelId = process.env.LINE_PAY_CHANNEL_ID as string;
     const channelSecret = process.env.LINE_PAY_CHANNEL_SECRET as string;
 
     const bodyStr = config.method?.toUpperCase() === 'GET' ? '' : (config.data ? JSON.stringify(config.data) : '');
-    const uri = config.url as string;
+
+    // 處理 Query String
+    let uri = config.url as string;
+    if (config.params) {
+        const qs = new URLSearchParams(config.params).toString();
+        if (qs) {
+            uri += `?${qs}`;
+        }
+    }
 
     const signature = createLinePaySignature(uri, bodyStr, nonce);
 

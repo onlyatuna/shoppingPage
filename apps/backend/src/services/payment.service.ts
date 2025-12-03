@@ -224,24 +224,17 @@ export class PaymentService {
         }
 
         try {
-            // [關鍵] 自己手動拼接 URL
-            let url = '/v3/payments';
-            const queryParts: string[] = [];
-
+            const queryParams: any = {};
             if (params.transactionId) {
-                // LINE Pay API requires array parameters. using encoded brackets to ensure signature match.
-                queryParts.push(`transactionId%5B%5D=${params.transactionId}`);
+                queryParams['transactionId[]'] = params.transactionId;
             }
             if (params.orderId) {
-                queryParts.push(`orderId%5B%5D=${params.orderId}`);
+                queryParams['orderId[]'] = params.orderId;
             }
 
-            if (queryParts.length > 0) {
-                url += `?${queryParts.join('&')}`;
-            }
-
-            // 直接呼叫拼接好的 URL，不使用 params
-            const res = await linePayClient.get(url, {
+            // 使用 params 傳遞參數，讓攔截器統一處理簽名
+            const res = await linePayClient.get('/v3/payments', {
+                params: queryParams,
                 timeout: 20000,
             });
 
