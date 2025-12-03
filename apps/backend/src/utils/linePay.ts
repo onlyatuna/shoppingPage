@@ -22,7 +22,7 @@ export function createLinePaySignature(uri: string, bodyStr: string, nonce: stri
     const encryptText = `${channelSecret}${uri}${bodyStr}${nonce}`;
 
     const signature = crypto
-        .createHmac('sha266', channelSecret)
+        .createHmac('sha256', channelSecret)
         .update(encryptText)
         .digest('base64');
 
