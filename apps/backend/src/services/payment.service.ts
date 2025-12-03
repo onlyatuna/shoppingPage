@@ -219,17 +219,15 @@ export class PaymentService {
      * @param params 包含 transactionId 或 orderId (至少擇一)
      */
     static async getPaymentDetails(params: { transactionId?: string; orderId?: string }) {
-        // 1. 防呆檢查：兩者不能同時為空
         if (!params.transactionId && !params.orderId) {
             throw new Error('查詢參數錯誤：必須提供 transactionId 或 orderId');
         }
 
         try {
-            // [修正] 改用普通物件傳遞，讓攔截器去處理轉換
+            // 這裡使用普通物件即可，攔截器會幫忙轉
             const queryParams: any = {};
 
             if (params.transactionId) {
-                // 注意 key 要加上 []
                 queryParams['transactionId[]'] = params.transactionId;
             }
 
@@ -237,12 +235,11 @@ export class PaymentService {
                 queryParams['orderId[]'] = params.orderId;
             }
 
-            // 這裡傳入普通物件
+            // 傳入 params
             const res = await linePayClient.get('/v3/payments', {
                 params: queryParams,
                 timeout: 20000,
             });
-
             // 3. 檢查回傳結果
             if (res.data.returnCode !== '0000') {
                 // 如果查無資料，LINE Pay 可能會回傳非 0000 的代碼
