@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Eye, Filter, User, Calendar, DollarSign } from 'lucide-react';
+import { Eye, Filter, User, Calendar, DollarSign, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '../../api/client';
 import { Order, OrderStatus } from '../../types';
 import AdminOrderDetailModal from '../../components/AdminOrderDetailModal';
+import { useAuthStore } from '../../store/authStore';
 
 const STATUS_OPTIONS: OrderStatus[] = ['PENDING', 'PAID', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
 
@@ -23,6 +24,7 @@ export default function AdminOrdersPage() {
     const queryClient = useQueryClient();
     const [filterStatus, setFilterStatus] = useState<OrderStatus | ''>('');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const user = useAuthStore(state => state.user);
 
     const { data: orders, isLoading } = useQuery({
         queryKey: ['admin-orders', filterStatus],
@@ -44,6 +46,28 @@ export default function AdminOrdersPage() {
         onError: (err: any) => toast.error(err.response?.data?.message || '更新失敗')
     });
 
+    const deleteTestOrdersMutation = useMutation({
+        mutationFn: async () => {
+            return apiClient.delete('/orders/test');
+        },
+        onSuccess: (response) => {
+            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+            toast.success(response.data.message);
+        },
+        onError: (err: any) => toast.error(err.response?.data?.message || '刪除失敗')
+    });
+
+    const handleDeleteTestOrders = () => {
+        toast('確認刪除測試訂單', {
+            description: '此操作將刪除所有 PENDING 和 CANCELLED 狀態的訂單，此操作無法復原！',
+            action: {
+                label: '確認刪除',
+                onClick: () => deleteTestOrdersMutation.mutate()
+            },
+            cancel: { label: '取消' }
+        });
+    };
+
     if (isLoading) return <div className="p-8 text-center">載入中...</div>;
 
     return (
@@ -51,18 +75,30 @@ export default function AdminOrdersPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold">訂單管理</h1>
 
-                <div className="w-full md:w-auto flex items-center gap-2 bg-white p-1 border rounded-lg">
-                    <Filter size={20} className="text-gray-500 ml-2" />
-                    <select
-                        className="w-full md:w-auto bg-transparent p-1 outline-none text-sm"
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value as OrderStatus | '')}
-                    >
-                        <option value="">所有狀態</option>
-                        {STATUS_OPTIONS.map(status => (
-                            <option key={status} value={status}>{status}</option>
-                        ))}
-                    </select>
+                <div className="w-full md:w-auto flex items-center gap-2">
+                    <div className="flex items-center gap-2 bg-white p-1 border rounded-lg">
+                        <Filter size={20} className="text-gray-500 ml-2" />
+                        <select
+                            className="w-full md:w-auto bg-transparent p-1 outline-none text-sm"
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value as OrderStatus | '')}
+                        >
+                            <option value="">所有狀態</option>
+                            {STATUS_OPTIONS.map(status => (
+                                <option key={status} value={status}>{status}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {user?.role === 'DEVELOPER' && (
+                        <button
+                            onClick={handleDeleteTestOrders}
+                            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                        >
+                            <Trash2 size={16} />
+                            清理測試訂單
+                        </button>
+                    )}
                 </div>
             </div>
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as OrderController from '../controllers/order.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
-import { requireAdmin } from '../middlewares/admin.middleware';
+import { requireAdmin, requireDeveloper } from '../middlewares/admin.middleware';
 import { prisma } from '../utils/prisma';
 import { StatusCodes } from 'http-status-codes';
 
@@ -12,6 +12,9 @@ router.use(authenticateToken); // 全部需要登入
 // [新增] 管理員路由 (注意路徑順序，不要被 :id 攔截)
 router.get('/admin/all', authenticateToken, requireAdmin, OrderController.getAllOrders);
 router.patch('/:id/status', authenticateToken, requireAdmin, OrderController.updateOrderStatus);
+
+// [新增] 開發者專用：刪除測試訂單
+router.delete('/test', requireDeveloper, OrderController.deleteTestOrders);
 
 router.post('/', OrderController.createOrder);    // 結帳 (下單)
 router.get('/', OrderController.getMyOrders);     // 訂單列表

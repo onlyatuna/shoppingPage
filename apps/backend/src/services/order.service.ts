@@ -140,4 +140,15 @@ export class OrderService {
         });
     }
 
+    // [新增] 開發者：刪除測試訂單 (PENDING 和 CANCELLED 狀態)
+    static async deleteTestOrders() {
+        return prisma.order.deleteMany({
+            where: {
+                status: {
+                    in: ['PENDING', 'CANCELLED']
+                }
+            }
+        });
+    }
+
 }
