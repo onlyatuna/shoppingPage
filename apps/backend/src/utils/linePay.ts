@@ -10,9 +10,6 @@ export const linePayClient = axios.create({
 
 /**
  * 產生 LINE Pay HMAC-SHA256 簽章
- * @param uri 請求路徑 (包含 Query String)
- * @param bodyStr 請求內容 (JSON 字串，GET 時為空字串)
- * @param nonce 隨機數
  */
 export function createLinePaySignature(uri: string, bodyStr: string, nonce: string) {
     const channelSecret = process.env.LINE_PAY_CHANNEL_SECRET as string;
@@ -31,21 +28,30 @@ linePayClient.interceptors.request.use((config) => {
     const nonce = crypto.randomUUID();
     const channelId = process.env.LINE_PAY_CHANNEL_ID as string;
 
-    // 1. 處理 URI (如果有 params，要拼接到 url 後面)
+    // 1. 處理 URI 與 Query String
+    // [關鍵修正] 我們手動把 params 拼接到 url，並清空 params
+    // 這樣可以確保 Axios 發送的網址跟我們簽章的網址 100% 一致
     let uri = config.url as string;
+
     if (config.params) {
-        // 使用 URLSearchParams 確保編碼與送出的一致
         const searchParams = new URLSearchParams(config.params);
         const queryString = searchParams.toString();
+
         if (queryString) {
+            // 將 Query String 拼接到 URI
             uri += `?${queryString}`;
         }
+
+        // [重要] 更新 config.url 並清空 params
+        // 這樣 Axios 就不會再對 params 做二次處理
+        config.url = uri;
+        config.params = {};
     }
 
     // 2. 處理 Body (GET 請求 body 為空字串，POST 為 JSON)
     const bodyStr = config.data ? JSON.stringify(config.data) : '';
 
-    // 3. 計算簽章
+    // 3. 計算簽章 (使用最終的 uri)
     const signature = createLinePaySignature(uri, bodyStr, nonce);
 
     // 4. 設定 Header
