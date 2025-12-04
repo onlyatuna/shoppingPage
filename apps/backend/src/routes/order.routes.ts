@@ -13,8 +13,8 @@ router.use(authenticateToken); // 全部需要登入
 router.get('/admin/all', authenticateToken, requireAdmin, OrderController.getAllOrders);
 router.patch('/:id/status', authenticateToken, requireAdmin, OrderController.updateOrderStatus);
 
-// [新增] 開發者專用：刪除測試訂單
-router.delete('/test', requireDeveloper, OrderController.deleteTestOrders);
+// [新增] 開發者專用：刪除單個訂單
+router.delete('/:id', requireDeveloper, OrderController.deleteOrder);
 
 router.post('/', OrderController.createOrder);    // 結帳 (下單)
 router.get('/', OrderController.getMyOrders);     // 訂單列表

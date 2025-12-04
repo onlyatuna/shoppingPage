@@ -7,7 +7,16 @@ type CategoryInput = z.infer<typeof createCategorySchema>;
 export class CategoryService {
     static async findAll() {
         return prisma.category.findMany({
-            include: { _count: { select: { products: true } } } // 順便算一下該分類有幾個商品
+            include: {
+                _count: {
+                    select: {
+                        // [關鍵修正] 只計算 isActive 為 true 的商品
+                        products: {
+                            where: { isActive: true }
+                        }
+                    }
+                }
+            }
         });
     }
 

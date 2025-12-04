@@ -78,18 +78,13 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     }
 };
 
-// [新增] 刪除測試訂單 (僅限開發者)
-export const deleteTestOrders = async (req: Request, res: Response) => {
+// [新增] 刪除訂單 (僅限開發者)
+export const deleteOrder = async (req: Request, res: Response) => {
     try {
-        const result = await OrderService.deleteTestOrders();
-        res.json({
-            status: 'success',
-            message: `已刪除 ${result.count} 筆測試訂單`,
-            data: { deletedCount: result.count }
-        });
-    } catch (error) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: '刪除測試訂單失敗'
-        });
+        const orderId = req.params.id;
+        await OrderService.deleteOrder(orderId);
+        res.json({ status: 'success', message: '訂單已刪除' });
+    } catch (error: any) {
+        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message || '刪除失敗' });
     }
 };

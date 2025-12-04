@@ -140,45 +140,20 @@ export class OrderService {
         });
     }
 
-    // [新增] 開發者：刪除測試訂單 (PENDING 和 CANCELLED 狀態)
-    static async deleteTestOrders() {
-        // 使用交易確保資料一致性
+    // [新增] 開發者：刪除單個訂單
+    static async deleteOrder(orderId: string) {
         return prisma.$transaction(async (tx) => {
-            // 步驟 1: 找出要刪除的訂單 ID
-            const ordersToDelete = await tx.order.findMany({
-                where: {
-                    status: {
-                        in: ['PENDING', 'CANCELLED']
-                    }
-                },
-                select: { id: true }
-            });
-
-            const orderIds = ordersToDelete.map(o => o.id);
-
-            if (orderIds.length === 0) {
-                return { count: 0 };
-            }
-
-            // 步驟 2: 刪除這些訂單的訂單項目
+            // 先刪除訂單項目
             await tx.orderItem.deleteMany({
-                where: {
-                    orderId: {
-                        in: orderIds
-                    }
-                }
+                where: { orderId }
             });
 
-            // 步驟 3: 刪除訂單
-            const result = await tx.order.deleteMany({
-                where: {
-                    id: {
-                        in: orderIds
-                    }
-                }
+            // 再刪除訂單
+            const deletedOrder = await tx.order.delete({
+                where: { id: orderId }
             });
 
-            return result;
+            return deletedOrder;
         });
     }
 

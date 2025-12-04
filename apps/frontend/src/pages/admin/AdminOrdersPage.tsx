@@ -46,25 +46,25 @@ export default function AdminOrdersPage() {
         onError: (err: any) => toast.error(err.response?.data?.message || '更新失敗')
     });
 
-    const deleteTestOrdersMutation = useMutation({
-        mutationFn: async () => {
-            return apiClient.delete('/orders/test');
+    const deleteOrderMutation = useMutation({
+        mutationFn: async (orderId: string) => {
+            return apiClient.delete(`/orders/${orderId}`);
         },
-        onSuccess: (response) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
-            toast.success(response.data.message);
+            toast.success('訂單已刪除');
         },
         onError: (err: any) => toast.error(err.response?.data?.message || '刪除失敗')
     });
 
-    const handleDeleteTestOrders = () => {
-        toast('確認刪除測試訂單', {
-            description: '此操作將刪除所有 PENDING 和 CANCELLED 狀態的訂單，此操作無法復原！',
+    const handleDeleteOrder = (orderId: string) => {
+        toast('確認刪除訂單', {
+            description: '此操作無法復原！',
             action: {
                 label: '確認刪除',
-                onClick: () => deleteTestOrdersMutation.mutate()
+                onClick: () => deleteOrderMutation.mutate(orderId)
             },
-            cancel: { label: '取消' }
+            cancel: { label: '取消', onClick: () => { } }
         });
     };
 
@@ -75,30 +75,18 @@ export default function AdminOrdersPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold">訂單管理</h1>
 
-                <div className="w-full md:w-auto flex items-center gap-2">
-                    <div className="flex items-center gap-2 bg-white p-1 border rounded-lg">
-                        <Filter size={20} className="text-gray-500 ml-2" />
-                        <select
-                            className="w-full md:w-auto bg-transparent p-1 outline-none text-sm"
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value as OrderStatus | '')}
-                        >
-                            <option value="">所有狀態</option>
-                            {STATUS_OPTIONS.map(status => (
-                                <option key={status} value={status}>{status}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {user?.role === 'DEVELOPER' && (
-                        <button
-                            onClick={handleDeleteTestOrders}
-                            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
-                        >
-                            <Trash2 size={16} />
-                            清理測試訂單
-                        </button>
-                    )}
+                <div className="flex items-center gap-2 bg-white p-1 border rounded-lg">
+                    <Filter size={20} className="text-gray-500 ml-2" />
+                    <select
+                        className="w-full md:w-auto bg-transparent p-1 outline-none text-sm"
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value as OrderStatus | '')}
+                    >
+                        <option value="">所有狀態</option>
+                        {STATUS_OPTIONS.map(status => (
+                            <option key={status} value={status}>{status}</option>
+                        ))}
+                    </select>
                 </div>
             </div>
 
@@ -142,9 +130,19 @@ export default function AdminOrdersPage() {
                                     </select>
                                 </td>
                                 <td className="p-4">
-                                    <button onClick={() => setSelectedOrder(order)} className="flex items-center gap-1 text-gray-600 hover:bg-gray-100 px-3 py-1 rounded border">
-                                        <Eye size={14} /> 詳情
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => setSelectedOrder(order)} className="flex items-center gap-1 text-gray-600 hover:bg-gray-100 px-3 py-1 rounded border">
+                                            <Eye size={14} /> 詳情
+                                        </button>
+                                        {user?.role === 'DEVELOPER' && (
+                                            <button
+                                                onClick={() => handleDeleteOrder(order.id)}
+                                                className="flex items-center gap-1 text-red-600 hover:bg-red-50 px-3 py-1 rounded border border-red-200"
+                                            >
+                                                <Trash2 size={14} /> 刪除
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -203,6 +201,15 @@ export default function AdminOrdersPage() {
                                 {STATUS_OPTIONS.map(s => <option key={s} value={s} className="bg-white text-black">{s}</option>)}
                             </select>
                         </div>
+
+                        {user?.role === 'DEVELOPER' && (
+                            <button
+                                onClick={() => handleDeleteOrder(order.id)}
+                                className="mt-3 w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 px-3 py-2 rounded border border-red-200"
+                            >
+                                <Trash2 size={14} /> 刪除訂單
+                            </button>
+                        )}
                     </div>
                 ))}
             </div>
