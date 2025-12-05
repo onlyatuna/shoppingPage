@@ -1,10 +1,15 @@
+// category.controller.ts
 import { Request, Response } from 'express';
 import { CategoryService } from '../services/category.service';
 import { createCategorySchema, updateCategorySchema } from '../schemas/category.schema';
 import { StatusCodes } from 'http-status-codes';
 
 export const getAll = async (req: Request, res: Response) => {
-    const categories = await CategoryService.findAll();
+    // 讀取 ?scope=admin 參數
+    const isForAdmin = req.query.scope === 'admin';
+
+    // 傳入參數給 Service
+    const categories = await CategoryService.findAll(isForAdmin);
     res.json({ status: 'success', data: categories });
 };
 

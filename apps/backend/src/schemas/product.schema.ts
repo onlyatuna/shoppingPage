@@ -1,3 +1,4 @@
+//product.schema.ts
 import { z } from 'zod';
 
 // 新增/修改商品的資料驗證

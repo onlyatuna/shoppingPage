@@ -1,3 +1,4 @@
+//Marquee.tsx
 import { useRef } from 'react'
 
 const messages = [

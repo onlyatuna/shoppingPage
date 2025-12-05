@@ -1,5 +1,5 @@
+//auth.schema.ts
 import { z } from 'zod';
-import { Role } from '@prisma/client';
 
 export const registerSchema = z.object({
     email: z.email('Email 格式不正確'),

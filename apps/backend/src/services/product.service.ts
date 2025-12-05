@@ -1,3 +1,4 @@
+//product.service.ts
 import { prisma } from '../utils/prisma';
 import { createProductSchema, queryProductSchema } from '../schemas/product.schema';
 import { z } from 'zod';

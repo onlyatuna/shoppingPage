@@ -1,3 +1,4 @@
+//user.controller.ts
 import { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
 import { updateProfileSchema, adminUpdateUserSchema } from '../schemas/user.schema';

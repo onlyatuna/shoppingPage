@@ -1,3 +1,4 @@
+//prisma.ts
 import { PrismaClient } from '@prisma/client';
 
 // 避免在開發模式 (Hot Reload) 下建立過多連線

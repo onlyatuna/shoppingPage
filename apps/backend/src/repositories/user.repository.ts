@@ -1,3 +1,4 @@
+//user.repository.ts
 import { prisma } from '../config/db';
 import { Prisma } from '@prisma/client';
 

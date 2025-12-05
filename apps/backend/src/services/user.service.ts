@@ -1,3 +1,4 @@
+//user.service.ts
 import { prisma } from '../utils/prisma';
 import bcrypt from 'bcryptjs';
 import { Role } from '@prisma/client';

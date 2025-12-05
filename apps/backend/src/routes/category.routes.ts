@@ -1,3 +1,4 @@
+//category.routes.ts
 import { Router } from 'express';
 import * as CategoryController from '../controllers/category.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';

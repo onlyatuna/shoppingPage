@@ -1,3 +1,4 @@
+//payment.routes.ts
 import { Router } from 'express';
 import * as PaymentController from '../controllers/payment.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';

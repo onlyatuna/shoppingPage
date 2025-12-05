@@ -1,3 +1,4 @@
+//HomePage.tsx
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
@@ -132,8 +133,8 @@ export default function HomePage() {
                             <button
                                 onClick={() => handleCategoryClick(null)}
                                 className={`w-full text-left px-4 py-2 rounded-md transition-colors ${selectedCategoryId === null
-                                        ? 'bg-black text-white font-bold'
-                                        : 'hover:bg-gray-100 text-gray-600'
+                                    ? 'bg-black text-white font-bold'
+                                    : 'hover:bg-gray-100 text-gray-600'
                                     }`}
                             >
                                 全部商品
@@ -144,8 +145,8 @@ export default function HomePage() {
                                     key={category.id}
                                     onClick={() => handleCategoryClick(category.id)}
                                     className={`w-full text-left px-4 py-2 rounded-md transition-colors flex justify-between ${selectedCategoryId === category.id
-                                            ? 'bg-black text-white font-bold'
-                                            : 'hover:bg-gray-100 text-gray-600'
+                                        ? 'bg-black text-white font-bold'
+                                        : 'hover:bg-gray-100 text-gray-600'
                                         }`}
                                 >
                                     <span>{category.name}</span>
@@ -218,8 +219,8 @@ export default function HomePage() {
                                             }}
                                             disabled={addToCartMutation.isPending || product.stock <= 0}
                                             className={`mt-3 w-full py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors ${product.stock <= 0
-                                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                    : 'bg-black text-white hover:bg-gray-800 active:scale-95'
+                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                : 'bg-black text-white hover:bg-gray-800 active:scale-95'
                                                 }`}
                                         >
                                             <ShoppingCart size={18} />

@@ -1,3 +1,4 @@
+//product.routes.ts
 import { Router } from 'express';
 import * as ProductController from '../controllers/product.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';

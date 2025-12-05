@@ -1,3 +1,4 @@
+//App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import apiClient from './api/client';

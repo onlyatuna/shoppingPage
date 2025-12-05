@@ -1,3 +1,4 @@
+//ProductFormModal.tsx
 import { useForm } from 'react-hook-form';
 import { X, Upload, Trash2, Loader2 } from 'lucide-react';
 import { Product, Category } from '../types';

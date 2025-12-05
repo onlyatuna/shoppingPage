@@ -1,3 +1,4 @@
+//express.d.ts
 import { Role } from '@prisma/client';
 
 declare global {

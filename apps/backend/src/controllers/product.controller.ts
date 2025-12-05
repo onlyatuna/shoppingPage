@@ -1,3 +1,4 @@
+//product.controller.ts
 import { Request, Response } from 'express';
 import { ProductService } from '../services/product.service';
 import { createProductSchema, queryProductSchema } from '../schemas/product.schema';

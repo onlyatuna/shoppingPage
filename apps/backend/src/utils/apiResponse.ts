@@ -1,3 +1,4 @@
+//apiResponse.ts
 import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { ApiResponse } from '@shop/shared';

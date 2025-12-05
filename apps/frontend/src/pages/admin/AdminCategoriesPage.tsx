@@ -1,3 +1,4 @@
+//AdminCategoriesPage.tsx
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash2, Plus, Save, X, Tag, Link as LinkIcon } from 'lucide-react';
@@ -9,13 +10,15 @@ export default function AdminCategoriesPage() {
     const [isCreating, setIsCreating] = useState(false);
     const [newCategory, setNewCategory] = useState({ name: '', slug: '' });
 
+    // 1. 讀取分類 (加入 scope=admin 參數)
     const { data: categories, isLoading } = useQuery({
-        queryKey: ['categories'],
+        queryKey: ['categories', 'admin'], // key 稍微改一下避免跟前台混用
         queryFn: async () => {
-            const res = await apiClient.get<{ data: Category[] }>('/categories');
+            const res = await apiClient.get<{ data: Category[] }>('/categories?scope=admin');
             return res.data.data;
         }
     });
+
 
     const createMutation = useMutation({
         mutationFn: async (data: { name: string; slug: string }) => {

@@ -1,3 +1,4 @@
+//test-linepay-debug.ts
 import * as dotenv from 'dotenv';
 dotenv.config({ path: 'apps/backend/.env' }); // Adjust path if needed
 import { linePayClient } from './utils/linePay';

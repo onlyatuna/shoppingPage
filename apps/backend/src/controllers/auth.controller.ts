@@ -1,3 +1,4 @@
+// auth.controller.ts
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { registerSchema, loginSchema } from '../schemas/auth.schema';
