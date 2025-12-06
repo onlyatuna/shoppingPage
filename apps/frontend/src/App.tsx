@@ -8,7 +8,7 @@ import { Toaster } from 'sonner';
 import Navbar from './components/Navbar';
 
 import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
+import LoginPage from './pages/auth/LoginPage';
 import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
 import ProfilePage from './pages/ProfilePage';
@@ -18,6 +18,9 @@ import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import PaymentCallbackPage from './pages/PaymentCallbackPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
 // 保護路由：只有 Admin 能進
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -89,6 +92,9 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<Navigate to="/login" replace />} />
+                    <Route path="/verify-email" element={<VerifyEmailPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                     <Route path="/profile" element={
                         <ProtectedRoute>

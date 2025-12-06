@@ -1,3 +1,5 @@
+// apps/backend/prisma/schema.prisma
+
 // 定義資料庫連線
 datasource db {
   provider = "mysql"
@@ -7,11 +9,12 @@ datasource db {
 // 產生 TypeScript Client
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x"]
+  // [修正] 加入 debian-openssl-3.0.x 以支援 Node 20 容器環境
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 // --------------------------------------
-// Enums (列舉): 統一狀態管理，避免魔法字串
+// Enums (列舉): 統一狀態管理
 // --------------------------------------
 
 enum Role {
@@ -21,12 +24,14 @@ enum Role {
 }
 
 enum OrderStatus {
-  PENDING     // 待付款
-  AUTHORIZED  // [新增] 已授權 (錢被圈存，尚未扣款)
-  PAID        // 已付款 (錢已扣除)
-  SHIPPED     // 已出貨
-  COMPLETED   // 已完成
-  CANCELLED   // 已取消
+  PENDING             // 待付款
+  AUTHORIZED          // 已授權 (錢被圈存，尚未扣款)
+  PAID                // 已付款 (錢已扣除)
+  SHIPPED             // 已出貨
+  COMPLETED           // 已完成
+  CANCELLED           // 已取消 (未付款前取消，或 Void)
+  REFUNDED            // [新增] 已全額退款
+  PARTIALLY_REFUNDED  // [新增] 已部分退款
 }
 
 // --------------------------------------
@@ -36,26 +41,35 @@ enum OrderStatus {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  password  String   // 加密後的 Hash
+  password  String   
   name      String?
   role      Role     @default(USER)
+  
+  // 驗證相關
+  isVerified                 Boolean   @default(false) 
+  verificationToken          String?   @unique         
+  verificationTokenExpiresAt DateTime? 
+
+  // 重置密碼相關
+  resetPasswordToken         String?   @unique
+  resetPasswordTokenExpiresAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // 關聯
-  cart      Cart?    // 一個使用者只有一個購物車
+  cart      Cart?    
   orders    Order[]
   addresses Address[]
 
-  @@map("users") // 對應資料庫表名為 users
+  @@map("users") 
 }
 
 model Address {
   id        Int     @id @default(autoincrement())
-  recipient String  // 收件人姓名
+  recipient String  
   phone     String
   city      String
-  address   String  // 詳細地址
+  address   String  
   isDefault Boolean @default(false)
   
   userId    Int
@@ -67,7 +81,7 @@ model Address {
 model Category {
   id        Int       @id @default(autoincrement())
   name      String
-  slug      String    @unique // 網址用，例如: /category/electronics
+  slug      String    @unique 
   products  Product[]
 
   @@map("categories")
@@ -76,23 +90,19 @@ model Category {
 model Product {
   id          Int      @id @default(autoincrement())
   name        String
-  slug        String   @unique // 網址用，例如: /product/iphone-15
+  slug        String   @unique 
   description String?  @db.Text
   
-  // 金錢務必使用 Decimal，避免 JS 浮點數誤差
   price       Decimal  @db.Decimal(10, 2) 
-  
-  // 庫存管理
   stock       Int      @default(0)
   
-  // 圖片：使用 JSON 陣列儲存多張圖 ["url1", "url2"]，比開新表更有效率
   images      Json?    
   
-  isActive    Boolean  @default(true) // 軟刪除/上下架控制
+  isActive    Boolean  @default(true) 
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  deletedAt   DateTime? // [新增] 軟刪除時間
+  deletedAt   DateTime? 
 
   categoryId  Int
   category    Category @relation(fields: [categoryId], references: [id])
@@ -100,21 +110,15 @@ model Product {
   cartItems   CartItem[]
   orderItems  OrderItem[]
 
-  // 建立索引以加速搜尋
   @@index([name])
   @@index([categoryId])
   @@map("products")
 }
 
-// --------------------------------------
-// 購物車模組 (Server State)
-// --------------------------------------
-
 model Cart {
   id        Int        @id @default(autoincrement())
   userId    Int        @unique
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   items     CartItem[]
   updatedAt DateTime   @updatedAt
 
@@ -131,29 +135,21 @@ model CartItem {
   productId Int
   product   Product  @relation(fields: [productId], references: [id])
 
-  // 複合唯一鍵：確保同一個購物車內，同一個商品只會有一筆紀錄 (數量疊加)
   @@unique([cartId, productId])
   @@map("cart_items")
 }
 
-// --------------------------------------
-// 訂單模組 (Transaction Core)
-// --------------------------------------
-
 model Order {
-  id            String      @id @default(uuid()) // 使用 UUID 防止被猜測訂單量
+  id            String      @id @default(uuid()) 
   userId        Int
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   status        OrderStatus @default(PENDING)
   totalAmount   Decimal     @db.Decimal(10, 2)
   
-  // 收件資訊快照：下單當下的地址 (防止使用者事後改地址表影響歷史訂單)
   shippingInfo  Json        
   
-  paymentId     String?     // 第三方金流編號 (如綠界/Stripe ID)
-
-  // [新增] 用來存 LINE Pay 回傳的完整 JSON (Debug 用)
+  paymentId     String?     
   paymentData   Json?     
   
   createdAt     DateTime    @default(now())
@@ -173,8 +169,6 @@ model OrderItem {
   product   Product  @relation(fields: [productId], references: [id])
   
   quantity  Int
-  
-  // 重點：記錄「購買當下」的單價，而非關聯 Product 表的目前價格
   price     Decimal  @db.Decimal(10, 2) 
 
   @@map("order_items")

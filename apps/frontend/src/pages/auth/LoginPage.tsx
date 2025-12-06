@@ -6,8 +6,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { ShoppingBag, ArrowRight, Loader2, Lock, Mail, User, ArrowLeft } from 'lucide-react';
-import apiClient from '../api/client';
-import { useAuthStore } from '../store/authStore';
+import apiClient from '../../api/client';
+import { useAuthStore } from '../../store/authStore';
 
 // --- 驗證規則 Schema ---
 const loginSchema = z.object({
@@ -65,7 +65,7 @@ export default function AuthPage() {
                 email: data.email,
                 password: data.password
             });
-            toast.success('註冊成功！請登入');
+            toast.success('註冊成功！請至信箱收取驗證信');
             // 自動切換回登入模式 (滑動動畫)
             setIsLoginMode(true);
         } catch (error: any) {
@@ -159,6 +159,15 @@ export default function AuthPage() {
                                 <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                                 <input {...registerLogin('password')} type="password" placeholder="密碼" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
                                 {loginErrors.password && <p className="text-red-500 text-xs mt-1">{(loginErrors.password as any).message}</p>}
+                            </div>
+                            <div className="text-right">
+                                <button
+                                    type="button"
+                                    onClick={() => navigate('/forgot-password')}
+                                    className="text-sm text-gray-600 hover:text-black transition"
+                                >
+                                    忘記密碼？
+                                </button>
                             </div>
                         </div>
 
