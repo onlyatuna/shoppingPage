@@ -9,14 +9,11 @@ const apiClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true // 允許跨域傳送 Cookie
 });
 
-// 請求攔截器：自動帶上 Token
+// 請求攔截器：(已移除 Token 自動帶入，改用 Cookie)
 apiClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
 });
 
@@ -25,7 +22,7 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem('token');
+            // Token 過期或無效，清除前端狀態 (需配合 authStore 使用，這裡先不處理 store)
             // 可以選擇強制重新整理或導向登入頁
             // window.location.href = '/login'; 
         }

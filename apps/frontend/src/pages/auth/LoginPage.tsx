@@ -48,8 +48,8 @@ export default function AuthPage() {
     const onLogin = async (data: any) => {
         try {
             const res = await apiClient.post('/auth/login', data);
-            const { token, user } = res.data.data;
-            login(token, user);
+            const { user } = res.data.data;
+            login(user);
             toast.success(`歡迎回來，${user.name}`);
             navigate('/');
         } catch (error: any) {

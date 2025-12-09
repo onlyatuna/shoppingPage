@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/Skeleton';
 
 export default function HomePage() {
-    const { token } = useAuthStore();
+    const { user } = useAuthStore();
     const queryClient = useQueryClient();
 
     // --- 1. URL 參數同步邏輯 ---
@@ -214,7 +214,7 @@ export default function HomePage() {
 
                                         <button
                                             onClick={() => {
-                                                if (!token) return toast.error('請先登入');
+                                                if (!user) return toast.error('請先登入');
                                                 addToCartMutation.mutate(product.id);
                                             }}
                                             disabled={addToCartMutation.isPending || product.stock <= 0}

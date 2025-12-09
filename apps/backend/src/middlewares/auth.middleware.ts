@@ -26,9 +26,10 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     // 從 Header 取得 Token
     // 格式通常是: "Authorization: Bearer <你的Token>"
     const authHeader = req.headers['authorization'];
+    const tokenFromHeader = authHeader && authHeader.split(' ')[1];
 
-    // 如果有 header，用空白切割取第二部分 (Token 本體)
-    const token = authHeader && authHeader.split(' ')[1];
+    // 優先從 Cookie 讀取 Token，如果沒有才看 Header
+    const token = req.cookies?.token || tokenFromHeader;
 
     // 情況 A: 根本沒傳 Token
     if (!token) {
@@ -38,7 +39,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     }
 
     // 情況 B: 驗證 Token 合法性
-    jwt.verify(token, process.env.JWT_SECRET as string, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded: any) => {
         if (err) {
             // Token 過期或被竄改
             return res.status(StatusCodes.FORBIDDEN).json({

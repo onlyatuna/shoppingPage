@@ -17,7 +17,7 @@ const FAQS = [
 ];
 
 export default function Navbar() {
-    const { token, logout, user } = useAuthStore();
+    const { user, logout } = useAuthStore();
     const navigate = useNavigate();
 
     // UI 狀態
@@ -37,7 +37,7 @@ export default function Navbar() {
             const res = await apiClient.get<{ data: Cart }>('/cart');
             return res.data.data;
         },
-        enabled: !!token,
+        enabled: !!user,
     });
 
     const { data: categories } = useQuery({
@@ -51,8 +51,8 @@ export default function Navbar() {
     const cartCount = cart?.items.reduce((acc, item) => acc + item.quantity, 0) || 0;
     const isStaff = user?.role === 'ADMIN' || user?.role === 'DEVELOPER';
 
-    const handleLogout = () => {
-        logout();
+    const handleLogout = async () => {
+        await logout();
         setIsUserDropdownOpen(false);
         setIsMobileMenuOpen(false);
         navigate('/login');
@@ -99,7 +99,7 @@ export default function Navbar() {
 
                     {/* 右側功能區 */}
                     <div className="flex items-center gap-1 md:gap-3 z-10">
-                        {token && isStaff && (
+                        {user && isStaff && (
                             <div className="hidden md:block mr-4 border-r pr-4 border-gray-300">
                                 <div className="group relative">
                                     <button className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-black uppercase tracking-wide py-2">
@@ -129,7 +129,7 @@ export default function Navbar() {
                         </Link>
 
                         {/* [修改] 我的訂單 (移到這裡) */}
-                        {token && (
+                        {user && (
                             <Link to="/orders" className="relative p-2 text-slate-800 hover:bg-gray-100 rounded-full transition" title="我的訂單">
                                 <Package size={26} />
                             </Link>

@@ -36,8 +36,7 @@ export default function ProfilePage() {
             // 更新 Zustand Store (保持前端狀態一致)
             // 注意：這裡我們假設 token 沒變，只更新 user 物件
             const updatedUser = res.data.data;
-            const token = localStorage.getItem('token') || '';
-            login(token, updatedUser);
+            login(updatedUser);
 
             // 清空密碼欄位
             setValue('password', '');

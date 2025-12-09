@@ -36,9 +36,19 @@ export const login = async (req: Request, res: Response) => {
         const validatedData = loginSchema.parse(req.body);
         const result = await AuthService.login(validatedData);
 
+        // 設定 HTTP-only Cookie
+        res.cookie('token', result.token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
         res.status(StatusCodes.OK).json({
             status: 'success',
-            data: result,
+            data: {
+                user: result.user
+            },
         });
     } catch (error: any) {
         // 針對不同錯誤回傳不同狀態碼
@@ -50,6 +60,19 @@ export const login = async (req: Request, res: Response) => {
             });
         }
     }
+};
+
+export const logout = async (req: Request, res: Response) => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+    });
+
+    res.status(StatusCodes.OK).json({
+        status: 'success',
+        message: '登出成功'
+    });
 };
 
 export const verifyEmail = async (req: Request, res: Response) => {
@@ -78,7 +101,7 @@ export const resendVerification = async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
         if (!email) throw new Error('Email is required');
-        
+
         const result = await AuthService.resendVerification(email);
         res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
     } catch (error: any) {
@@ -90,7 +113,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
         if (!email) throw new Error('Email is required');
-        
+
         const result = await AuthService.requestPasswordReset(email);
         res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
     } catch (error: any) {
@@ -102,7 +125,7 @@ export const verifyResetToken = async (req: Request, res: Response) => {
     try {
         const token = req.query.token as string;
         if (!token) throw new Error('Token is required');
-        
+
         const result = await AuthService.verifyResetToken(token);
         res.status(StatusCodes.OK).json({ status: 'success', data: result });
     } catch (error: any) {
@@ -114,7 +137,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     try {
         const { token, password } = req.body;
         if (!token || !password) throw new Error('Token and password are required');
-        
+
         const result = await AuthService.resetPassword(token, password);
         res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
     } catch (error: any) {

@@ -1,5 +1,6 @@
 //app.ts
 import express, { Request, Response } from 'express';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import morgan from 'morgan';
 import { prisma } from './utils/prisma';
@@ -18,8 +19,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middlewares
-app.use(cors());              // 允許跨域請求 (前端 5173 -> 後端 3000)
+app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+}));
 app.use(express.json());      // 解析 JSON Request Body
+app.use(cookieParser());
 app.use(morgan('dev'));       // 記錄 HTTP Log
 
 // 測試路由 1: Health Check

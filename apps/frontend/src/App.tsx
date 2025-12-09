@@ -1,8 +1,6 @@
 //App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import apiClient from './api/client';
-import { User } from './types';
 import { useAuthStore } from './store/authStore';
 import { Toaster } from 'sonner';
 import Navbar from './components/Navbar';
@@ -24,10 +22,11 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
 // 保護路由：只有 Admin 能進
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-    const { user, token } = useAuthStore();
+    const { user, isInitialized } = useAuthStore();
 
-    if (!token) return <Navigate to="/login" replace />;
-    if (user?.role !== 'ADMIN' && user?.role !== 'DEVELOPER') {
+    if (!isInitialized) return null; // 等待初始化
+    if (!user) return <Navigate to="/login" replace />;
+    if (user.role !== 'ADMIN' && user.role !== 'DEVELOPER') {
         return <div className="p-10 text-center text-red-500">權限不足</div>;
     }
 
@@ -36,39 +35,21 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 // 保護路由元件: 沒登入就踢去 Login
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { token } = useAuthStore();
-    if (!token) {
+    const { user, isInitialized } = useAuthStore();
+
+    if (!isInitialized) return null; // 等待初始化
+    if (!user) {
         return <Navigate to="/login" replace />;
     }
     return <>{children}</>;
 };
 
 function App() {
-    const { token, setAuth, logout, isInitialized, setInitialized } = useAuthStore();
+    const { checkAuth, isInitialized } = useAuthStore();
 
     // 🔄 核心邏輯：App 啟動時檢查身分
     useEffect(() => {
-        const initAuth = async () => {
-            // 1. 如果沒有 Token，直接標記初始化完成 (視為未登入狀態)
-            if (!token) {
-                setInitialized(true);
-                return;
-            }
-
-            try {
-                // 2. 有 Token，嘗試去後端換取使用者資料
-                const res = await apiClient.get<{ data: User }>('/users/profile');
-
-                // 3. 成功：把資料塞回 Store
-                setAuth(res.data.data);
-            } catch (error) {
-                // 4. 失敗 (例如 Token 過期)：執行登出清理
-                console.error('Token 無效或過期', error);
-                logout();
-            }
-        };
-
-        initAuth();
+        checkAuth();
     }, []); // 空陣列表示只在元件掛載時執行一次
 
     // ⏳ (選用) 加上一個全域 Loading 畫面

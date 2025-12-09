@@ -10,6 +10,9 @@ router.post('/register', AuthController.register);
 // POST /api/auth/login
 router.post('/login', AuthController.login);
 
+// POST /api/auth/logout
+router.post('/logout', AuthController.logout);
+
 // POST /api/auth/resend-verification
 router.post('/resend-verification', AuthController.resendVerification);
 
