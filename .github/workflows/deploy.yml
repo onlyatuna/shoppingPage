@@ -78,7 +78,7 @@ jobs:
             
             # 5. 重啟服務
             docker compose down
-            docker compose up -d
+            docker compose up -d --force-recreate
             
             # 6. 執行資料庫遷移 (確保新功能生效)
             # 注意：需等待 Container 啟動，若失敗可加 sleep 10
