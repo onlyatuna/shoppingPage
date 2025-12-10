@@ -1,152 +1,155 @@
-# 🛒 Shopping Mall Monorepo
+Shopping Page Project (E-commerce Platform)
+這是一個全端電子商務平台專案，採用 Monorepo 架構開發。包含完整的使用者購物流程、購物車管理、LinePay 金流串接以及後台管理系統。
 
-## 1. 核心設計哲學
-- **前後端分離 (Separation of Concerns)**：API 僅負責數據交換 (JSON)，不負責渲染 HTML。  
-- **分層架構 (Layered Architecture)**：後端邏輯嚴格分層（Controller → Service → Repository）。  
-- **型別安全 (Type Safety)**：前後端共用 TypeScript 型別 (Types/Interfaces)，減少 API 對接錯誤。  
-- **單一數據源 (Single Source of Truth)**：前端使用 React Query (TanStack Query) 管理伺服器狀態，全域 Store (如 Zustand) 僅管理 UI 狀態（如購物車開關）。  
+🛠 技術堆疊 (Tech Stack)
+核心架構
+Monorepo Management: NPM Workspaces
 
----
+Language: TypeScript
 
-## 2. 專案結構 (Monorepo 推薦)
-建議使用 Monorepo 結構（npm workspaces 或 Turborepo），方便前後端共用型別定義。
+前端 (Frontend) - apps/frontend
+Framework: React (Vite)
 
-root/
-├── packages/
-│   ├── shared/           # 前後端共用的型別 (DTOs, Enums)
-│   │   ├── src/
-│   │   │   ├── types/
-│   │   │   └── constants.ts
-│   │   └── package.json
+Styling: Tailwind CSS
+
+State Management: Zustand (useCartStore, authStore)
+
+HTTP Client: Axios
+
+Routing: React Router DOM
+
+後端 (Backend) - apps/backend
+Runtime: Node.js
+
+Framework: Express.js
+
+Database ORM: Prisma
+
+Database: PostgreSQL
+
+Payment: LinePay API Integration
+
+Authentication: JWT (JSON Web Tokens)
+
+✨ 功能特色 (Features)
+👤 使用者功能
+會員系統：註冊、登入 (JWT)、Email 驗證、忘記密碼。
+
+商品瀏覽：商品列表、分類篩選、關鍵字搜尋。
+
+購物車：新增商品、調整數量、移除商品。
+
+結帳流程：訂單建立、整合 LinePay 線上付款。
+
+個人中心：查看個人資料、歷史訂單狀態。
+
+🛡️ 管理員後台 (Admin Dashboard)
+商品管理：新增、修改、刪除 (Soft Delete) 商品，上傳圖片。
+
+分類管理：管理商品分類。
+
+訂單管理：查看所有訂單、更新訂單狀態 (Pending, Paid, Shipped, etc.)。
+
+使用者管理：查看會員列表、管理權限。
+
+🚀 快速開始 (Getting Started)
+前置需求
+Node.js (v18+)
+
+PostgreSQL Database
+
+1. 安裝依賴
+在專案根目錄執行：
+
+Bash
+
+npm install
+2. 環境變數設定 (.env)
+請在 apps/backend 目錄下建立 .env 檔案，並填入以下內容：
+
+程式碼片段
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Database (PostgreSQL)
+DATABASE_URL="postgresql://user:password@localhost:5432/shopping_db?schema=public"
+
+# JWT Authentication
+JWT_SECRET="your_super_secret_key"
+
+# Frontend URL (For CORS & Redirects)
+FRONTEND_URL="http://localhost:5173"
+
+# LinePay Configuration
+LINE_PAY_CHANNEL_ID="your_channel_id"
+LINE_PAY_CHANNEL_SECRET="your_channel_secret"
+LINE_PAY_VERSION="v3"
+LINE_PAY_SITE_URL="https://sandbox-api-pay.line.me"
+
+# Email Service (Nodemailer - Gmail example)
+NODEMAILER_USER="your_email@gmail.com"
+NODEMAILER_PASS="your_app_password"
+3. 資料庫初始化 (Prisma)
+進入後端目錄並執行遷移與種子資料填充：
+
+Bash
+
+cd apps/backend
+
+# 執行資料庫遷移
+npx prisma migrate dev
+
+# 填充初始資料 (Seed)
+npx prisma db seed
+注意：seed.ts 會建立預設的管理員帳號與測試商品。
+
+4. 啟動開發伺服器
+建議開啟兩個終端機視窗分別啟動前後端：
+
+Terminal 1 (Backend):
+
+Bash
+
+cd apps/backend
+npm run dev
+# 伺服器將運行於 http://localhost:3000
+Terminal 2 (Frontend):
+
+Bash
+
+cd apps/frontend
+npm run dev
+# 前端將運行於 http://localhost:5173
+📂 專案結構 (Project Structure)
+Plaintext
+
+.
+├── apps
+│   ├── backend         # Express 伺服器、API 邏輯、Prisma Schema
+│   │   ├── prisma      # 資料庫模型與遷移檔
+│   │   └── src
+│   │       ├── controllers  # 處理請求邏輯
+│   │       ├── services     # 業務邏輯層
+│   │       ├── routes       # API 路由定義
+│   │       └── utils        # 工具函式 (LinePay, Prisma client)
+│   │
+│   └── frontend        # React 應用程式
+│       ├── src
+│       │   ├── api          # Axios 設定與 API 呼叫
+│       │   ├── components   # UI 元件
+│       │   ├── pages        # 頁面路由
+│       │   └── store        # Zustand 狀態管理
 │
-├── apps/
-│   ├── backend/          # Express Server
-│   │   ├── src/
-│   │   │   ├── config/   # DB連線, Env變數
-│   │   │   ├── controllers/ # 處理 Request/Response
-│   │   │   ├── services/    # 商業邏輯 (計算價格, 檢查庫存)
-│   │   │   ├── repositories/# 資料庫操作 (SQL/ORM)
-│   │   │   ├── middlewares/ # Auth, Error Handling
-│   │   │   ├── routes/      # API路徑定義
-│   │   │   ├── utils/       # 工具函式
-│   │   │   └── app.ts
-│   │   └── package.json
-│
-│   ├── frontend/         # Vite App
-│   │   ├── src/
-│   │   │   ├── api/      # Axios/Fetch 封裝
-│   │   │   ├── components/# UI 元件 (Button, Input)
-│   │   │   ├── features/ # 按功能分類 (Auth, Product, Cart)
-│   │   │   │   ├── ProductList/
-│   │   │   │   ├── ProductDetail/
-│   │   │   │   └── hooks/
-│   │   │   ├── layouts/  # 頁面佈局
-│   │   │   ├── pages/    # 路由頁面
-│   │   │   ├── store/    # Global State (Zustand)
-│   │   │   └── utils/
-│   │   └── package.json
-│
-├── package.json
-└── tsconfig.json
+└── packages
+    └── shared          # 前後端共用的 TypeScript Types
+⚠️ 部署注意事項 (Deployment)
+API 路徑：前端透過 Proxy (vite.config.ts) 將 /api 請求轉發至後端。在生產環境中，請確保 Nginx 或伺服器配置正確的反向代理。
 
----
+CORS：生產環境請在 apps/backend/src/app.ts 中嚴格設定 cors 的 origin，避免開放所有來源。
 
-## 3. 後端架構詳解 (Express + MySQL)
+Security：不要將 .env 檔案提交到版本控制系統。
 
-### A. 技術選型
-- **ORM**：Prisma 或 Drizzle ORM  
-- **驗證**：Zod  
-
-### B. 分層邏輯
-- **Routes**：定義路徑與 HTTP Method。  
-- **Controllers**：解析 `req.body`，使用 Zod 驗證，呼叫 Service，回傳 JSON。  
-- **Services**：處理商業邏輯（結帳、庫存檢查、扣款、產生訂單號碼）。  
-- **Repositories (DAO)**：專注於資料庫 CRUD。  
-
-### C. 範例流程（下訂單）
-1. **Controller**：接收 `{ productId, quantity }`，驗證數量。  
-2. **Service**：開啟 Transaction → 檢查庫存 → 扣除庫存 → 建立訂單 → Commit。  
-3. **Repository**：執行 `INSERT INTO orders ...`  
-
----
-
-## 4. 前端架構詳解 (Vite + React)
-
-### A. 功能驅動目錄 (Feature-based)
-- `src/features/product/` → 商品卡片、商品列表邏輯  
-- `src/features/cart/` → 購物車下拉選單、結帳邏輯  
-- `src/features/auth/` → 登入/註冊表單  
-
-### B. 狀態管理策略
-- **Server State**：商品列表、訂單記錄 → 使用 React Query  
-- **Client State**：UI 狀態、購物車暫存 → 使用 Zustand/Context API  
-
-### C. API 封裝
-- 建立 `apiClient`，使用 Axios Interceptors 處理 JWT Token 與刷新機制。  
-
----
-
-## 5. 資料庫設計重點 (MySQL)
-
-### A. 正規化
-- `users`  
-- `products`  
-- `orders`（訂單主檔：總金額、狀態、收件資訊）  
-- `order_items`（訂單明細：記錄當下購買價格 `price_at_purchase`）  
-
-### B. 索引
-- `product_name` → Full-text index  
-- `category_id`, `user_id` → index  
-
-### C. 併發控制
-- **超賣問題**：同時購買最後一個商品  
-- **解法**：Optimistic Locking 或 SQL 條件更新：  
-  ```sql
-  UPDATE products SET stock = stock - 1 WHERE id = ? AND stock > 0;
-## 6. 安全性與效能優化
-
-### 圖片處理
-- 不要將用戶上傳的圖片存在 Express 的 `public` 資料夾，這樣無法擴展。  
-- 建議使用 **AWS S3**、**Cloudinary** 或 **Firebase Storage** 儲存圖片，資料庫只存 URL。  
-
-### 金流整合
-- 串接 **綠界 (ECPay)**、**LinePay** 或 **Stripe**。  
-
-### Webhook
-- 後端必須處理金流回傳的 Webhook。  
-- 當金流方扣款成功回傳時，後端要驗證簽章並更新訂單狀態。  
-
-### JWT Authentication
-- 使用 **Access Token (短效期)** + **Refresh Token (長效期, HttpOnly Cookie)** 的機制。  
-
----
-
-## 7. 建議的重構步驟
-
-1. **環境建置**  
-   - 設定 Monorepo，安裝 TypeScript、Express、Vite。  
-
-2. **DB Schema 設計**  
-   - 使用 Prisma 定義 Schema 並遷移到 MySQL。  
-
-3. **後端基礎建設**  
-   - 設定 Express、Error Handler、Logger (如 Winston/Morgan)。  
-
-4. **開發核心 API**  
-   - User Auth (Register/Login)  
-   - Product CRUD  
-
-5. **前端基礎建設**  
-   - 設定 Router、Axios 封裝、React Query。  
-
-6. **串接首頁與商品頁**  
-   - 確保讀取資料流暢。  
-
-7. **開發購物車 (Cart)**  
-   - 這是邏輯最複雜的地方 (前端 LocalStorage 同步 vs 後端 DB 同步)。  
-
-8. **訂單與結帳**  
-   - 實作 Transaction 與庫存扣減。  
-
-9. **部署 (DevOps)**  
-   - 使用 Docker 容器化，部署到 Railway / AWS / Render。  
+📝 License
+This project is licensed under the MIT License.

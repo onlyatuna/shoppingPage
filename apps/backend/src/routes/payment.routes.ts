@@ -9,8 +9,8 @@ const router = Router();
 // 1. 發起付款 (需登入)
 router.post('/line-pay/request', authenticateToken, PaymentController.requestLinePay);
 
-// 2. 確認付款 (不可有 Auth，因為是 LINE Pay 導回來的)
-router.post('/line-pay/confirm', PaymentController.confirmLinePay);
+// 2. 確認付款 (需登入，驗證訂單所有權)
+router.post('/line-pay/confirm', authenticateToken, PaymentController.confirmLinePay);
 
 // 3. 查詢交易狀態 (輪詢用，需登入)
 router.get('/line-pay/requests/:transactionId/check', authenticateToken, PaymentController.checkLinePayStatus);

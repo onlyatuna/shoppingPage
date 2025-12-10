@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export class AuthService {
-    
+
     // --- 註冊 (設定 24小時過期) ---
     static async register(data: z.infer<typeof registerSchema>) {
         const existingUser = await prisma.user.findUnique({
@@ -18,7 +18,7 @@ export class AuthService {
 
         const hashedPassword = await bcrypt.hash(data.password, 10);
         const verificationToken = crypto.randomBytes(32).toString('hex');
-        
+
         // [新增] 設定過期時間為 24 小時後
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 24);
@@ -64,7 +64,7 @@ export class AuthService {
             data: {
                 isVerified: true,
                 verificationToken: null,
-                verificationTokenExpiresAt: null, 
+                verificationTokenExpiresAt: null,
             },
         });
 
@@ -75,7 +75,7 @@ export class AuthService {
     // 如果連結過期，使用者需要一個 API 來重新取得新連結
     static async resendVerification(email: string) {
         const user = await prisma.user.findUnique({ where: { email } });
-        
+
         if (!user) throw new Error('找不到此信箱');
         if (user.isVerified) throw new Error('此帳號已驗證，請直接登入');
 
@@ -96,7 +96,7 @@ export class AuthService {
 
         return { message: '驗證信已重新發送，請檢查信箱' };
     }
-    
+
     // --- 登入 ---
     static async login(data: z.infer<typeof loginSchema>) {
         const user = await prisma.user.findUnique({
@@ -113,7 +113,12 @@ export class AuthService {
         const token = jwt.sign(
             { userId: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET!,
-            { expiresIn: '7d' }
+            {
+                expiresIn: '7d',
+                algorithm: 'HS256',  // 明確指定演算法，防止演算法混淆攻擊
+                issuer: 'shopping-mall-api',  // 發行者標識
+                audience: 'shopping-mall-client'  // 受眾標識
+            }
         );
 
         return {

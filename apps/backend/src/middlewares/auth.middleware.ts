@@ -3,6 +3,10 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    throw new Error('JWT_SECRET must be at least 32 characters');
+}
+
 // ------------------------------------------------------------------
 // 1. TypeScript 型別擴充 (Type Declaration)
 // ------------------------------------------------------------------
@@ -39,7 +43,11 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     }
 
     // 情況 B: 驗證 Token 合法性
-    jwt.verify(token, process.env.JWT_SECRET as string, (err: any, decoded: any) => {
+    jwt.verify(token, process.env.JWT_SECRET as string, {
+        algorithms: ['HS256'],  // 只接受 HS256 演算法
+        issuer: 'shopping-mall-api',  // 驗證發行者
+        audience: 'shopping-mall-client'  // 驗證受眾
+    }, (err: any, decoded: any) => {
         if (err) {
             // Token 過期或被竄改
             return res.status(StatusCodes.FORBIDDEN).json({

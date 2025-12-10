@@ -1,6 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { linePayClient } from '../utils/linePay';
-import Decimal from 'decimal.js'; 
+import Decimal from 'decimal.js';
 
 export class PaymentService {
 
@@ -32,12 +32,12 @@ export class PaymentService {
         // 2. 建構 Products 列表 (安全性清洗與型別修正)
         const linePayProducts = order.items.map(item => {
             const safePrice = new Decimal(item.price.toString()).round().toNumber();
-            
+
             // [修正] 從 Prisma JSON 欄位安全提取第一張圖片
             let productImageUrl = '';
             if (Array.isArray(item.product.images) && item.product.images.length > 0) {
                 // 強制轉型為 string，避免 TypeScript 報錯
-                productImageUrl = String(item.product.images[0]); 
+                productImageUrl = String(item.product.images[0]);
             }
 
             return {
@@ -106,9 +106,14 @@ export class PaymentService {
     }
 
     // --- 步驟 2: 確認付款 (Confirm) ---
-    static async confirmLinePay(orderId: string, transactionId: string) {
+    static async confirmLinePay(orderId: string, transactionId: string, userId?: number) {
         const order = await prisma.order.findUnique({ where: { id: orderId } });
         if (!order) throw new Error('訂單不存在');
+
+        // 驗證訂單所有權（如果提供了 userId）
+        if (userId !== undefined && order.userId !== userId) {
+            throw new Error('無權操作此訂單');
+        }
 
         // [開發環境容錯]
         if (order.paymentId && order.paymentId !== transactionId) {
@@ -237,7 +242,7 @@ export class PaymentService {
         // 1. 驗證訂單
         const order = await prisma.order.findUnique({ where: { id: orderId } });
         if (!order || !order.paymentId) throw new Error('訂單不存在或無交易編號');
-        
+
         // 只有已付款的訂單才能退款
         if (order.status !== 'PAID') {
             throw new Error(`無法退款：訂單狀態為 ${order.status}`);
@@ -245,8 +250,8 @@ export class PaymentService {
 
         // 2. 處理金額 (Decimal.js)
         // 如果沒傳 refundAmount，預設為全額退款
-        const amount = refundAmount 
-            ? new Decimal(refundAmount).toNumber() 
+        const amount = refundAmount
+            ? new Decimal(refundAmount).toNumber()
             : undefined; // undefined 代表全額退款
 
         // 防呆：退款金額不可大於訂單總額
@@ -257,13 +262,13 @@ export class PaymentService {
         try {
             // POST /v3/payments/{transactionId}/refund
             const res = await linePayClient.post(`/v3/payments/${order.paymentId}/refund`, {
-                refundAmount: amount 
+                refundAmount: amount
             });
 
             if (res.data.returnCode !== '0000') {
                 // 1198: Request is already refunded (重複退款視為成功)
                 if (res.data.returnCode === '1198') {
-                     console.log(`⚠️ Order ${orderId} already refunded (1198).`);
+                    console.log(`⚠️ Order ${orderId} already refunded (1198).`);
                 } else {
                     throw new Error(`Refund Failed: ${res.data.returnMessage}`);
                 }
@@ -271,8 +276,8 @@ export class PaymentService {
 
             // 3. 更新 DB 狀態
             // 若是全額退款，狀態改為 REFUNDED；部分退款則視業務邏輯而定 (這裡示範全額)
-            const newStatus = (!amount || amount === new Decimal(order.totalAmount.toString()).toNumber()) 
-                ? 'REFUNDED' 
+            const newStatus = (!amount || amount === new Decimal(order.totalAmount.toString()).toNumber())
+                ? 'REFUNDED'
                 : 'PARTIALLY_REFUNDED'; // 需確認您的 Enum 是否支援此狀態
 
             await prisma.order.update({
@@ -306,7 +311,7 @@ export class PaymentService {
             const res = await linePayClient.post(`/v3/payments/authorizations/${order.paymentId}/void`, {});
 
             if (res.data.returnCode !== '0000') {
-                 throw new Error(`Void Failed: ${res.data.returnMessage}`);
+                throw new Error(`Void Failed: ${res.data.returnMessage}`);
             }
 
             // 更新狀態為 CANCELLED

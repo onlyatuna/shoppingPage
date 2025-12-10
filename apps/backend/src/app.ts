@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import morgan from 'morgan';
 import { prisma } from './utils/prisma';
+import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import productRoutes from './routes/product.routes';
@@ -20,8 +21,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());      // 解析 JSON Request Body
 app.use(cookieParser());
@@ -63,6 +66,9 @@ app.use(`${apiV1Prefix}/categories`, categoryRoutes);
 app.use(`${apiV1Prefix}/upload`, uploadRoutes);
 app.use(`${apiV1Prefix}/users`, userRoutes);
 app.use(`${apiV1Prefix}/payment`, paymentRoutes);
+
+// 全域錯誤處理器（必須放在所有路由之後）
+app.use(errorHandler);
 
 // 2. [新增] 部署設定：託管前端靜態檔案
 // 注意：我們假設 Docker 會把前端 build 好的 dist 複製到後端同一層級的 client/dist

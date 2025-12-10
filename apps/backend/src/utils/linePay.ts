@@ -49,12 +49,14 @@ linePayClient.interceptors.request.use((config) => {
 
     const signature = createLinePaySignature(uri, bodyStr, nonce);
 
-    // Debug Log
-    console.log(`📡 [LINE Pay] ${config.method?.toUpperCase()} ${uri}`);
-    console.log(`   Body: '${bodyStr}'`);
-    console.log(`   Nonce: ${nonce}`);
-    console.log(`   Signature Base: ${channelSecret}${uri}${bodyStr}${nonce}`);
-    console.log(`   Signature: ${signature}`);
+    // Debug Log - 只在開發環境顯示，且不洩露敏感資訊
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`📡 [LINE Pay] ${config.method?.toUpperCase()} ${uri}`);
+        console.log(`   Body: '${bodyStr}'`);
+        console.log(`   Nonce: ${nonce}`);
+        // ❌ 不要記錄包含 channelSecret 的 Signature Base
+        // console.log(`   Signature Base: ${channelSecret}${uri}${bodyStr}${nonce}`);
+    }
 
     config.headers['X-LINE-ChannelId'] = channelId;
     config.headers['X-LINE-Authorization-Nonce'] = nonce;
