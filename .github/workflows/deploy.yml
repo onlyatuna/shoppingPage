@@ -3,16 +3,15 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 env:
-  # 設定 Docker Image 名稱 (指向 GitHub Container Registry)
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # ⚠️ 這裡直接寫死全小寫，避免 ${{ github.repository }} 帶入大寫導致報錯
+  IMAGE_TAG: ghcr.io/onlyatuna/shoppingpage:latest
 
 jobs:
-  build-and-deploy:
+  # --- Job 1: 建置並推送 Docker Image ---
+  build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -21,8 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 👇 [修正 1] 新增這一步：啟用 Docker Buildx
-      # 這能解決 "Cache export is not supported" 的錯誤
+      # [修正 1] 啟用 Docker Buildx (解決 Cache export 錯誤)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -33,81 +31,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 👇 [修正 2] 強制使用全小寫名稱
-      # 原本的 ${{ env.IMAGE_NAME }} 含有大寫，這裡直接寫死小寫名稱最保險
+      # [修正 2] 使用全小寫名稱推送到 GHCR
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          # 請確認這裡是全小寫
-          tags: ghcr.io/onlyatuna/shoppingpage:latest
+          tags: ${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          # 👇 [修正 3] 部署腳本中的 Image 名稱也要改成小寫
-          script: |
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            # 拉取小寫名稱
-            docker pull ghcr.io/onlyatuna/shoppingpage:latest
-            
-            mkdir -p ~/shop-app
-            cd ~/shop-app || exit 1
-            
-            # ... (.env 產生的部分保持不變) ...
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
-            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-            echo "LINE_PAY_CHANNEL_ID=${{ secrets.LINE_PAY_CHANNEL_ID }}" >> .env
-            echo "LINE_PAY_CHANNEL_SECRET=${{ secrets.LINE_PAY_CHANNEL_SECRET }}" >> .env
-            echo "SMTP_HOST=${{ secrets.SMTP_HOST }}" >> .env
-            echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
-            echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
-            echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
-            echo "NODE_ENV=production" >> .env
-
-            docker compose down
-            docker compose up -d
-            docker image prune -f
-  # --- Job 2: 建置並推送 Docker Image ---
-  build-and-push:
-    needs: check-code
-    if: github.event_name == 'push' # 只在 merge 到 main 時執行
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # 建置 Backend Image (包含 Frontend build，因為是 Monorepo)
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          # 使用 Cache 加速建置
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # --- Job 3: 部署到 EC2 ---
+  # --- Job 2: 部署到 EC2 ---
   deploy:
-    needs: build-and-push
+    needs: build-and-push  # 確保 Build 成功才執行
     runs-on: ubuntu-latest
     
     steps:
@@ -117,34 +53,36 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          # [修正 3] 部署腳本確保引用正確的小寫 Image 名稱
           script: |
-            # 1. 登入 GHCR (讓 EC2 有權限拉 Image)
+            # 1. 登入 GHCR
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # 2. 拉取最新 Image
-            docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest
+            # 2. 拉取最新 Image (小寫)
+            docker pull ghcr.io/onlyatuna/shoppingpage:latest
             
-            # 3. 確保專案目錄存在
+            # 3. 進入專案目錄
             mkdir -p ~/shop-app
-            cd ~/shop-app
+            cd ~/shop-app || exit 1
             
-            # 4. 建立/更新 .env 檔案 (從 GitHub Secrets 注入)
+            # 4. 產生 .env (注入所有必要變數)
             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             echo "LINE_PAY_CHANNEL_ID=${{ secrets.LINE_PAY_CHANNEL_ID }}" >> .env
             echo "LINE_PAY_CHANNEL_SECRET=${{ secrets.LINE_PAY_CHANNEL_SECRET }}" >> .env
+            echo "SMTP_HOST=${{ secrets.SMTP_HOST }}" >> .env
             echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
             echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
+            echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
             echo "NODE_ENV=production" >> .env
-            # ...加入其他需要的變數
             
             # 5. 重啟服務
-            # 注意：這裡假設您的 docker-compose.yml 已經在伺服器上，或者您可以在這裡用 echo 寫入它
             docker compose down
             docker compose up -d
             
-            # 6. 執行 Prisma Migration (確保 DB 結構最新)
-            docker compose exec -T backend npx prisma migrate deploy
+            # 6. 執行資料庫遷移 (確保新功能生效)
+            # 注意：需等待 Container 啟動，若失敗可加 sleep 10
+            docker compose exec -T app npx prisma migrate deploy
             
-            # 7. 清理舊 Image (釋放空間)
+            # 7. 清理舊 Image
             docker image prune -f
