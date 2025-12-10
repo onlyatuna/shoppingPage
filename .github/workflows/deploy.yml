@@ -1,0 +1,112 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  # 設定 Docker Image 名稱 (指向 GitHub Container Registry)
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # --- Job 1: 程式碼檢查 (CI) ---
+  check-code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        working-directory: apps/backend
+
+      - name: Type Check (TypeScript)
+        run: |
+          npm run type-check --if-present
+          # 如果沒有定義 type-check script，可以直接跑 tsc
+          # npx tsc --noEmit
+
+  # --- Job 2: 建置並推送 Docker Image ---
+  build-and-push:
+    needs: check-code
+    if: github.event_name == 'push' # 只在 merge 到 main 時執行
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 建置 Backend Image (包含 Frontend build，因為是 Monorepo)
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          # 使用 Cache 加速建置
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # --- Job 3: 部署到 EC2 ---
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 1. 登入 GHCR (讓 EC2 有權限拉 Image)
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # 2. 拉取最新 Image
+            docker pull ghcr.io/${{ env.IMAGE_NAME }}:latest
+            
+            # 3. 確保專案目錄存在
+            mkdir -p ~/shop-app
+            cd ~/shop-app
+            
+            # 4. 建立/更新 .env 檔案 (從 GitHub Secrets 注入)
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "LINE_PAY_CHANNEL_ID=${{ secrets.LINE_PAY_CHANNEL_ID }}" >> .env
+            echo "LINE_PAY_CHANNEL_SECRET=${{ secrets.LINE_PAY_CHANNEL_SECRET }}" >> .env
+            echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
+            echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
+            echo "NODE_ENV=production" >> .env
+            # ...加入其他需要的變數
+            
+            # 5. 重啟服務
+            # 注意：這裡假設您的 docker-compose.yml 已經在伺服器上，或者您可以在這裡用 echo 寫入它
+            docker compose down
+            docker compose up -d
+            
+            # 6. 執行 Prisma Migration (確保 DB 結構最新)
+            docker compose exec -T backend npx prisma migrate deploy
+            
+            # 7. 清理舊 Image (釋放空間)
+            docker image prune -f
