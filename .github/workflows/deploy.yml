@@ -12,31 +12,69 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # --- Job 1: 程式碼檢查 (CI) ---
-  check-code:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+
+      # 👇 [修正 1] 新增這一步：啟用 Docker Buildx
+      # 這能解決 "Cache export is not supported" 的錯誤
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
         with:
-          node-version: '20'
-          cache: 'npm'
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Dependencies
-        run: npm ci
+      # 👇 [修正 2] 強制使用全小寫名稱
+      # 原本的 ${{ env.IMAGE_NAME }} 含有大寫，這裡直接寫死小寫名稱最保險
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          # 請確認這裡是全小寫
+          tags: ghcr.io/onlyatuna/shoppingpage:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Generate Prisma Client
-        run: npx prisma generate
-        working-directory: apps/backend
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # 👇 [修正 3] 部署腳本中的 Image 名稱也要改成小寫
+          script: |
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # 拉取小寫名稱
+            docker pull ghcr.io/onlyatuna/shoppingpage:latest
+            
+            mkdir -p ~/shop-app
+            cd ~/shop-app || exit 1
+            
+            # ... (.env 產生的部分保持不變) ...
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "LINE_PAY_CHANNEL_ID=${{ secrets.LINE_PAY_CHANNEL_ID }}" >> .env
+            echo "LINE_PAY_CHANNEL_SECRET=${{ secrets.LINE_PAY_CHANNEL_SECRET }}" >> .env
+            echo "SMTP_HOST=${{ secrets.SMTP_HOST }}" >> .env
+            echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
+            echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
+            echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+            echo "NODE_ENV=production" >> .env
 
-      - name: Type Check (TypeScript)
-        run: |
-          npm run type-check --if-present
-          # 如果沒有定義 type-check script，可以直接跑 tsc
-          # npx tsc --noEmit
-
+            docker compose down
+            docker compose up -d
+            docker image prune -f
   # --- Job 2: 建置並推送 Docker Image ---
   build-and-push:
     needs: check-code

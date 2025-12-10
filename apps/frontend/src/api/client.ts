@@ -1,5 +1,6 @@
 //client.ts
 import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 const apiClient = axios.create({
     // 開發環境(dev)維持 '/api/v1' (透過 Vite Proxy)
@@ -22,9 +23,10 @@ apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Token 過期或無效，清除前端狀態 (需配合 authStore 使用，這裡先不處理 store)
-            // 可以選擇強制重新整理或導向登入頁
-            // window.location.href = '/login'; 
+            // Token 過期或無效，清除前端狀態並導向登入頁
+            const { logout } = useAuthStore.getState();
+            logout();
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }
