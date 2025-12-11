@@ -43,32 +43,46 @@ jobs:
 
   # --- Job 2: 部署到 EC2 ---
   deploy:
-    needs: build-and-push  # 確保 Build 成功才執行
+    needs: build-and-push
     runs-on: ubuntu-latest
-
     
     steps:
+      - uses: actions/checkout@v4
+
+      # 👇 [新增步驟] 將 docker-compose.yml 複製到伺服器
+      - name: Copy docker-compose file to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "~/shop-app/"
+
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # 👇 [修正] 移除了 cache-from/to (這些是無效參數)
+          # 這裡只保留超時設定
+          timeout: 60s
           command_timeout: 30m
+          
           script: |
             # 1. 登入 GHCR
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # 2. 拉取最新 Image (小寫)
+            # 2. 拉取最新 Image
             docker pull ghcr.io/onlyatuna/shoppingpage:latest
             
-            # 3. 進入專案目錄
-            mkdir -p ~/shop-app
+            # 3. 進入目錄
             cd ~/shop-app || exit 1
             
-            # 4. 產生 .env (注入所有必要變數)
+            #此時目錄下應該已經有 scp 過來的 docker-compose.yml 了
+            
+            # 4. 產生 .env (保持不變)
             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             echo "LINE_PAY_CHANNEL_ID=${{ secrets.LINE_PAY_CHANNEL_ID }}" >> .env
@@ -78,10 +92,10 @@ jobs:
             echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
             echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
             echo "NODE_ENV=production" >> .env
-            
-            # 5. 重啟服務
+
+            # 5. 重啟服務 (現在找得到設定檔，不會報錯了)
             docker compose up -d --force-recreate
-            
-            # 6. 執行資料庫遷移 (確保新功能生效)
-            # 注意：需等待 Container 啟動，若失敗可加 sleep 10
+
+            # 6. 資料庫遷移
+            sleep 10
             docker compose exec -T app npx prisma migrate deploy
