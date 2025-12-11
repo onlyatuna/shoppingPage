@@ -98,4 +98,5 @@ jobs:
 
             # 6. 資料庫遷移
             sleep 10
-            docker compose exec -T app npx prisma migrate deploy
+            sleep 10
+            docker compose exec -T app npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma
