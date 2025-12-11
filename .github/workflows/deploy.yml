@@ -54,6 +54,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           command_timeout: 30m
           script: |
             # 1. 登入 GHCR
@@ -78,12 +80,8 @@ jobs:
             echo "NODE_ENV=production" >> .env
             
             # 5. 重啟服務
-            docker compose down
             docker compose up -d --force-recreate
             
             # 6. 執行資料庫遷移 (確保新功能生效)
             # 注意：需等待 Container 啟動，若失敗可加 sleep 10
             docker compose exec -T app npx prisma migrate deploy
-            
-            # 7. 清理舊 Image
-            docker image prune -f
