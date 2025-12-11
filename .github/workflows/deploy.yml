@@ -43,8 +43,14 @@ jobs:
 
   # --- Job 2: 部署到 EC2 ---
   deploy:
+    resources:
+      limits:
+        cpus: '0.80'        # 限制只用 80% CPU
+        memory: 600M        # 限制只用 600MB RAM (保留空間給系統)
+  
     needs: build-and-push  # 確保 Build 成功才執行
     runs-on: ubuntu-latest
+
     
     steps:
       - name: Deploy to EC2 via SSH
@@ -53,7 +59,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          command_timeout: 30m 
+          command_timeout: 30m
           script: |
             # 1. 登入 GHCR
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
