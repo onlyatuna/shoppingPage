@@ -1,5 +1,4 @@
 node_modules
-docker-compose.yml
 apps/*/node_modules
 packages/*/node_modules
 dist

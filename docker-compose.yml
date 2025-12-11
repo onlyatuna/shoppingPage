@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    container_name: shopping-app
+    restart: always
+    ports:
+      - "80:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=mysql://root:Qq940628@localhost:3306/shop_db
+      - JWT_SECRET=ilovejessicayangjfiwj489ru932jfoiasjof928u3r92
+      - CLOUDINARY_CLOUD_NAME=dawgqidgb
+      - CLOUDINARY_API_KEY=129795273391246
+      - CLOUDINARY_API_SECRET=NTZf8Wz8sm1_lw-rrUeBNsoHbv8
+    depends_on:
+      - db
+
+  deploy:
+      resources:
+        limits:
+          cpus: '0.80'        # 限制只用 80% CPU
+          memory: 600M        # 限制只用 600MB RAM (保留空間給系統)
+
+  db:
+    image: mysql:8.0
+    container_name: shopping-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Qq940628
+      MYSQL_DATABASE: shop_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
