@@ -16,11 +16,11 @@ services:
     depends_on:
       - db
 
-  deploy:
-      resources:
-        limits:
-          cpus: '0.80'        # 限制只用 80% CPU
-          memory: 600M        # 限制只用 600MB RAM (保留空間給系統)
+    deploy:
+        resources:
+          limits:
+            cpus: '0.80'        # 限制只用 80% CPU
+            memory: 600M        # 限制只用 600MB RAM (保留空間給系統)
 
   db:
     image: mysql:8.0
