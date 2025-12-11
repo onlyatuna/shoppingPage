@@ -1,36 +1,48 @@
+version: '3.8'
+
 services:
   app:
-    build: .
+    # 1. [修正] 改用 GHCR Image (全小寫)
+    # 讓 EC2 直接下載編譯好的檔案，不要自己 Build
+    image: ghcr.io/onlyatuna/shoppingpage:latest
     container_name: shopping-app
     restart: always
+    
+    # 2. [設定] 連接埠
+    # 您原本寫 80:3000，如果您沒有用 Caddy/Nginx，這樣可以直接用 IP 訪問
+    # 如果有用 Caddy，建議改回 3000:3000
     ports:
       - "80:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - DATABASE_URL=mysql://root:Qq940628@localhost:3306/shop_db
-      - JWT_SECRET=ilovejessicayangjfiwj489ru932jfoiasjof928u3r92
-      - CLOUDINARY_CLOUD_NAME=dawgqidgb
-      - CLOUDINARY_API_KEY=129795273391246
-      - CLOUDINARY_API_SECRET=NTZf8Wz8sm1_lw-rrUeBNsoHbv8
+
+    # 3. [修正] 讀取 CI/CD 生成的 .env 檔案
+    # 這樣就不用把密碼寫死在這裡，而且能讀到最新的 GitHub Secrets
+    env_file:
+      - .env
+      
     depends_on:
       - db
 
+    # 4. [保留] 資源限制 (做得好！這能防止當機)
     deploy:
-        resources:
-          limits:
-            cpus: '0.80'        # 限制只用 80% CPU
-            memory: 600M        # 限制只用 600MB RAM (保留空間給系統)
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 600M
 
   db:
     image: mysql:8.0
     container_name: shopping-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: Qq940628
+      # 5. [修正] 密碼改用變數 (會自動讀取 .env 中的 DATABASE_PASSWORD)
+      # 為了相容您原本的 .env 生成腳本，我們稍後需確認 .env 有沒有這個變數
+      # 如果沒有，暫時寫死也可以，但建議用變數
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD:-Qq940628}
       MYSQL_DATABASE: shop_db
     volumes:
       - mysql_data:/var/lib/mysql
+      # 加入這個設定以優化 MySQL 記憶體使用 (對小機器很重要)
+    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=256M
 
 volumes:
   mysql_data:
