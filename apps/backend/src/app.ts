@@ -1,4 +1,4 @@
-//app.ts
+// apps/backend/src/app.ts
 import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -16,67 +16,73 @@ import uploadRoutes from './routes/upload.routes';
 import paymentRoutes from './routes/payment.routes';
 import path from 'path';
 
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// [修正 1] 信任 Proxy (Caddy)
+// 必須設定，否則在 HTTPS 環境下，Secure Cookie 會寫入失敗
+app.set('trust proxy', 1);
+
 // Middlewares
-// Helmet 安全標頭（必須在 CORS 之前）
+// [修正 2] Helmet 安全標頭設定更新
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             scriptSrc: ["'self'"],
-            imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-            connectSrc: ["'self'"],
+            // 加入 images.unsplash.com 以解決圖片被擋的問題
+            imgSrc: [
+                "'self'",
+                "data:",
+                "https://res.cloudinary.com",
+                "https://images.unsplash.com"
+            ],
+            // 加入 LINE Pay API (雖然主要是後端打，但若有前端 SDK 需加這行)
+            connectSrc: [
+                "'self'",
+                "https://api.line.me",
+                "https://sandbox-api-pay.line.me"
+            ],
             fontSrc: ["'self'"],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
             frameSrc: ["'none'"],
         }
     },
-    crossOriginEmbedderPolicy: false, // 避免影響 Cloudinary
+    // 允許跨域資源載入 (避免 Cloudinary 圖片被擋)
+    crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    credentials: true,
+    credentials: true, // 允許帶 Cookie
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json());      // 解析 JSON Request Body
-app.use(cookieParser());
-app.use(morgan('dev'));       // 記錄 HTTP Log
 
-// 測試路由 1: Health Check
+app.use(express.json());
+app.use(cookieParser()); // 解析 Cookie
+app.use(morgan('dev'));
+
+// 測試路由
 app.get('/api/health', (req: Request, res: Response) => {
     res.send('✅ Shopping Mall API is Running!');
 });
 
-// 測試路由 2: 測試資料庫連線
 app.get('/api/test-db', async (req: Request, res: Response) => {
     try {
-        // 嘗試讀取使用者數量
         const userCount = await prisma.user.count();
-        res.json({
-            status: 'success',
-            message: 'Database connected successfully',
-            userCount
-        });
+        res.json({ status: 'success', message: 'Database connected', userCount });
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            status: 'error',
-            message: 'Database connection failed'
-        });
+        res.status(500).json({ status: 'error', message: 'Database connection failed' });
     }
 });
 
 // Routes
 const apiV1Prefix = '/api/v1';
 
-// 掛載 Auth 路由
 app.use(`${apiV1Prefix}/auth`, authRoutes);
 app.use(`${apiV1Prefix}/products`, productRoutes);
 app.use(`${apiV1Prefix}/cart`, cartRoutes);
@@ -86,26 +92,26 @@ app.use(`${apiV1Prefix}/upload`, uploadRoutes);
 app.use(`${apiV1Prefix}/users`, userRoutes);
 app.use(`${apiV1Prefix}/payment`, paymentRoutes);
 
-// 全域錯誤處理器（必須放在所有路由之後）
+// 全域錯誤處理器
 app.use(errorHandler);
 
-// 2. [新增] 部署設定：託管前端靜態檔案
-// 注意：我們假設 Docker 會把前端 build 好的 dist 複製到後端同一層級的 client/dist
+// 部署設定：託管前端靜態檔案
 if (process.env.NODE_ENV === 'production') {
-    // Dockerfile copies frontend/dist to apps/backend/public
     const frontendDist = path.join(__dirname, '../public');
 
-    // 託管靜態檔案
     app.use(express.static(frontendDist));
 
-    // 所有不符合 API 的請求，都回傳 index.html (讓 React Router 接手)
-    // 使用 middleware 而非 wildcard route，避免 path-to-regexp 語法問題
+    // SPA Fallback: 所有非 API 請求都回傳 index.html
     app.use((req, res) => {
-        res.sendFile(path.join(frontendDist, 'index.html'));
+        // 確保不是 API 請求才回傳 HTML (雖然放在最後面了，但多一層保險也好)
+        if (req.path.startsWith('/api')) {
+            res.status(404).json({ message: 'API Not Found' });
+        } else {
+            res.sendFile(path.join(frontendDist, 'index.html'));
+        }
     });
 }
 
-// 啟動伺服器
 app.listen(PORT, () => {
     console.log(`🚀 Server is running at http://localhost:${PORT}`);
 });
