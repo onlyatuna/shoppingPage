@@ -56,7 +56,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,Caddyfile"
           target: "~/shop-app/"
 
       - name: Deploy to EC2 via SSH

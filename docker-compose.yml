@@ -1,6 +1,20 @@
 version: '3.8'
 
 services:
+  # 👇 [新增] Caddy 服務 (負責 HTTPS)
+  caddy:
+    image: caddy:latest
+    container_name: shopping-caddy
+    restart: always
+    ports:
+      - "80:80"   # HTTP (自動轉 HTTPS)
+      - "443:443" # HTTPS
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile # 掛載設定檔
+      - caddy_data:/data                 # 持久化憑證
+      - caddy_config:/config
+    depends_on:
+      - app
   app:
     # 1. [修正] 改用 GHCR Image (全小寫)
     # 讓 EC2 直接下載編譯好的檔案，不要自己 Build
@@ -12,7 +26,7 @@ services:
     # 您原本寫 80:3000，如果您沒有用 Caddy/Nginx，這樣可以直接用 IP 訪問
     # 如果有用 Caddy，建議改回 3000:3000
     ports:
-      - "80:3000"
+      - "3000:3000"
 
     # 3. [修正] 讀取 CI/CD 生成的 .env 檔案
     # 這樣就不用把密碼寫死在這裡，而且能讀到最新的 GitHub Secrets
@@ -46,3 +60,5 @@ services:
 
 volumes:
   mysql_data:
+  caddy_data:   # [新增]
+  caddy_config: # [新增]

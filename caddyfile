@@ -1,0 +1,5 @@
+# 請將這裡換成您的真實網域
+evanchen316.com {
+    # 將所有流量轉發給 app 容器的 3000 port
+    reverse_proxy app:3000
+}
