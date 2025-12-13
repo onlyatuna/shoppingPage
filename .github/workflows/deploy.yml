@@ -92,6 +92,9 @@ jobs:
             echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
             echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
             echo "NODE_ENV=production" >> .env
+            echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
+            echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
+            echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
 
             # 5. 重啟服務 (現在找得到設定檔，不會報錯了)
             docker compose up -d --force-recreate
