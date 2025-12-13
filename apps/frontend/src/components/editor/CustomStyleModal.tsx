@@ -174,6 +174,7 @@ export default function CustomStyleModal({ isOpen, onClose, onSave, initialStyle
                                 const IconComponent = icon.component;
                                 return (
                                     <button
+                                        type="button"
                                         key={icon.name}
                                         onClick={() => setSelectedIcon(icon.name)}
                                         className={`p-3 rounded-lg border-2 transition-all ${selectedIcon === icon.name
@@ -196,6 +197,7 @@ export default function CustomStyleModal({ isOpen, onClose, onSave, initialStyle
                         <div className="grid grid-cols-3 gap-2">
                             {colorThemes.map((theme, index) => (
                                 <button
+                                    type="button"
                                     key={index}
                                     onClick={() => setSelectedTheme(theme)}
                                     className={`p-3 rounded-lg border-2 transition-all ${theme.color} ${selectedTheme === theme

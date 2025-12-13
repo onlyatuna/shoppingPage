@@ -44,6 +44,7 @@ export default function CopywritingAssistant({
                     AI 文案助理
                 </h3>
                 <button
+                    type="button"
                     onClick={onGenerate}
                     disabled={disabled || isGenerating}
                     className="text-xs flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
@@ -91,6 +92,7 @@ export default function CopywritingAssistant({
                             />
                             {generatedCaption && (
                                 <button
+                                    type="button"
                                     onClick={handleCopy}
                                     className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-white dark:bg-gray-700 shadow-sm hover:shadow text-gray-500 hover:text-blue-500 transition-all z-10 border border-gray-100 dark:border-gray-600"
                                     title="複製文案"
@@ -105,6 +107,7 @@ export default function CopywritingAssistant({
                 {/* Collapsible Prompt Input Section - 可折叠的文案提示输入框 */}
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                     <button
+                        type="button"
                         onClick={() => setIsPromptExpanded(!isPromptExpanded)}
                         className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
                     >

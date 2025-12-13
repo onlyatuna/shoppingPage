@@ -23,6 +23,7 @@ export default function MobileWizardNav({
 
             {onBack ? (
                 <button
+                    type="button"
                     onClick={onBack}
                     className="p-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
@@ -40,6 +41,7 @@ export default function MobileWizardNav({
             </div>
 
             <button
+                type="button"
                 onClick={onNext}
                 disabled={!canGoNext || isProcessing}
                 aria-label={step === 'edit' ? '下一步：文案' : step === 'caption' ? '下一步：發佈' : '完成'}

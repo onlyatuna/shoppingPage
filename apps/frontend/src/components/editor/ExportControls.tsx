@@ -132,6 +132,7 @@ export default function ExportControls({
             <div className="flex flex-col gap-3">
                 {/* 主按鈕：下載圖片 */}
                 <button
+                    type="button"
                     onClick={onDownload}
                     disabled={disabled}
                     className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
@@ -141,6 +142,7 @@ export default function ExportControls({
                 </button>
 
                 <button
+                    type="button"
                     onClick={onPublishProduct}
                     disabled={disabled}
                     className="w-full py-3 px-4 bg-gray-900 dark:bg-gray-700 hover:bg-black dark:hover:bg-gray-600 active:scale-[0.98] text-white rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
@@ -151,6 +153,7 @@ export default function ExportControls({
 
                 {/* 次按鈕：發佈到 IG */}
                 <button
+                    type="button"
                     onClick={handlePublish}
                     disabled={disabled || isPublishing}
                     className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 active:scale-[0.98] text-white rounded-xl font-bold shadow-lg shadow-pink-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
@@ -158,9 +161,11 @@ export default function ExportControls({
                     {isPublishing ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                        <Instagram size={18} />
+                        <>
+                            <Instagram size={18} />
+                            發佈到 Instagram
+                        </>
                     )}
-                    一鍵發佈到 IG
                 </button>
             </div>
 

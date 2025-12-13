@@ -40,8 +40,8 @@ app.use(helmet({
 
 // Add Cache-Control headers for API responses
 app.use((req, res, next) => {
-    // Default: no-cache for API endpoints to ensure fresh data
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    // Use 'no-cache' to require revalidation, avoiding deprecated directives
+    res.setHeader('Cache-Control', 'no-cache');
     next();
 });
 
