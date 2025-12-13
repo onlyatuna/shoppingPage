@@ -1,4 +1,5 @@
 // apps/backend/src/app.ts
+import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -14,6 +15,8 @@ import orderRoutes from './routes/order.routes';
 import categoryRoutes from './routes/category.routes';
 import uploadRoutes from './routes/upload.routes';
 import paymentRoutes from './routes/payment.routes';
+import geminiRoutes from './routes/gemini.routes';
+import instagramRoutes from './routes/instagram.routes';
 import path from 'path';
 
 const app = express();
@@ -55,13 +58,16 @@ app.use(helmet({
 }));
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: [
+        process.env.FRONTEND_URL || 'http://localhost:5173',
+        'http://127.0.0.1:5173'
+    ],
     credentials: true, // 允許帶 Cookie
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser()); // 解析 Cookie
 app.use(morgan('dev'));
 
@@ -91,6 +97,8 @@ app.use(`${apiV1Prefix}/categories`, categoryRoutes);
 app.use(`${apiV1Prefix}/upload`, uploadRoutes);
 app.use(`${apiV1Prefix}/users`, userRoutes);
 app.use(`${apiV1Prefix}/payment`, paymentRoutes);
+app.use(`${apiV1Prefix}/gemini`, geminiRoutes);
+app.use(`${apiV1Prefix}/instagram`, instagramRoutes);
 
 // 全域錯誤處理器
 app.use(errorHandler);

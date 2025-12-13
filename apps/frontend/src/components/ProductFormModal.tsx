@@ -1,7 +1,8 @@
 //ProductFormModal.tsx
 import { useForm } from 'react-hook-form';
-import { X, Upload, Trash2, Loader2 } from 'lucide-react';
+import { X, Upload, Trash2, Loader2, Edit } from 'lucide-react';
 import { Product, Category } from '../types';
+import ImageEditModal from './ImageEditModal';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client';
@@ -21,59 +22,48 @@ interface Props {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: any) => void;
-    initialData?: Product | null;
+    initialData?: Partial<Product> | null;
     isPending: boolean;
 }
 
 export default function ProductFormModal({ isOpen, onClose, onSubmit, initialData, isPending }: Props) {
     const { register, handleSubmit, reset, setValue, watch } = useForm<ProductFormData>();
 
-    // 監聽目前的 images 值，以便即時顯示預覽
+    // ... (watch images logic same)
     const currentImagesStr = watch('images') || '';
     const currentImages = currentImagesStr ? currentImagesStr.split(',').filter(Boolean) : [];
 
-    // 上傳中的狀態
     const [isUploading, setIsUploading] = useState(false);
+    const [editingImageUrl, setEditingImageUrl] = useState<string | null>(null);
 
-
-    // 1. 撈取分類列表
+    // ... (query categories same)
     const { data: categories } = useQuery({
         queryKey: ['categories'],
         queryFn: async () => {
             const res = await apiClient.get<{ data: Category[] }>('/categories');
             return res.data.data;
         },
-        enabled: isOpen, // 只有 Modal 打開時才撈
+        enabled: isOpen,
     });
 
     // 2. 控制表單初始值
     useEffect(() => {
         if (isOpen) {
-            if (initialData) {
-                // --- 編輯模式 ---
-                setValue('name', initialData.name);
-                setValue('price', Number(initialData.price));
-                setValue('stock', initialData.stock);
-                setValue('description', initialData.description || '');
-                setValue('slug', initialData.slug || `product-${initialData.id}`);
-                setValue('isActive', initialData.isActive);
-                setValue('images', initialData.images?.join(',') || '');
-                setValue('categoryId', initialData.categoryId); // 使用真實分類 ID
-            } else {
-                // --- 新增模式 ---
-                reset({
-                    name: '',
-                    price: 0,
-                    stock: 10,
-                    description: '',
-                    images: '',
-                    categoryId: categories && categories.length > 0 ? categories[0].id : 0, // 預設第一個分類
-                    isActive: true,
-                    slug: `new-${Date.now()}`,
-                });
-            }
+            // Apply initialData values if they exist, otherwise defaults
+            reset({
+                name: initialData?.name || '',
+                price: initialData?.price ? Number(initialData.price) : 0,
+                stock: initialData?.stock || 10,
+                description: initialData?.description || '',
+                images: initialData?.images?.join(',') || '',
+                categoryId: initialData?.categoryId || (categories && categories.length > 0 ? categories[0].id : 0),
+                isActive: initialData?.isActive ?? true,
+                // If editing (has ID), keep slug or default. If new, generate.
+                // Note: initialData?.slug might be used if provided.
+                slug: initialData?.slug || (initialData?.id ? `product-${initialData.id}` : `new-${Date.now()}`),
+            });
         }
-    }, [isOpen, initialData, categories, reset, setValue]);
+    }, [isOpen, initialData, categories, reset]);
 
     if (!isOpen) return null;
 
@@ -130,6 +120,19 @@ export default function ProductFormModal({ isOpen, onClose, onSubmit, initialDat
         setValue('images', updated);
     };
 
+    // [新增] 處理編輯後的圖片
+    const handleImageEdited = (editedUrl: string) => {
+        if (!editingImageUrl) return;
+
+        // 替換舊的 URL 為新的 URL
+        const updated = currentImages.map(url =>
+            url === editingImageUrl ? editedUrl : url
+        ).join(',');
+
+        setValue('images', updated);
+        setEditingImageUrl(null);
+    };
+
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -138,7 +141,7 @@ export default function ProductFormModal({ isOpen, onClose, onSubmit, initialDat
                     <X size={24} />
                 </button>
 
-                <h2 className="text-2xl font-bold mb-4">{initialData ? '編輯商品' : '新增商品'}</h2>
+                <h2 className="text-2xl font-bold mb-4">{initialData?.id ? '編輯商品' : '新增商品'}</h2>
 
                 <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
                     {/* 隱藏欄位 */}
@@ -189,8 +192,17 @@ export default function ProductFormModal({ isOpen, onClose, onSubmit, initialDat
                                     <img src={url} alt="Preview" className="w-full h-full object-cover" />
                                     <button
                                         type="button"
+                                        onClick={() => setEditingImageUrl(url)}
+                                        className="absolute top-1 left-1 bg-blue-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                                        title="編輯圖片"
+                                    >
+                                        <Edit size={12} />
+                                    </button>
+                                    <button
+                                        type="button"
                                         onClick={() => removeImage(url)}
                                         className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                                        title="刪除圖片"
                                     >
                                         <Trash2 size={12} />
                                     </button>
@@ -233,6 +245,16 @@ export default function ProductFormModal({ isOpen, onClose, onSubmit, initialDat
                     </button>
                 </form>
             </div>
+
+            {/* 圖片編輯 Modal */}
+            {editingImageUrl && (
+                <ImageEditModal
+                    isOpen={!!editingImageUrl}
+                    onClose={() => setEditingImageUrl(null)}
+                    imageUrl={editingImageUrl}
+                    onImageEdited={handleImageEdited}
+                />
+            )}
         </div>
     );
 }

@@ -8,6 +8,7 @@ import { Product, Category } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/Skeleton';
+import InstagramGallery from '../components/InstagramGallery';
 
 export default function HomePage() {
     const { user } = useAuthStore();
@@ -181,12 +182,12 @@ export default function HomePage() {
                             {products.map((product) => (
                                 <div key={product.id} className="group bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                                     {/* 圖片 */}
-                                    <div className="relative h-64 bg-gray-100 overflow-hidden">
+                                    <div className="relative aspect-square h-auto md:h-64 md:aspect-auto bg-gray-100 overflow-hidden">
                                         {product.images[0] ? (
                                             <img
                                                 src={product.images[0]}
                                                 alt={product.name}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                className="w-full h-full object-contain md:object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                         ) : (
                                             <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
@@ -245,6 +246,8 @@ export default function HomePage() {
                     )}
                 </main>
             </div>
+
+            <InstagramGallery />
         </div>
     );
 }

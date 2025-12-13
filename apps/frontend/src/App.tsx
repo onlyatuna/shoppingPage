@@ -1,5 +1,4 @@
-//App.tsx
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import { Toaster } from 'sonner';
@@ -19,6 +18,8 @@ import PaymentCallbackPage from './pages/PaymentCallbackPage';
 import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import EditorPage from './pages/EditorPage';
+import CloudLibraryPage from './pages/CloudLibraryPage';
 
 // 保護路由：只有 Admin 能進
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -46,6 +47,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
     const { checkAuth, isInitialized } = useAuthStore();
+    const location = useLocation();
+    const isEditorPage = location.pathname === '/editor';
 
     // 🔄 核心邏輯：App 啟動時檢查身分
     useEffect(() => {
@@ -65,10 +68,10 @@ function App() {
         );
     }
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900">
+        <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-[#121212] dark:text-gray-100 transition-colors">
             <Toaster position="top-center" richColors />
-            <Navbar />
-            <div className="max-w-7xl mx-auto">
+            {!isEditorPage && <Navbar />}
+            <div className={isEditorPage ? '' : 'max-w-7xl mx-auto'}>
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
@@ -123,6 +126,19 @@ function App() {
                     <Route path="/admin/users" element={
                         <AdminRoute>
                             <AdminUsersPage />
+                        </AdminRoute>} />
+
+                    {/* 專業圖片編輯工作站 */}
+                    {/* 專業圖片編輯工作站 */}
+                    <Route path="/editor" element={
+                        <AdminRoute>
+                            <EditorPage />
+                        </AdminRoute>} />
+
+                    {/* 雲端圖庫 */}
+                    <Route path="/library" element={
+                        <AdminRoute>
+                            <CloudLibraryPage />
                         </AdminRoute>} />
                 </Routes>
             </div>

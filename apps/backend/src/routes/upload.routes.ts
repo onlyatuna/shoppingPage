@@ -35,7 +35,9 @@ const upload = multer({
 });
 
 // 3. 上傳 API
+// 3. 上傳 API
 router.post('/', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+    // ... (existing upload logic) ...
     try {
         if (!req.file) {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: '未上傳檔案' });
@@ -54,35 +56,87 @@ router.post('/', authenticateToken, requireAdmin, upload.single('image'), async 
         res.json({
             status: 'success',
             data: {
-                url: result.secure_url
+                url: result.secure_url,
+                public_id: result.public_id // Must return public_id for future deletion
             }
         });
     } catch (error: any) {
+        // ... (existing error handling) ...
         console.error('Upload Error:', error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: '圖片上傳失敗'
+        });
+    }
+});
 
-        // 處理 Multer 錯誤
-        if (error instanceof multer.MulterError) {
-            if (error.code === 'LIMIT_FILE_SIZE') {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    message: '檔案過大，最大允許 5MB'
-                });
-            }
-            if (error.code === 'LIMIT_FILE_COUNT') {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    message: '一次只能上傳一個檔案'
-                });
-            }
-        }
+// 4. 取得 Cloudinary 圖片列表 (支援分頁)
+router.get('/resources', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { next_cursor } = req.query;
 
-        // 處理檔案格式錯誤
-        if (error.message?.includes('只允許上傳')) {
+        // 使用 Admin API 取得資源列表
+        // 注意：這需要 API Key 有足夠權限 (通常預設都有)
+        const result = await cloudinary.api.resources({
+            type: 'upload',
+            prefix: 'ecommerce-product', // 只撈取此專案的圖片
+            max_results: 9, // 每頁顯示數量
+            next_cursor: next_cursor as string
+        });
+
+        res.json({
+            status: 'success',
+            data: {
+                resources: result.resources,
+                next_cursor: result.next_cursor
+            }
+        });
+    } catch (error: any) {
+        console.error('Cloudinary List Error:', error);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: '無法取得雲端圖庫',
+            error: error.message
+        });
+    }
+});
+
+// 5. 刪除 Cloudinary 圖片
+import { prisma } from '../utils/prisma';
+
+router.delete('/:publicId', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { publicId } = req.params;
+
+        // 1. Check if image is used by any product
+        // images column is JSON array of strings (URLs). 
+        // We match against the publicId. URLs typically contain the publicId.
+        // Using raw query for JSON search in MySQL
+        const productsUsingImage: any[] = await prisma.$queryRaw`
+            SELECT id, name FROM products 
+            WHERE JSON_SEARCH(images, 'one', ${'%' + publicId + '%'}) IS NOT NULL
+            LIMIT 1
+        `;
+
+        if (productsUsingImage.length > 0) {
             return res.status(StatusCodes.BAD_REQUEST).json({
-                message: error.message
+                status: 'error',
+                message: `此圖片正被商品 "${productsUsingImage[0].name}" 使用中，無法直接刪除。請先至商品管理頁面移除。`,
+                code: 'IMAGE_IN_USE'
             });
         }
 
+        // 2. Delete from Cloudinary
+        const result = await cloudinary.uploader.destroy(publicId);
+
+        if (result.result === 'ok') {
+            res.json({ status: 'success', message: '圖片刪除成功' });
+        } else {
+            res.status(StatusCodes.BAD_REQUEST).json({ status: 'error', message: '刪除失敗或找不到圖片' });
+        }
+    } catch (error: any) {
+        console.error('Cloudinary Delete Error:', error);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: '圖片上傳失敗'
+            message: '刪除失敗',
+            error: error.message
         });
     }
 });

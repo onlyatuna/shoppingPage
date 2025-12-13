@@ -1,0 +1,58 @@
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+
+interface MobileWizardNavProps {
+    step: 'edit' | 'caption' | 'publish';
+    onNext: () => void;
+    onBack?: () => void;
+    canGoNext: boolean;
+    nextLabel?: string;
+    isProcessing?: boolean;
+}
+
+export default function MobileWizardNav({
+    step,
+    onNext,
+    onBack,
+    canGoNext,
+    nextLabel,
+    isProcessing
+}: MobileWizardNavProps) {
+    return (
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1e1e1e] border-t border-gray-200 dark:border-gray-700 p-4 pb-safe z-40 md:hidden flex items-center justify-between gap-4 shadow-lg-up">
+            <style>{`.shadow-lg-up { box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1); }`}</style>
+
+            {onBack ? (
+                <button
+                    onClick={onBack}
+                    className="p-3 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                >
+                    <ChevronLeft size={24} />
+                </button>
+            ) : (
+                <div className="w-12" /> // Spacer
+            )}
+
+            {/* Step Indicators */}
+            <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${step === 'edit' ? 'bg-blue-600 scale-125' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                <div className={`w-2 h-2 rounded-full ${step === 'caption' ? 'bg-blue-600 scale-125' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                <div className={`w-2 h-2 rounded-full ${step === 'publish' ? 'bg-blue-600 scale-125' : 'bg-gray-300 dark:bg-gray-600'}`} />
+            </div>
+
+            <button
+                onClick={onNext}
+                disabled={!canGoNext || isProcessing}
+                className={`
+                    flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white transition-all
+                    ${canGoNext
+                        ? 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30'
+                        : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                    }
+                `}
+            >
+                {isProcessing ? '處理中...' : (nextLabel || '下一步')}
+                {!isProcessing && <ChevronRight size={18} />}
+            </button>
+        </div>
+    );
+}

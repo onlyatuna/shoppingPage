@@ -1,16 +1,40 @@
 //AdminProductsPage.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Search, Package, DollarSign, Layers, Trash2 } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Edit, Plus, Search, Package, DollarSign, Layers, Trash2, Sparkles } from 'lucide-react';
 import apiClient from '../../api/client';
 import { Product } from '../../types';
 import ProductFormModal from '../../components/ProductFormModal';
 
 export default function AdminProductsPage() {
     const queryClient = useQueryClient();
+    const location = useLocation();
+    const navigate = useNavigate();
+
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    // Support Partial Product for pre-filling Create Form
+    const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+
+    // Check for navigation state (e.g. from Editor)
+    useEffect(() => {
+        if (location.state?.newProductImage) {
+            setEditingProduct({
+                name: '',
+                price: '0',
+                stock: 10,
+                isActive: true,
+                images: [location.state.newProductImage],
+                description: location.state.newProductDescription || '',
+                // No ID implies Create Mode
+            });
+            setIsModalOpen(true);
+
+            // Clear state so reload doesn't trigger again
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     const { data: products, isLoading } = useQuery({
         queryKey: ['admin-products', searchTerm],
@@ -68,7 +92,7 @@ export default function AdminProductsPage() {
     };
 
     const handleFormSubmit = (data: any) => {
-        if (editingProduct) {
+        if (editingProduct && editingProduct.id) {
             updateProductMutation.mutate({ id: editingProduct.id, data });
         } else {
             createProductMutation.mutate(data);
@@ -92,12 +116,20 @@ export default function AdminProductsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold">後台商品管理</h1>
-                <button
-                    onClick={openCreateModal}
-                    className="w-full md:w-auto bg-black text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-800"
-                >
-                    <Plus size={20} /> 新增商品
-                </button>
+                <div className="flex gap-3 w-full md:w-auto">
+                    <button
+                        onClick={() => navigate('/editor')}
+                        className="flex-1 md:flex-none bg-indigo-600 text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-indigo-700 shadow-sm transition-colors"
+                    >
+                        <Sparkles size={20} /> AI輔助上架
+                    </button>
+                    <button
+                        onClick={openCreateModal}
+                        className="flex-1 md:flex-none bg-black text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
+                    >
+                        <Plus size={20} /> 新增商品
+                    </button>
+                </div>
             </div>
 
             {/* Search */}
