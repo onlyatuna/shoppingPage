@@ -17,6 +17,8 @@ import uploadRoutes from './routes/upload.routes';
 import paymentRoutes from './routes/payment.routes';
 import geminiRoutes from './routes/gemini.routes';
 import instagramRoutes from './routes/instagram.routes';
+import customStyleRoutes from './routes/customStyle.routes';
+import translateRoutes from './routes/translate.routes';
 import path from 'path';
 
 const app = express();
@@ -27,32 +29,10 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
 // Middlewares
-// [修正 2] Helmet 安全標頭設定更新
+// Security headers - disabled CSP and XSS-Protection as they're unnecessary for API-only endpoints
 app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'"],
-            // 加入 images.unsplash.com 以解決圖片被擋的問題
-            imgSrc: [
-                "'self'",
-                "data:",
-                "https://res.cloudinary.com",
-                "https://images.unsplash.com"
-            ],
-            // 加入 LINE Pay API (雖然主要是後端打，但若有前端 SDK 需加這行)
-            connectSrc: [
-                "'self'",
-                "https://api.line.me",
-                "https://sandbox-api-pay.line.me"
-            ],
-            fontSrc: ["'self'"],
-            objectSrc: ["'none'"],
-            mediaSrc: ["'self'"],
-            frameSrc: ["'none'"],
-        }
-    },
+    contentSecurityPolicy: false, // Disabled - not needed for API responses
+    xssFilter: false, // Disabled - x-xss-protection header is deprecated
     // 允許跨域資源載入 (避免 Cloudinary 圖片被擋)
     crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
@@ -99,6 +79,8 @@ app.use(`${apiV1Prefix}/users`, userRoutes);
 app.use(`${apiV1Prefix}/payment`, paymentRoutes);
 app.use(`${apiV1Prefix}/gemini`, geminiRoutes);
 app.use(`${apiV1Prefix}/instagram`, instagramRoutes);
+app.use(`${apiV1Prefix}/translate`, translateRoutes);
+app.use(`${apiV1Prefix}/custom-styles`, customStyleRoutes);
 
 // 全域錯誤處理器
 app.use(errorHandler);

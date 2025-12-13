@@ -4,9 +4,17 @@ import bcrypt from 'bcryptjs';
 import { Role } from '@prisma/client';
 
 export class UserService {
-    // --- 1. 取得所有使用者 (Admin) ---
-    static async findAll() {
+    // --- 1. 取得所有使用者 (Developer) ---
+    static async findAll(searchQuery?: string) {
+        const whereClause = searchQuery ? {
+            OR: [
+                { email: { contains: searchQuery, mode: 'insensitive' as const } },
+                { name: { contains: searchQuery, mode: 'insensitive' as const } }
+            ]
+        } : {};
+
         return prisma.user.findMany({
+            where: whereClause,
             orderBy: { createdAt: 'desc' },
             select: { // 只回傳安全欄位
                 id: true,
@@ -51,17 +59,8 @@ export class UserService {
         const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
         if (!targetUser) throw new Error('使用者不存在');
 
-        // 2. 規則 A: 如果操作者只是 ADMIN
-        if (requesterRole === 'ADMIN') {
-            // 不能修改比自己大或平級的人 (不能改 DEVELOPER 或 其他 ADMIN)
-            if (targetUser.role === 'ADMIN' || targetUser.role === 'DEVELOPER') {
-                throw new Error('權限不足：管理員無法修改其他管理員或開發者');
-            }
-            // 不能將別人升級成 DEVELOPER (不能越級封爵)
-            if (newRole === 'DEVELOPER') {
-                throw new Error('權限不足：管理員無法指派開發者權限');
-            }
-        }
+        // 2. 只有 DEVELOPER 才能執行此功能 (在 route 層已檢查)
+        // 不需要額外的權限限制，DEVELOPER 可以修改任何人的權限
 
         // 3. 執行更新
         return prisma.user.update({
@@ -81,14 +80,10 @@ export class UserService {
         const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
         if (!targetUser) throw new Error('使用者不存在');
 
-        // 規則 B: 如果操作者只是 ADMIN，不能刪除 ADMIN 或 DEVELOPER
-        if (requesterRole === 'ADMIN') {
-            if (targetUser.role === 'ADMIN' || targetUser.role === 'DEVELOPER') {
-                throw new Error('權限不足：管理員無法刪除其他管理員或開發者');
-            }
-        }
+        // 只有 DEVELOPER 才能執行此功能 (在 route 層已檢查)
+        // DEVELOPER 可以刪除任何人 (除了自己)
 
-        // 執行刪除 (這裡假設你已經設定了 Cascade Delete，或者是用 Transaction 刪除)
+        // 執行刪除
         return prisma.user.delete({
             where: { id: targetUserId }
         });

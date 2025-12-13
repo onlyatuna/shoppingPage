@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface MobileWizardNavProps {
     step: 'edit' | 'caption' | 'publish';
@@ -42,16 +42,20 @@ export default function MobileWizardNav({
             <button
                 onClick={onNext}
                 disabled={!canGoNext || isProcessing}
+                aria-label={step === 'edit' ? '下一步：文案' : step === 'caption' ? '下一步：發佈' : '完成'}
                 className={`
-                    flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white transition-all
-                    ${canGoNext
-                        ? 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30'
-                        : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                    p-3 rounded-full transition-colors
+                    ${canGoNext && !isProcessing
+                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                     }
                 `}
             >
-                {isProcessing ? '處理中...' : (nextLabel || '下一步')}
-                {!isProcessing && <ChevronRight size={18} />}
+                {isProcessing ? (
+                    <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                ) : step !== 'publish' ? (
+                    <ChevronRight size={24} />
+                ) : null}
             </button>
         </div>
     );

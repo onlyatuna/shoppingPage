@@ -1,9 +1,10 @@
 //AdminUsersPage.tsx
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, Shield, Code } from 'lucide-react';
+import { Trash2, Shield, Code, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
+import { useState } from 'react';
 
 interface UserData {
     id: number;
@@ -17,11 +18,13 @@ interface UserData {
 export default function AdminUsersPage() {
     const queryClient = useQueryClient();
     const { user: currentUser } = useAuthStore();
+    const [searchQuery, setSearchQuery] = useState('');
 
     const { data: users, isLoading } = useQuery({
-        queryKey: ['admin-users'],
+        queryKey: ['admin-users', searchQuery],
         queryFn: async () => {
-            const res = await apiClient.get<{ data: UserData[] }>('/users');
+            const params = searchQuery ? { search: searchQuery } : {};
+            const res = await apiClient.get<{ data: UserData[] }>('/users', { params });
             return res.data.data;
         }
     });
@@ -72,7 +75,29 @@ export default function AdminUsersPage() {
 
     return (
         <div className="p-4 md:p-8">
-            <h1 className="text-2xl font-bold mb-6">帳號管理</h1>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <h1 className="text-2xl font-bold">帳號管理</h1>
+
+                {/* Search Bar */}
+                <div className="relative w-full md:w-80">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="搜尋 Email 或姓名..."
+                        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    />
+                    {searchQuery && (
+                        <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            <X size={18} />
+                        </button>
+                    )}
+                </div>
+            </div>
 
             {/* --- Desktop Table --- */}
             <div className="hidden md:block bg-white border rounded-lg shadow overflow-hidden">

@@ -19,6 +19,9 @@ import StylePresetGrid from '../components/editor/StylePresetGrid';
 import { Sparkles } from 'lucide-react'; // For mobile trigger button icons
 import useSwipe from '../hooks/useSwipe';
 import CustomStyleModal, { CustomStyle } from '../components/editor/CustomStyleModal';
+import FrameSelector from '../components/editor/FrameSelector';
+import FrameUploadModal from '../components/editor/FrameUploadModal';
+import { Frame } from '../types/frame';
 
 export default function EditorPage() {
     const { theme, toggleTheme } = useTheme();
@@ -36,6 +39,13 @@ export default function EditorPage() {
     // Custom Styles State
     const [customStyles, setCustomStyles] = useState<CustomStyle[]>([]);
     const [isCustomStyleModalOpen, setIsCustomStyleModalOpen] = useState(false);
+    const [editingStyle, setEditingStyle] = useState<CustomStyle | null>(null);
+
+    // Frame State
+    const [selectedFrame, setSelectedFrame] = useState<Frame | null>(null);
+    const [customFrames, setCustomFrames] = useState<Frame[]>([]);
+    const [isFrameSelectorOpen, setIsFrameSelectorOpen] = useState(false);
+    const [isFrameUploadOpen, setIsFrameUploadOpen] = useState(false);
 
     // Mobile specific state
     const [mobileStep, setMobileStep] = useState<'edit' | 'caption' | 'publish'>('edit');
@@ -66,6 +76,48 @@ export default function EditorPage() {
             toast.success('已載入雲端圖片');
         }
     }, [location.state]);
+
+    // Load custom styles and frames from localStorage/backend on mount
+    useEffect(() => {
+        // Load custom frames from localStorage
+        const storedFrames = localStorage.getItem('customFrames');
+        if (storedFrames) {
+            setCustomFrames(JSON.parse(storedFrames));
+        }
+
+        // Load custom styles from backend API
+        const loadCustomStyles = async () => {
+            try {
+                const response = await apiClient.get('/custom-styles');
+                if (response.data.success) {
+                    // Convert backend format to frontend format
+                    const styles = response.data.data.map((style: any) => ({
+                        id: style.id, // Database ID for deletion
+                        key: style.key,
+                        name: style.name,
+                        engName: style.engName,
+                        desc: style.desc,
+                        icon: style.icon,
+                        color: style.color,
+                        borderColor: style.borderColor,
+                        prompt: style.prompt,
+                        preview: style.preview
+                    }));
+                    console.log('📥 Loaded custom styles from backend:', styles);
+                    setCustomStyles(styles);
+                }
+            } catch (error) {
+                console.error('Failed to load custom styles from backend:', error);
+                // Fallback to localStorage if API fails
+                const storedStyles = localStorage.getItem('customStyles');
+                if (storedStyles) {
+                    setCustomStyles(JSON.parse(storedStyles));
+                }
+            }
+        };
+
+        loadCustomStyles();
+    }, []);
 
     // Copywriting State
     const [generatedCaption, setGeneratedCaption] = useState<string | null>(null);
@@ -107,9 +159,111 @@ export default function EditorPage() {
         }
     };
 
-    const handleSaveCustomStyle = (customStyle: CustomStyle) => {
-        setCustomStyles(prev => [...prev, customStyle]);
-        toast.success(`✨ 已新增自訂風格：${customStyle.name}`);
+    const handleSaveCustomStyle = async (customStyle: CustomStyle) => {
+        try {
+            const isEditing = editingStyle !== null;
+            console.log('💾 Saving custom style:', { isEditing, customStyle, editingStyle });
+
+            if (isEditing) {
+                // Update existing style in backend
+                if (customStyle.id) {
+                    console.log('🔄 Updating style with ID:', customStyle.id);
+                    try {
+                        const response = await apiClient.put(`/custom-styles/${customStyle.id}`, customStyle);
+                        console.log('✅ Backend update response:', response.data);
+
+                        if (response.data.success) {
+                            const updatedStyles = customStyles.map(s =>
+                                s.key === customStyle.key ? customStyle : s
+                            );
+                            setCustomStyles(updatedStyles);
+                            localStorage.setItem('customStyles', JSON.stringify(updatedStyles));
+                            toast.success(`✨ 已更新風格：${customStyle.name}`);
+                        }
+                    } catch (apiError) {
+                        console.error('❌ Backend update failed:', apiError);
+                        // Fallback to localStorage
+                        const updatedStyles = customStyles.map(s =>
+                            s.key === customStyle.key ? customStyle : s
+                        );
+                        setCustomStyles(updatedStyles);
+                        localStorage.setItem('customStyles', JSON.stringify(updatedStyles));
+                        toast.warning(`⚠️ 風格已更新（僅本機）`);
+                    }
+                } else {
+                    console.warn('⚠️ No ID for editing style, saving locally only');
+                    // No ID means not saved to backend yet, just update locally
+                    const updatedStyles = customStyles.map(s =>
+                        s.key === customStyle.key ? customStyle : s
+                    );
+                    setCustomStyles(updatedStyles);
+                    localStorage.setItem('customStyles', JSON.stringify(updatedStyles));
+                    toast.success(`✨ 已更新風格：${customStyle.name}`);
+                }
+            } else {
+                // Create new style
+                const response = await apiClient.post('/custom-styles', customStyle);
+
+                if (response.data.success) {
+                    // Use the returned style from backend which includes the database ID
+                    const savedStyle = {
+                        ...customStyle,
+                        id: response.data.data.id // Add database ID from backend response
+                    };
+                    const updatedStyles = [...customStyles, savedStyle];
+                    setCustomStyles(updatedStyles);
+                    localStorage.setItem('customStyles', JSON.stringify(updatedStyles));
+                    toast.success(`✨ 已新增自訂風格：${customStyle.name}`);
+                }
+            }
+
+            setEditingStyle(null); // Reset editing state
+        } catch (error: any) {
+            console.error('Failed to save custom style:', error);
+            // Fallback to localStorage only if API fails
+            const isEditing = editingStyle !== null;
+            let updatedStyles;
+            if (isEditing) {
+                updatedStyles = customStyles.map(s =>
+                    s.key === customStyle.key ? customStyle : s
+                );
+            } else {
+                updatedStyles = [...customStyles, customStyle];
+            }
+            setCustomStyles(updatedStyles);
+            localStorage.setItem('customStyles', JSON.stringify(updatedStyles));
+            toast.warning(`⚠️ 風格已儲存至本機（同步失敗）`);
+        }
+    };
+
+    const handleDeleteCustomStyle = async (styleKey: string) => {
+        try {
+            // Find the style to delete
+            const styleToDelete = customStyles.find(s => s.key === styleKey);
+            if (!styleToDelete) return;
+
+            // Update local state immediately for better UX
+            const updatedStyles = customStyles.filter(s => s.key !== styleKey);
+            setCustomStyles(updatedStyles);
+            localStorage.setItem('customStyles', JSON.stringify(updatedStyles));
+
+            // Delete from backend using database ID
+            if (styleToDelete.id) {
+                try {
+                    await apiClient.delete(`/custom-styles/${styleToDelete.id}`);
+                    toast.success('✨ 風格已刪除');
+                } catch (apiError) {
+                    console.error('Backend deletion failed:', apiError);
+                    toast.warning('⚠️ 風格已刪除（僅本機）');
+                }
+            } else {
+                // If no ID (newly created, not yet saved to backend), just remove locally
+                toast.success('✨ 風格已刪除');
+            }
+        } catch (error) {
+            console.error('Failed to delete custom style:', error);
+            toast.error('刪除風格失敗');
+        }
     };
 
     const handleLibrarySelect = (imageUrl: string) => {
@@ -145,6 +299,55 @@ export default function EditorPage() {
             console.error('Upload failed', error);
             return null;
         }
+    };
+
+    // Helper: Compose image with frame on canvas
+    const composeImageWithFrame = async (imageUrl: string, frameUrl: string): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                reject(new Error('Canvas context not available'));
+                return;
+            }
+
+            const image = new Image();
+            image.crossOrigin = 'anonymous';
+
+            image.onload = () => {
+                // Set canvas size to match image
+                canvas.width = image.width;
+                canvas.height = image.height;
+
+                // Draw the base image
+                ctx.drawImage(image, 0, 0);
+
+                // Load and draw the frame
+                const frame = new Image();
+                frame.crossOrigin = 'anonymous';
+
+                frame.onload = () => {
+                    // Draw frame on top with object-cover effect
+                    ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+
+                    // Convert to base64
+                    const composedImage = canvas.toDataURL('image/png');
+                    resolve(composedImage);
+                };
+
+                frame.onerror = () => {
+                    reject(new Error('Failed to load frame'));
+                };
+
+                frame.src = frameUrl;
+            };
+
+            image.onerror = () => {
+                reject(new Error('Failed to load image'));
+            };
+
+            image.src = imageUrl;
+        });
     };
 
     const handleGenerate = async () => {
@@ -229,10 +432,23 @@ export default function EditorPage() {
         }
     };
 
-    const handleDownload = () => {
-        if (!editedImage) return;
+    const handleDownload = async () => {
+        // Allow downloading either edited OR uploaded image
+        let downloadImage = editedImage || uploadedImage;
+        if (!downloadImage) return;
+
+        // Compose frame with image if frame is selected
+        if (selectedFrame && selectedFrame.id !== 'none') {
+            try {
+                downloadImage = await composeImageWithFrame(downloadImage, selectedFrame.url);
+            } catch (error) {
+                console.error('Frame composition failed:', error);
+                toast.error('圖框合成失敗，將下載原圖');
+            }
+        }
+
         const link = document.createElement('a');
-        link.href = editedImage;
+        link.href = downloadImage;
         link.download = `edited-product-${Date.now()}.jpg`;
         document.body.appendChild(link);
         link.click();
@@ -245,13 +461,24 @@ export default function EditorPage() {
         let targetImage = editedImage || uploadedImage;
         if (!targetImage) return;
 
+        // Compose frame with image if frame is selected
+        if (selectedFrame && selectedFrame.id !== 'none') {
+            try {
+                const composedImage = await composeImageWithFrame(targetImage, selectedFrame.url);
+                targetImage = composedImage;
+            } catch (error) {
+                console.error('Frame composition failed:', error);
+                toast.error('圖框合成失敗，將使用原圖發布');
+            }
+        }
+
         // If Base64, try to upload first (redundancy check)
         if (targetImage.startsWith('data:')) {
             const uploadedUrl = await uploadBase64Image(targetImage);
             if (uploadedUrl) targetImage = uploadedUrl;
         }
 
-        setIsProcessing(true);
+        // Don't set isProcessing here - ExportControls has its own loading state
         try {
             const response = await apiClient.post('/instagram/publish', {
                 imageUrl: targetImage,
@@ -263,14 +490,22 @@ export default function EditorPage() {
         } catch (error: any) {
             console.error(error);
             toast.error(`發佈失敗: ${error.response?.data?.message || error.message}`);
-        } finally {
-            setIsProcessing(false);
         }
     };
 
     const handlePublishProduct = async () => {
         let targetImage = editedImage || uploadedImage;
         if (!targetImage) return;
+
+        // Compose frame with image if frame is selected
+        if (selectedFrame && selectedFrame.id !== 'none') {
+            try {
+                targetImage = await composeImageWithFrame(targetImage, selectedFrame.url);
+            } catch (error) {
+                console.error('Frame composition failed:', error);
+                toast.error('圖框合成失敗，將使用原圖上架');
+            }
+        }
 
         // If it's a Base64 string, upload it first
         if (targetImage.startsWith('data:')) {
@@ -376,8 +611,12 @@ export default function EditorPage() {
                 {/* Custom Style Modal */}
                 <CustomStyleModal
                     isOpen={isCustomStyleModalOpen}
-                    onClose={() => setIsCustomStyleModalOpen(false)}
+                    onClose={() => {
+                        setIsCustomStyleModalOpen(false);
+                        setEditingStyle(null); // Reset editing style on close
+                    }}
                     onSave={handleSaveCustomStyle}
+                    initialStyle={editingStyle}
                 />
 
                 {/* Product Modal */}
@@ -391,12 +630,17 @@ export default function EditorPage() {
 
                 {/* Left Panel - Control Panel (Desktop Only) */}
                 <div className="hidden md:block h-full">
-                    <ControlPanel
+                    <StylePresetGrid
                         selectedStyle={selectedStyle}
-                        onSelectStyle={handleStyleSelect}
+                        onSelectStyle={setSelectedStyle}
                         customStyles={customStyles}
                         onAddCustomStyle={() => setIsCustomStyleModalOpen(true)}
-                        isProcessing={isProcessing}
+                        onEditCustomStyle={(style) => {
+                            setEditingStyle(style);
+                            setIsCustomStyleModalOpen(true);
+                        }}
+                        onDeleteCustomStyle={handleDeleteCustomStyle}
+                        disabled={isProcessing}
                     />
                 </div>
 
@@ -406,6 +650,15 @@ export default function EditorPage() {
                 flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden relative
                 ${mobileStep !== 'edit' ? 'hidden md:flex' : 'flex'}
             `}>
+                    {/* Mobile Style Change Button (Top Right on Mobile) */}
+                    <button
+                        onClick={() => setIsMobileSheetOpen(true)}
+                        className="md:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm"
+                    >
+                        <Sparkles size={16} className="text-blue-500" />
+                        <span>風格</span>
+                    </button>
+
                     <ImageCanvas
                         originalImage={uploadedImage}
                         editedImage={editedImage}
@@ -414,22 +667,16 @@ export default function EditorPage() {
                         onImageUpload={handleImageUpload}
                         onOpenLibrary={() => setIsLibraryOpen(true)}
                         onRemove={handleRemoveImage}
+                        onSelectFrame={() => setIsFrameSelectorOpen(true)}
+                        selectedFrame={selectedFrame}
                     />
-
-                    {/* Mobile Trigger Button for Bottom Sheet (Only in Edit step and visible on mobile) */}
-                    <button
-                        onClick={() => setIsMobileSheetOpen(true)}
-                        className="md:hidden absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-bold z-30"
-                    >
-                        <Sparkles size={18} className="text-blue-500" />
-                        <span>更換風格</span>
-                    </button>
                 </div>
 
                 {/* Mobile View: Caption Step */}
                 <div className={`flex-1 p-6 pb-32 overflow-y-auto ${mobileStep === 'caption' ? 'block md:hidden' : 'hidden'}`}>
                     <h2 className="text-xl font-bold mb-4">AI 文案助手</h2>
                     <CopywritingAssistant
+                        instanceId="mobile-caption"
                         generatedCaption={generatedCaption}
                         onCaptionChange={setGeneratedCaption}
                         captionPrompt={captionPrompt}
@@ -443,10 +690,18 @@ export default function EditorPage() {
                 {/* Mobile View: Publish Step */}
                 <div className={`flex-1 p-6 pb-32 overflow-y-auto ${mobileStep === 'publish' ? 'block md:hidden' : 'hidden'}`}>
                     <h2 className="text-xl font-bold mb-4">發佈與匯出</h2>
-                    {/* Preview Image small */}
+                    {/* Preview Image with Frame */}
                     {(editedImage || uploadedImage) && (
-                        <div className="mb-6 w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                        <div className="mb-6 w-full aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
                             <img src={editedImage || uploadedImage || ''} className="w-full h-full object-contain" />
+                            {/* Frame Overlay */}
+                            {selectedFrame && selectedFrame.id !== 'none' && (
+                                <img
+                                    src={selectedFrame.url}
+                                    alt="Frame"
+                                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                />
+                            )}
                         </div>
                     )}
                     <ExportControls
@@ -465,6 +720,7 @@ export default function EditorPage() {
                         </h2>
 
                         <CopywritingAssistant
+                            instanceId="desktop-caption"
                             generatedCaption={generatedCaption}
                             onCaptionChange={setGeneratedCaption}
                             captionPrompt={captionPrompt}
@@ -501,6 +757,11 @@ export default function EditorPage() {
                         }}
                         customStyles={customStyles}
                         onAddCustomStyle={() => setIsCustomStyleModalOpen(true)}
+                        onEditCustomStyle={(style) => {
+                            setEditingStyle(style);
+                            setIsCustomStyleModalOpen(true);
+                        }}
+                        onDeleteCustomStyle={handleDeleteCustomStyle}
                         disabled={isProcessing}
                     />
                 </MobileBottomSheet>
@@ -515,6 +776,29 @@ export default function EditorPage() {
                 />
                 {/* Close Main Content Area */}
             </div>
+
+            {/* Frame Selection Modal */}
+            <FrameSelector
+                isOpen={isFrameSelectorOpen}
+                onClose={() => setIsFrameSelectorOpen(false)}
+                selectedFrame={selectedFrame}
+                onSelectFrame={setSelectedFrame}
+                customFrames={customFrames}
+                onUploadFrame={() => {
+                    setIsFrameSelectorOpen(false);
+                    setIsFrameUploadOpen(true);
+                }}
+            />
+
+            {/* Frame Upload Modal */}
+            <FrameUploadModal
+                isOpen={isFrameUploadOpen}
+                onClose={() => setIsFrameUploadOpen(false)}
+                onSave={(frame) => {
+                    setCustomFrames(prev => [...prev, frame]);
+                    localStorage.setItem('customFrames', JSON.stringify([...customFrames, frame]));
+                }}
+            />
         </div>
     );
 }

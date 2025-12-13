@@ -15,7 +15,11 @@ interface ImageCanvasProps {
     onImageUpload: (file: File) => void;
     onOpenLibrary: () => void;
     onRemove?: () => void;
+    onSelectFrame: () => void;
+    selectedFrame: Frame | null;
 }
+
+import { Frame } from '../../types/frame';
 
 export default function ImageCanvas({
     originalImage,
@@ -24,7 +28,9 @@ export default function ImageCanvas({
     onRegenerate,
     onImageUpload,
     onOpenLibrary,
-    onRemove
+    onRemove,
+    onSelectFrame,
+    selectedFrame
 }: ImageCanvasProps) {
     // Cropping State
     const [isCropping, setIsCropping] = useState(false);
@@ -104,7 +110,7 @@ export default function ImageCanvas({
                         : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750'
                     }`}
             >
-                <input {...getInputProps()} />
+                <input {...getInputProps()} aria-label="上傳圖片" />
                 <div className="p-4 rounded-full bg-white dark:bg-gray-700 shadow-sm mb-4">
                     <Upload className="w-8 h-8 text-indigo-500" />
                 </div>
@@ -197,6 +203,20 @@ export default function ImageCanvas({
                             />
                         )}
                     </AnimatePresence>
+
+                    {/* Frame Overlay - Only show if frame is selected and not showing original */}
+                    {selectedFrame && !showOriginal && selectedFrame.id !== 'none' && (
+                        <motion.img
+                            key={`frame-${selectedFrame.id}`}
+                            src={selectedFrame.url}
+                            alt="Frame"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                            style={{ zIndex: 10 }}
+                        />
+                    )}
                 </div>
 
                 {/* 加載狀態遮罩 */}
@@ -205,9 +225,12 @@ export default function ImageCanvas({
                 {/* 浮動工具列 - 只有當有結果圖時才顯示 */}
                 {(editedImage || originalImage) && !isProcessing && !isCropping && (
                     <FloatingToolbar
-                        className={`transition-opacity duration-300 ease-in-out ${!isHoveringCanvas ? 'opacity-0 pointer-events-none' :
-                            isHoveringToolbar ? 'opacity-100' : 'opacity-40'
-                            }`}
+                        className={`
+                            transition-opacity duration-300 ease-in-out
+                            ${!isHoveringCanvas && !isHoveringToolbar ? 'md:opacity-0 md:pointer-events-none' :
+                                isHoveringToolbar ? 'md:opacity-100' : 'md:opacity-40'
+                            }
+                        `}
                         onMouseEnter={() => setIsHoveringToolbar(true)}
                         onMouseLeave={() => setIsHoveringToolbar(false)}
                         onAddText={() => console.log('Add Text')}
@@ -219,6 +242,7 @@ export default function ImageCanvas({
                             setIsCropping(true);
                         }}
                         onRegenerate={onRegenerate}
+                        onSelectFrame={onSelectFrame}
                     />
                 )}
             </div>

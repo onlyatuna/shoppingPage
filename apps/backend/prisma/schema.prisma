@@ -24,14 +24,14 @@ enum Role {
 }
 
 enum OrderStatus {
-  PENDING             // 待付款
-  AUTHORIZED          // 已授權 (錢被圈存，尚未扣款)
-  PAID                // 已付款 (錢已扣除)
-  SHIPPED             // 已出貨
-  COMPLETED           // 已完成
-  CANCELLED           // 已取消 (未付款前取消，或 Void)
-  REFUNDED            // [新增] 已全額退款
-  PARTIALLY_REFUNDED  // [新增] 已部分退款
+  PENDING // 待付款
+  AUTHORIZED // 已授權 (錢被圈存，尚未扣款)
+  PAID // 已付款 (錢已扣除)
+  SHIPPED // 已出貨
+  COMPLETED // 已完成
+  CANCELLED // 已取消 (未付款前取消，或 Void)
+  REFUNDED // [新增] 已全額退款
+  PARTIALLY_REFUNDED // [新增] 已部分退款
 }
 
 // --------------------------------------
@@ -39,76 +39,77 @@ enum OrderStatus {
 // --------------------------------------
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String   
-  name      String?
-  role      Role     @default(USER)
-  
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  password String
+  name     String?
+  role     Role    @default(USER)
+
   // 驗證相關
-  isVerified                 Boolean   @default(false) 
-  verificationToken          String?   @unique         
-  verificationTokenExpiresAt DateTime? 
+  isVerified                 Boolean   @default(false)
+  verificationToken          String?   @unique
+  verificationTokenExpiresAt DateTime?
 
   // 重置密碼相關
-  resetPasswordToken         String?   @unique
+  resetPasswordToken          String?   @unique
   resetPasswordTokenExpiresAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  cart      Cart?    
-  orders    Order[]
-  addresses Address[]
+  cart         Cart?
+  orders       Order[]
+  addresses    Address[]
+  customStyles CustomStyle[]
 
-  @@map("users") 
+  @@map("users")
 }
 
 model Address {
   id        Int     @id @default(autoincrement())
-  recipient String  
+  recipient String
   phone     String
   city      String
-  address   String  
+  address   String
   isDefault Boolean @default(false)
-  
-  userId    Int
-  user      User    @relation(fields: [userId], references: [id])
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 
   @@map("addresses")
 }
 
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String
-  slug      String    @unique 
-  products  Product[]
+  id       Int       @id @default(autoincrement())
+  name     String
+  slug     String    @unique
+  products Product[]
 
   @@map("categories")
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   name        String
-  slug        String   @unique 
-  description String?  @db.Text
-  
-  price       Decimal  @db.Decimal(10, 2) 
-  stock       Int      @default(0)
-  
-  images      Json?    
-  
-  isActive    Boolean  @default(true) 
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime? 
+  slug        String  @unique
+  description String? @db.Text
 
-  categoryId  Int
-  category    Category @relation(fields: [categoryId], references: [id])
+  price Decimal @db.Decimal(10, 2)
+  stock Int     @default(0)
 
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
+  images Json?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
 
   @@index([name])
   @@index([categoryId])
@@ -126,50 +127,72 @@ model Cart {
 }
 
 model CartItem {
-  id        Int      @id @default(autoincrement())
-  quantity  Int      @default(1)
-  
-  cartId    Int
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  
+  id       Int @id @default(autoincrement())
+  quantity Int @default(1)
+
+  cartId Int
+  cart   Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 
   @@unique([cartId, productId])
   @@map("cart_items")
 }
 
 model Order {
-  id            String      @id @default(uuid()) 
-  userId        Int
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  status        OrderStatus @default(PENDING)
-  totalAmount   Decimal     @db.Decimal(10, 2)
-  
-  shippingInfo  Json        
-  
-  paymentId     String?     
-  paymentData   Json?     
-  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id     String @id @default(uuid())
+  userId Int
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  items         OrderItem[]
+  status      OrderStatus @default(PENDING)
+  totalAmount Decimal     @db.Decimal(10, 2)
+
+  shippingInfo Json
+
+  paymentId   String?
+  paymentData Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
 
   @@map("orders")
 }
 
 model OrderItem {
-  id        Int      @id @default(autoincrement())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id])
-  
+  id      Int    @id @default(autoincrement())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  
-  quantity  Int
-  price     Decimal  @db.Decimal(10, 2) 
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Int
+  price    Decimal @db.Decimal(10, 2)
 
   @@map("order_items")
+}
+
+model CustomStyle {
+  id          Int     @id @default(autoincrement())
+  key         String  // Unique identifier for the style
+  name        String  // Display name (Chinese)
+  engName     String? // English name
+  desc        String? // Description
+  icon        String? // Icon name
+  color       String? // Background color
+  borderColor String? // Border color
+  prompt      String  @db.Text // AI generation prompt
+  preview     String? // Preview image URL (optional)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key]) // Ensure unique style key per user
+  @@map("custom_styles")
 }

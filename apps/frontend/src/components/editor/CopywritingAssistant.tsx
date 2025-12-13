@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Check } from 'lucide-react';
+import { Sparkles, Copy, Check, ChevronDown, ChevronUp, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CopywritingAssistantProps {
@@ -10,6 +10,7 @@ interface CopywritingAssistantProps {
     isGenerating: boolean;
     onGenerate: () => void;
     disabled?: boolean;
+    instanceId?: string; // Unique identifier for this instance (e.g., 'desktop' or 'mobile')
 }
 
 export default function CopywritingAssistant({
@@ -18,10 +19,12 @@ export default function CopywritingAssistant({
     captionPrompt,
     onCaptionPromptChange,
     isGenerating,
+    instanceId = 'default',
     onGenerate,
     disabled
 }: CopywritingAssistantProps) {
     const [copied, setCopied] = useState(false);
+    const [isPromptExpanded, setIsPromptExpanded] = useState(false);
 
     const handleCopy = () => {
         if (generatedCaption) {
@@ -49,22 +52,7 @@ export default function CopywritingAssistant({
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 relative transition-colors flex flex-col gap-4">
-                {/* 參數輸入：文案提示 */}
-                <div>
-                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
-                        💡 文案提示 (例如：母親節優惠、針對上班族)
-                    </label>
-                    <input
-                        type="text"
-                        value={captionPrompt}
-                        onChange={(e) => onCaptionPromptChange(e.target.value)}
-                        placeholder="輸入提示讓 AI 更精準..."
-                        className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-200"
-                        disabled={isGenerating}
-                    />
-                </div>
-
-                {/* 結果/編輯區 */}
+                {/* 結果/編輯區 - 放在最上面 */}
                 <div>
                     <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
                         📝 貼文內容
@@ -79,6 +67,7 @@ export default function CopywritingAssistant({
                     ) : (
                         <div className="relative">
                             <textarea
+                                id={`caption-input-${instanceId}`}
                                 value={generatedCaption || ''}
                                 onChange={(e) => onCaptionChange?.(e.target.value)}
                                 placeholder="在此輸入貼文內容，或點擊上方「自動生成」由 AI 幫您撰寫..."
@@ -93,6 +82,40 @@ export default function CopywritingAssistant({
                                     {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
                                 </button>
                             )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Collapsible Prompt Input Section - 可折叠的文案提示输入框 */}
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <button
+                        onClick={() => setIsPromptExpanded(!isPromptExpanded)}
+                        className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+                    >
+                        <div className="flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+                            <Lightbulb size={14} className="text-yellow-600" />
+                            💡 文案提示
+                        </div>
+                        {isPromptExpanded ? (
+                            <ChevronUp size={16} className="text-gray-500" />
+                        ) : (
+                            <ChevronDown size={16} className="text-gray-500" />
+                        )}
+                    </button>
+
+                    {isPromptExpanded && (
+                        <div className="px-3 py-3 bg-white dark:bg-[#1e1e1e] border-t border-gray-200 dark:border-gray-700">
+                            <input
+                                type="text"
+                                value={captionPrompt}
+                                onChange={(e) => onCaptionPromptChange(e.target.value)}
+                                placeholder="例如：母親節優惠、針對上班族"
+                                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-200"
+                                disabled={isGenerating}
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                輸入具體要求，例如：「適合 IG 貼文」、「輕鬆活潑的語氣」、「針對年輕族群」
+                            </p>
                         </div>
                     )}
                 </div>

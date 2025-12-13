@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import * as UserController from '../controllers/user.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
-import { requireAdmin } from '../middlewares/admin.middleware';
+import { requireDeveloper } from '../middlewares/admin.middleware';
 
 const router = Router();
 
@@ -10,9 +10,9 @@ const router = Router();
 router.get('/profile', authenticateToken, UserController.getProfile);
 router.patch('/profile', authenticateToken, UserController.updateProfile);
 
-// --- 管理員功能 (需 Admin 權限) ---
-router.get('/', authenticateToken, requireAdmin, UserController.getAllUsers);
-router.patch('/:id/role', authenticateToken, requireAdmin, UserController.updateUserRole);
-router.delete('/:id', authenticateToken, requireAdmin, UserController.deleteUser);
+// --- 開發者功能 (需 Developer 權限) ---
+router.get('/', authenticateToken, requireDeveloper, UserController.getAllUsers);
+router.patch('/:id/role', authenticateToken, requireDeveloper, UserController.updateUserRole);
+router.delete('/:id', authenticateToken, requireDeveloper, UserController.deleteUser);
 
 export default router;

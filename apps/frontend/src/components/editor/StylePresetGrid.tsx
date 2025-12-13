@@ -1,4 +1,5 @@
-import { Sparkles, Gem, Leaf, PartyPopper, Plus, Palette } from 'lucide-react';
+import { useState } from 'react';
+import { Sparkles, Gem, Leaf, PartyPopper, Plus, Palette, Pencil, Trash2 } from 'lucide-react';
 import { CustomStyle } from './CustomStyleModal';
 
 export type StylePresetKey = 'minimalist' | 'luxury' | 'organic' | 'festival';
@@ -8,6 +9,8 @@ interface StylePresetGridProps {
     onSelectStyle: (style: StylePresetKey | string) => void;
     customStyles?: CustomStyle[];
     onAddCustomStyle?: () => void;
+    onEditCustomStyle?: (style: CustomStyle) => void;
+    onDeleteCustomStyle?: (styleKey: string) => void;
     disabled?: boolean;
 }
 
@@ -54,7 +57,8 @@ export const presets = [
     }
 ];
 
-export default function StylePresetGrid({ selectedStyle, onSelectStyle, customStyles = [], onAddCustomStyle, disabled }: StylePresetGridProps) {
+export default function StylePresetGrid({ selectedStyle, onSelectStyle, customStyles = [], onAddCustomStyle, onEditCustomStyle, onDeleteCustomStyle, disabled }: StylePresetGridProps) {
+    const [isEditMode, setIsEditMode] = useState(false);
     // Icon mapping for custom styles
     const iconMap: Record<string, any> = {
         Sparkles,
@@ -66,9 +70,23 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
 
     return (
         <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                1. 選擇風格
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    1. 選擇風格
+                </h3>
+                {customStyles.length > 0 && (
+                    <button
+                        onClick={() => setIsEditMode(!isEditMode)}
+                        className={`p-1.5 rounded-lg transition-all ${isEditMode
+                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'
+                            }`}
+                        title={isEditMode ? "完成編輯" : "編輯風格"}
+                    >
+                        <Pencil size={16} />
+                    </button>
+                )}
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
                 {/* Default Presets */}
@@ -106,33 +124,66 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                 {customStyles.map((customStyle) => {
                     const IconComponent = iconMap[customStyle.icon] || Palette;
                     return (
-                        <button
-                            key={customStyle.key}
-                            onClick={() => onSelectStyle(customStyle.key)}
-                            disabled={disabled}
-                            className={`
-                                relative p-3 rounded-xl border-2 text-left transition-all
-                                ${customStyle.color}
-                                ${selectedStyle === customStyle.key
-                                    ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-[#2d2d2d] border-transparent scale-[1.02] shadow-md'
-                                    : `${customStyle.borderColor} opacity-80 hover:opacity-100 hover:scale-[1.01]`
-                                }
-                                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                            `}
-                        >
-                            <div className="flex items-start justify-between mb-1">
-                                <span className="text-sm font-bold">{customStyle.name}</span>
-                                <IconComponent size={16} />
-                            </div>
-                            <p className="text-xs font-medium opacity-80">{customStyle.engName}</p>
-                            <p className="text-[10px] mt-1 opacity-70 leading-tight">
-                                {customStyle.desc}
-                            </p>
+                        <div key={customStyle.key} className="relative group">
+                            <button
+                                onClick={() => !isEditMode && onSelectStyle(customStyle.key)}
+                                disabled={disabled}
+                                className={`
+                                    w-full relative p-3 rounded-xl border-2 text-left transition-all
+                                    ${customStyle.color}
+                                    ${selectedStyle === customStyle.key
+                                        ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-[#2d2d2d] border-transparent scale-[1.02] shadow-md'
+                                        : `${customStyle.borderColor} opacity-80 hover:opacity-100 hover:scale-[1.01]`
+                                    }
+                                    ${disabled ? 'opacity-50 cursor-not-allowed' : isEditMode ? 'cursor-default' : 'cursor-pointer'}
+                                `}
+                            >
+                                <div className="flex items-start justify-between mb-1">
+                                    <span className="text-sm font-bold">{customStyle.name}</span>
+                                    <IconComponent size={16} />
+                                </div>
+                                <p className="text-xs font-medium opacity-80">{customStyle.engName}</p>
+                                <p className="text-[10px] mt-1 opacity-70 leading-tight">
+                                    {customStyle.desc}
+                                </p>
 
-                            {selectedStyle === customStyle.key && (
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border border-white dark:border-gray-800" />
+                                {selectedStyle === customStyle.key && !isEditMode && (
+                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border border-white dark:border-gray-800" />
+                                )}
+                            </button>
+
+                            {/* Edit/Delete buttons - Show only in edit mode on hover */}
+                            {isEditMode && (
+                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                    {onEditCustomStyle && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onEditCustomStyle(customStyle);
+                                            }}
+                                            className="p-1.5 bg-blue-500 hover:bg-blue-600 rounded-md shadow-lg transition-all hover:scale-110"
+                                            title="編輯風格"
+                                        >
+                                            <Pencil size={12} className="text-white" />
+                                        </button>
+                                    )}
+                                    {onDeleteCustomStyle && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (confirm(`確定要刪除「${customStyle.name}」風格嗎？`)) {
+                                                    onDeleteCustomStyle(customStyle.key);
+                                                }
+                                            }}
+                                            className="p-1.5 bg-red-500 hover:bg-red-600 rounded-md shadow-lg transition-all hover:scale-110"
+                                            title="刪除風格"
+                                        >
+                                            <Trash2 size={12} className="text-white" />
+                                        </button>
+                                    )}
+                                </div>
                             )}
-                        </button>
+                        </div>
                     );
                 })}
 

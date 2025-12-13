@@ -225,6 +225,7 @@ export default function ProductFormModal({ isOpen, onClose, onSubmit, initialDat
                                     accept="image/*"
                                     onChange={handleFileUpload}
                                     disabled={isUploading}
+                                    aria-label="上傳商品圖片"
                                 />
                             </label>
                         </div>

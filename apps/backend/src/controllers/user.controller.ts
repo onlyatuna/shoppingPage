@@ -5,9 +5,10 @@ import { updateProfileSchema, adminUpdateUserSchema } from '../schemas/user.sche
 import { StatusCodes } from 'http-status-codes';
 import { Role } from '@prisma/client'; // 引入 Role
 
-// [Admin] 取得所有使用者
+// [Developer] 取得所有使用者
 export const getAllUsers = async (req: Request, res: Response) => {
-    const users = await UserService.findAll();
+    const { search } = req.query;
+    const users = await UserService.findAll(search as string | undefined);
     res.json({ status: 'success', data: users });
 };
 
@@ -33,8 +34,16 @@ export const updateProfile = async (req: Request, res: Response) => {
 // [Admin] 更新使用者權限
 export const updateUserRole = async (req: Request, res: Response) => {
     try {
+        const requesterId = req.user!.userId;
         const requesterRole = req.user!.role as Role;
         const targetUserId = Number(req.params.id);
+
+        // [Security] 防止使用者修改自己的權限
+        if (requesterId === targetUserId) {
+            return res.status(StatusCodes.FORBIDDEN).json({
+                message: '無法修改自己的權限'
+            });
+        }
 
         // 1. 先用 Zod 解析，確保格式正確
         const parsedBody = adminUpdateUserSchema.parse(req.body);

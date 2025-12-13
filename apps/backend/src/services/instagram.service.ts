@@ -82,56 +82,64 @@ export class InstagramService {
             });
 
             const creationId = containerResponse.data.id;
+            console.log('Container created:', creationId);
 
 
 
-            // Step 1.5: Wait for Media to be Ready (Polling Status)
-            let attempts = 0;
-            const maxAttempts = 10;
-            let isReady = false;
+            // Step 2: Wait for Media Processing with exponential backoff
+            const maxAttempts = 20; // Increased from 10
+            let attempt = 0;
 
-            while (attempts < maxAttempts && !isReady) {
+            while (attempt < maxAttempts) {
+                attempt++;
+
+                // Exponential backoff: start at 3s, increase by 1s each attempt, max 10s
+                const delay = Math.min(3000 + (attempt * 1000), 10000);
+                console.log(`Waiting ${delay}ms before checking (attempt ${attempt}/${maxAttempts})...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+
                 try {
                     const statusResponse = await axios.get(`https://graph.instagram.com/${creationId}`, {
                         params: {
-                            fields: 'status_code',
+                            fields: 'status_code,status',
                             access_token: token
                         }
                     });
 
                     const statusCode = statusResponse.data.status_code;
-                    console.log(`Checking media status (${attempts + 1}/${maxAttempts}): ${statusCode}`);
+                    console.log(`Media status(${attempt} / ${maxAttempts}): ${statusCode}`);
 
                     if (statusCode === 'FINISHED') {
-                        isReady = true;
+                        console.log('Media ready! Publishing...');
+
+                        // Step 3: Publish Media
+                        const publishResponse = await axios.post(`https://graph.instagram.com/${igUserId}/media_publish`, null, {
+                            params: {
+                                creation_id: creationId,
+                                access_token: token
+                            }
+                        });
+
+                        console.log('Successfully published! Media ID:', publishResponse.data.id);
+                        return publishResponse.data.id;
+
                     } else if (statusCode === 'ERROR' || statusCode === 'EXPIRED') {
                         throw new Error(`Media processing failed with status: ${statusCode}`);
-                    } else {
-                        // IN_PROGRESS -> Wait 2 seconds
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        attempts++;
                     }
-                } catch (err) {
-                    // Ignore network glitches during polling, just wait and retry
-                    console.warn('Error checking media status:', err);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    attempts++;
+
+                    // Still IN_PROGRESS, continue loop
+
+                } catch (error: any) {
+                    // Log error but continue trying unless it's the last attempt
+                    console.warn(`Error on attempt ${attempt}:`, error.message);
+
+                    if (attempt >= maxAttempts) {
+                        throw new Error('媒體處理超時，請稍後再試或檢查圖片格式');
+                    }
                 }
             }
 
-            if (!isReady) {
-                throw new Error('Timeout waiting for media to be ready');
-            }
-
-            // Step 2: Publish Media
-            const publishResponse = await axios.post(`https://graph.instagram.com/${igUserId}/media_publish`, null, {
-                params: {
-                    creation_id: creationId,
-                    access_token: token
-                }
-            });
-
-            return publishResponse.data.id;
+            throw new Error('媒體處理超時，請稍後再試或檢查圖片格式');
 
         } catch (error: any) {
             console.error('Instagram Publish Error:', error.response?.data || error.message);
