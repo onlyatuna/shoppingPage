@@ -578,6 +578,7 @@ export default function EditorPage() {
             <header className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] z-50 shrink-0">
                 <div className="flex items-center gap-4">
                     <button
+                        type="button"
                         onClick={() => navigate(-1)}
                         className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
                         aria-label="Go back"
@@ -589,6 +590,7 @@ export default function EditorPage() {
 
                 <div className="flex items-center gap-2">
                     <button
+                        type="button"
                         onClick={toggleTheme}
                         className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
                         aria-label="Toggle theme"

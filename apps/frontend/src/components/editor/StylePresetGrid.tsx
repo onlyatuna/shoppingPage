@@ -76,6 +76,7 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                 </h3>
                 {customStyles.length > 0 && (
                     <button
+                        type="button"
                         onClick={() => setIsEditMode(!isEditMode)}
                         className={`p-1.5 rounded-lg transition-all ${isEditMode
                             ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
@@ -92,6 +93,7 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                 {/* Default Presets */}
                 {presets.map((preset) => (
                     <button
+                        type="button"
                         key={preset.key}
                         onClick={() => onSelectStyle(preset.key)}
                         disabled={disabled}
@@ -126,6 +128,7 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                     return (
                         <div key={customStyle.key} className="relative group">
                             <button
+                                type="button"
                                 onClick={() => !isEditMode && onSelectStyle(customStyle.key)}
                                 disabled={disabled}
                                 className={`
@@ -157,6 +160,7 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                     {onEditCustomStyle && (
                                         <button
+                                            type="button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onEditCustomStyle(customStyle);
@@ -169,6 +173,7 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                                     )}
                                     {onDeleteCustomStyle && (
                                         <button
+                                            type="button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 if (confirm(`確定要刪除「${customStyle.name}」風格嗎？`)) {
@@ -190,6 +195,7 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                 {/* Add Custom Style Button */}
                 {onAddCustomStyle && (
                     <button
+                        type="button"
                         onClick={onAddCustomStyle}
                         disabled={disabled}
                         className={`
