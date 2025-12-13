@@ -132,11 +132,12 @@ export default function AdminOrdersPage() {
                                 </td>
                                 <td className="p-4">
                                     <div className="flex items-center gap-2">
-                                        <button onClick={() => setSelectedOrder(order)} className="flex items-center gap-1 text-gray-600 hover:bg-gray-100 px-3 py-1 rounded border">
+                                        <button type="button" onClick={() => setSelectedOrder(order)} className="flex items-center gap-1 text-gray-600 hover:bg-gray-100 px-3 py-1 rounded border">
                                             <Eye size={14} /> 詳情
                                         </button>
                                         {user?.role === 'DEVELOPER' && (
                                             <button
+                                                type="button"
                                                 onClick={() => handleDeleteOrder(order.id)}
                                                 className="flex items-center gap-1 text-red-600 hover:bg-red-50 px-3 py-1 rounded border border-red-200"
                                             >
@@ -162,7 +163,7 @@ export default function AdminOrdersPage() {
                                     <Calendar size={10} /> {new Date(order.createdAt).toLocaleString()}
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedOrder(order)} className="text-blue-600 text-sm flex items-center gap-1">
+                            <button type="button" onClick={() => setSelectedOrder(order)} className="text-blue-600 text-sm flex items-center gap-1">
                                 詳情 <Eye size={14} />
                             </button>
                         </div>
@@ -205,6 +206,7 @@ export default function AdminOrdersPage() {
 
                         {user?.role === 'DEVELOPER' && (
                             <button
+                                type="button"
                                 onClick={() => handleDeleteOrder(order.id)}
                                 className="mt-3 w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 px-3 py-2 rounded border border-red-200"
                             >

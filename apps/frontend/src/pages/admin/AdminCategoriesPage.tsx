@@ -49,6 +49,7 @@ export default function AdminCategoriesPage() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold">分類管理</h1>
                 <button
+                    type="button"
                     onClick={() => setIsCreating(true)}
                     className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 disabled:opacity-50"
                     disabled={isCreating}
@@ -76,10 +77,10 @@ export default function AdminCategoriesPage() {
                             onChange={(e) => setNewCategory({ ...newCategory, slug: e.target.value })}
                         />
                         <div className="flex gap-2 mt-2 md:mt-0">
-                            <button onClick={() => createMutation.mutate(newCategory)} className="flex-1 md:flex-none bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center justify-center gap-2">
+                            <button type="button" onClick={() => createMutation.mutate(newCategory)} className="flex-1 md:flex-none bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center justify-center gap-2">
                                 <Save size={18} /> 儲存
                             </button>
-                            <button onClick={() => setIsCreating(false)} className="flex-1 md:flex-none bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 flex items-center justify-center gap-2">
+                            <button type="button" onClick={() => setIsCreating(false)} className="flex-1 md:flex-none bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 flex items-center justify-center gap-2">
                                 <X size={18} /> 取消
                             </button>
                         </div>
@@ -107,7 +108,7 @@ export default function AdminCategoriesPage() {
                                 <td className="p-4 font-mono text-sm text-gray-600">{category.slug}</td>
                                 <td className="p-4"><span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold">{category._count?.products || 0}</span></td>
                                 <td className="p-4">
-                                    <button onClick={() => { if (confirm(`確定刪除 ${category.name}？`)) deleteMutation.mutate(category.id); }} className="text-gray-400 hover:text-red-500 p-1">
+                                    <button type="button" onClick={() => { if (confirm(`確定刪除 ${category.name}？`)) deleteMutation.mutate(category.id); }} className="text-gray-400 hover:text-red-500 p-1" aria-label="刪除分類">
                                         <Trash2 size={18} />
                                     </button>
                                 </td>
@@ -134,8 +135,10 @@ export default function AdminCategoriesPage() {
                             </div>
                         </div>
                         <button
+                            type="button"
                             onClick={() => { if (confirm(`確定刪除 ${category.name}？`)) deleteMutation.mutate(category.id); }}
                             className="p-3 bg-red-50 text-red-500 rounded-full hover:bg-red-100"
+                            aria-label="刪除分類"
                         >
                             <Trash2 size={20} />
                         </button>

@@ -118,12 +118,14 @@ export default function AdminProductsPage() {
                 <h1 className="text-2xl font-bold">後台商品管理</h1>
                 <div className="flex gap-3 w-full md:w-auto">
                     <button
+                        type="button"
                         onClick={() => navigate('/editor')}
                         className="flex-1 md:flex-none bg-indigo-600 text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-indigo-700 shadow-sm transition-colors"
                     >
                         <Sparkles size={20} /> AI輔助上架
                     </button>
                     <button
+                        type="button"
                         onClick={openCreateModal}
                         className="flex-1 md:flex-none bg-black text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
                     >
@@ -172,18 +174,20 @@ export default function AdminProductsPage() {
                                 <td className={`p-4 ${product.stock < 5 ? 'text-red-500 font-bold' : ''}`}>{product.stock}</td>
                                 <td className="p-4">
                                     <button
+                                        type="button"
                                         onClick={() => toggleActive(product)}
                                         className={`relative w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${product.isActive ? 'bg-green-500' : 'bg-gray-300'
                                             }`}
+                                        aria-label={product.isActive ? '下架商品' : '上架商品'}
                                     >
                                         <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out ${product.isActive ? 'translate-x-6' : 'translate-x-0'}`} />
                                     </button>
                                 </td>
                                 <td className="p-4 flex gap-2">
-                                    <button onClick={() => openEditModal(product)} className="p-2 text-gray-600 hover:bg-gray-200 rounded">
+                                    <button type="button" onClick={() => openEditModal(product)} className="p-2 text-gray-600 hover:bg-gray-200 rounded" aria-label="編輯商品">
                                         <Edit size={18} />
                                     </button>
-                                    <button onClick={() => handleDelete(product)} className="p-2 text-red-500 hover:bg-red-50 rounded">
+                                    <button type="button" onClick={() => handleDelete(product)} className="p-2 text-red-500 hover:bg-red-50 rounded" aria-label="刪除商品">
                                         <Trash2 size={18} />
                                     </button>
                                 </td>
@@ -225,6 +229,7 @@ export default function AdminProductsPage() {
                             {/* 底部按鈕區 */}
                             <div className="flex justify-between items-center mt-3 pt-3 border-t">
                                 <button
+                                    type="button"
                                     onClick={() => toggleActive(product)}
                                     className={`text-xs font-bold px-3 py-1.5 rounded ${product.isActive ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}
                                 >
@@ -232,12 +237,14 @@ export default function AdminProductsPage() {
                                 </button>
                                 <div className="flex gap-2">
                                     <button
+                                        type="button"
                                         onClick={() => openEditModal(product)}
                                         className="flex items-center gap-1 text-xs bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200"
                                     >
                                         <Edit size={14} /> 編輯
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => handleDelete(product)}
                                         className="flex items-center gap-1 text-xs bg-red-50 text-red-500 px-3 py-1.5 rounded hover:bg-red-100"
                                     >

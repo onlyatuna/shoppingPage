@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Sun, Moon, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from '../contexts/ThemeContext';
-import ControlPanel from '../components/editor/ControlPanel';
 import { StylePresetKey, presets } from '../components/editor/StylePresetGrid';
 import ImageCanvas from '../components/editor/ImageCanvas';
 import CopywritingAssistant from '../components/editor/CopywritingAssistant';
@@ -480,7 +479,7 @@ export default function EditorPage() {
 
         // Don't set isProcessing here - ExportControls has its own loading state
         try {
-            const response = await apiClient.post('/instagram/publish', {
+            await apiClient.post('/instagram/publish', {
                 imageUrl: targetImage,
                 // Use generated/manual caption OR prompt OR default
                 caption: generatedCaption || prompt || 'Made with AI Editor'
@@ -654,6 +653,7 @@ export default function EditorPage() {
             `}>
                     {/* Mobile Style Change Button (Top Right on Mobile) */}
                     <button
+                        type="button"
                         onClick={() => setIsMobileSheetOpen(true)}
                         className="md:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm"
                     >

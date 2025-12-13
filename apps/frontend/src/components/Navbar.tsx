@@ -84,7 +84,7 @@ export default function Navbar() {
 
                     {/* 手機版漢堡按鈕 */}
                     <div className="md:hidden z-10">
-                        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-1">
+                        <button type="button" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-1" aria-label={isMobileMenuOpen ? "關閉選單" : "開啟選單"}>
                             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
                     </div>
@@ -101,7 +101,7 @@ export default function Navbar() {
                         {user && isStaff && (
                             <div className="hidden md:block mr-4 border-r pr-4 border-gray-300">
                                 <div className="group relative">
-                                    <button className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-black uppercase tracking-wide py-2">
+                                    <button type="button" className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-black uppercase tracking-wide py-2">
                                         後台管理 <ChevronDown size={14} />
                                     </button>
                                     <div className="absolute top-full right-0 w-48 bg-white border border-gray-100 shadow-xl rounded-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50">
@@ -138,8 +138,10 @@ export default function Navbar() {
                         <div className="relative" ref={dropdownRef}>
                             {user ? (
                                 <button
+                                    type="button"
                                     onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                                     className="flex items-center justify-center w-9 h-9 rounded-full text-gray-700 hover:bg-gray-100 transition focus:outline-none"
+                                    aria-label="使用者選單"
                                 >
                                     {/* 外部按鈕維持 User Icon */}
                                     <User size={26} />
@@ -190,7 +192,7 @@ export default function Navbar() {
                         <Link to="/?sort=new" className="hover:text-blue-600 transition-colors">最新商品</Link>
 
                         <div className="group relative h-full flex items-center">
-                            <button className="flex items-center gap-1 hover:text-blue-600 transition-colors cursor-pointer h-full">
+                            <button type="button" className="flex items-center gap-1 hover:text-blue-600 transition-colors cursor-pointer h-full">
                                 商品分類 <ChevronDown size={14} />
                             </button>
                             <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border shadow-lg rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-40 translate-y-2 group-hover:translate-y-0">
@@ -204,7 +206,7 @@ export default function Navbar() {
                         </div>
 
                         <div className="group relative h-full flex items-center">
-                            <button className="flex items-center gap-1 hover:text-blue-600 transition-colors cursor-pointer h-full">
+                            <button type="button" className="flex items-center gap-1 hover:text-blue-600 transition-colors cursor-pointer h-full">
                                 常見問題 <ChevronDown size={14} />
                             </button>
                             <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border shadow-lg rounded-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-40 translate-y-2 group-hover:translate-y-0">
@@ -225,7 +227,7 @@ export default function Navbar() {
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
                         />
-                        <button type="submit" className="absolute right-2 top-1.5 text-gray-400 hover:text-black">
+                        <button type="submit" className="absolute right-2 top-1.5 text-gray-400 hover:text-black" aria-label="搜尋">
                             <Search size={16} />
                         </button>
                     </form>
@@ -247,7 +249,7 @@ export default function Navbar() {
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
                             />
-                            <button type="submit" className="absolute right-3 top-2 text-gray-500">
+                            <button type="submit" className="absolute right-3 top-2 text-gray-500" aria-label="搜尋">
                                 <Search size={20} />
                             </button>
                         </form>
@@ -257,7 +259,7 @@ export default function Navbar() {
                         </Link>
 
                         <div>
-                            <button onClick={() => setMobileExpandCategory(!mobileExpandCategory)} className="w-full flex justify-between items-center px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
+                            <button type="button" onClick={() => setMobileExpandCategory(!mobileExpandCategory)} className="w-full flex justify-between items-center px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
                                 <span>商品分類</span>
                                 <ChevronDown size={20} className={`transition-transform ${mobileExpandCategory ? 'rotate-180' : ''}`} />
                             </button>
@@ -273,7 +275,7 @@ export default function Navbar() {
                         </div>
 
                         <div>
-                            <button onClick={() => setMobileExpandFaq(!mobileExpandFaq)} className="w-full flex justify-between items-center px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
+                            <button type="button" onClick={() => setMobileExpandFaq(!mobileExpandFaq)} className="w-full flex justify-between items-center px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
                                 <span>常見問題</span>
                                 <ChevronDown size={20} className={`transition-transform ${mobileExpandFaq ? 'rotate-180' : ''}`} />
                             </button>

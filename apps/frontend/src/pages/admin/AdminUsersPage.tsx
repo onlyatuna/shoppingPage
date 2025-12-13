@@ -90,8 +90,10 @@ export default function AdminUsersPage() {
                     />
                     {searchQuery && (
                         <button
+                            type="button"
                             onClick={() => setSearchQuery('')}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            aria-label="清除搜尋"
                         >
                             <X size={18} />
                         </button>
@@ -133,10 +135,10 @@ export default function AdminUsersPage() {
                                 <td className="p-4 flex gap-2">
                                     {canManageUser(u) ? (
                                         <>
-                                            <button onClick={() => handleRoleChange(u)} className="text-xs border px-2 py-1 rounded hover:bg-black hover:text-white transition">
+                                            <button type="button" onClick={() => handleRoleChange(u)} className="text-xs border px-2 py-1 rounded hover:bg-black hover:text-white transition">
                                                 設為 {u.role === 'ADMIN' ? 'User' : 'Admin'}
                                             </button>
-                                            <button onClick={() => handleDelete(u)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 size={18} /></button>
+                                            <button type="button" onClick={() => handleDelete(u)} className="p-1 text-gray-400 hover:text-red-600" aria-label="刪除使用者"><Trash2 size={18} /></button>
                                         </>
                                     ) : u.id === currentUser?.id ? <span className="text-xs text-blue-500">你自己</span> : <span className="text-xs text-gray-300">無權限</span>}
                                 </td>
@@ -173,10 +175,10 @@ export default function AdminUsersPage() {
                             <div className="flex gap-2">
                                 {canManageUser(u) ? (
                                     <>
-                                        <button onClick={() => handleRoleChange(u)} className="text-xs bg-gray-100 px-3 py-1.5 rounded font-medium hover:bg-gray-200">
+                                        <button type="button" onClick={() => handleRoleChange(u)} className="text-xs bg-gray-100 px-3 py-1.5 rounded font-medium hover:bg-gray-200">
                                             變更權限
                                         </button>
-                                        <button onClick={() => handleDelete(u)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded font-medium hover:bg-red-100">
+                                        <button type="button" onClick={() => handleDelete(u)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded font-medium hover:bg-red-100">
                                             刪除
                                         </button>
                                     </>
