@@ -38,10 +38,21 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
-// Add Cache-Control headers for API responses
+// Add Cache-Control headers - differentiate between API and static assets
 app.use((req, res, next) => {
-    // Use 'no-cache' to require revalidation, avoiding deprecated directives
-    res.setHeader('Cache-Control', 'no-cache');
+    // Static assets with content hash (e.g., index-abc123.js) - long-term cache
+    if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+        // If filename contains hash (dash followed by alphanumeric), use long-term cache
+        if (req.path.match(/-[a-zA-Z0-9]{8,}\.(js|css)$/)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        } else {
+            // Other static files (like favicon) - moderate cache
+            res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
+        }
+    } else {
+        // API endpoints - no cache to ensure fresh data
+        res.setHeader('Cache-Control', 'no-cache');
+    }
     next();
 });
 

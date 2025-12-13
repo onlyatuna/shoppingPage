@@ -71,7 +71,7 @@ export default function CopywritingAssistant({
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 relative transition-colors flex flex-col gap-4">
                 {/* 結果/編輯區 - 放在最上面 */}
                 <div>
-                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
+                    <label htmlFor={`caption-input-${instanceId}`} className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">
                         📝 貼文內容
                     </label>
                     {isGenerating ? (
