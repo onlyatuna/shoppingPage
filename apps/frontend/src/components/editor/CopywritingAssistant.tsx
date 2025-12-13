@@ -11,6 +11,7 @@ interface CopywritingAssistantProps {
     onGenerate: () => void;
     disabled?: boolean;
     instanceId?: string; // Unique identifier for this instance (e.g., 'desktop' or 'mobile')
+    imageUrl?: string | null; // Current generated/uploaded image URL for thumbnail
 }
 
 export default function CopywritingAssistant({
@@ -21,7 +22,8 @@ export default function CopywritingAssistant({
     isGenerating,
     instanceId = 'default',
     onGenerate,
-    disabled
+    disabled,
+    imageUrl
 }: CopywritingAssistantProps) {
     const [copied, setCopied] = useState(false);
     const [isPromptExpanded, setIsPromptExpanded] = useState(false);
@@ -50,6 +52,20 @@ export default function CopywritingAssistant({
                     {generatedCaption ? '重新生成' : '自動生成'}
                 </button>
             </div>
+
+            {/* Image Thumbnail Preview */}
+            {imageUrl && (
+                <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">📷 當前圖片預覽</p>
+                    <div className="relative w-full aspect-square max-w-[120px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 shadow-sm">
+                        <img
+                            src={imageUrl}
+                            alt="當前生成圖片"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                </div>
+            )}
 
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 relative transition-colors flex flex-col gap-4">
                 {/* 結果/編輯區 - 放在最上面 */}

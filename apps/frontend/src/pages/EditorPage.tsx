@@ -677,6 +677,7 @@ export default function EditorPage() {
                     <h2 className="text-xl font-bold mb-4">AI 文案助手</h2>
                     <CopywritingAssistant
                         instanceId="mobile-caption"
+                        imageUrl={editedImage || uploadedImage}
                         generatedCaption={generatedCaption}
                         onCaptionChange={setGeneratedCaption}
                         captionPrompt={captionPrompt}
@@ -721,6 +722,7 @@ export default function EditorPage() {
 
                         <CopywritingAssistant
                             instanceId="desktop-caption"
+                            imageUrl={editedImage || uploadedImage}
                             generatedCaption={generatedCaption}
                             onCaptionChange={setGeneratedCaption}
                             captionPrompt={captionPrompt}

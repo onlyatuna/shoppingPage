@@ -29,13 +29,21 @@ const PORT = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
 // Middlewares
-// Security headers - disabled CSP and XSS-Protection as they're unnecessary for API-only endpoints
+// Security headers - disabled CSP, XSS-Protection, and X-Frame-Options as unnecessary for API
 app.use(helmet({
     contentSecurityPolicy: false, // Disabled - not needed for API responses
     xssFilter: false, // Disabled - x-xss-protection header is deprecated
+    frameguard: false, // Disabled - X-Frame-Options is deprecated, use CSP frame-ancestors instead
     // 允許跨域資源載入 (避免 Cloudinary 圖片被擋)
     crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
+
+// Add Cache-Control headers for API responses
+app.use((req, res, next) => {
+    // Default: no-cache for API endpoints to ensure fresh data
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    next();
+});
 
 app.use(cors({
     origin: [
