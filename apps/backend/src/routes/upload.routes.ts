@@ -92,9 +92,16 @@ router.get('/resources', authenticateToken, requireAdmin, async (req, res) => {
         });
     } catch (error: any) {
         console.error('Cloudinary List Error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            statusCode: error.http_code,
+            name: error.name
+        });
+
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             message: '無法取得雲端圖庫',
-            error: error.message
+            error: error.message,
+            hint: 'Please check Cloudinary API credentials and configuration'
         });
     }
 });

@@ -40,9 +40,28 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
 
             setResources(newResources);
             setNextCursor(newNextCursor);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to fetch library:', error);
-            toast.error('無法載入圖庫');
+
+            // Distinguish between different error types
+            const status = error.response?.status;
+            const message = error.response?.data?.message;
+
+            if (status === 401 || status === 403) {
+                toast.error('權限不足：此功能需要管理員或開發者權限', {
+                    description: message || '請使用管理員帳號登入',
+                    duration: 5000
+                });
+            } else if (status === 500) {
+                toast.error('伺服器錯誤：無法載入圖庫', {
+                    description: '請檢查 Cloudinary 設定或稍後再試',
+                    duration: 5000
+                });
+            } else {
+                toast.error('無法載入圖庫', {
+                    description: message || '請稍後再試',
+                });
+            }
         } finally {
             setLoading(false);
         }
