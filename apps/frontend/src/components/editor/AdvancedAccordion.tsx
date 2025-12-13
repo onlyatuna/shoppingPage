@@ -21,7 +21,7 @@ export default function AdvancedAccordion({ prompt, onPromptChange, disabled }: 
                 <div className="flex items-center gap-2">
                     <Settings size={16} className="text-gray-500 dark:text-gray-400" />
                     <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        3. 魔法參數
+                        2. 魔法參數
                     </span>
                 </div>
                 {isOpen ? (

@@ -1,20 +1,32 @@
-import { RefreshCw, Type, Stamp } from 'lucide-react';
+import { RefreshCw, Type, Stamp, Crop } from 'lucide-react';
 
 interface FloatingToolbarProps {
     onAddText: () => void;
     onAddWatermark: () => void;
+    onCrop: () => void;
     onRegenerate: () => void;
     disabled?: boolean;
+    className?: string;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 }
 
 export default function FloatingToolbar({
     onAddText,
     onAddWatermark,
+    onCrop,
     onRegenerate,
-    disabled
+    disabled,
+    className,
+    onMouseEnter,
+    onMouseLeave
 }: FloatingToolbarProps) {
     return (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-2 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 transition-all hover:scale-105 z-20">
+        <div
+            className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-2 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 transition-all hover:scale-105 z-20 ${className || ''}`}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+        >
             <button
                 onClick={onAddText}
                 disabled={disabled}
@@ -22,6 +34,17 @@ export default function FloatingToolbar({
                 title="添加文字 (Coming Soon)"
             >
                 <Type size={20} />
+            </button>
+
+            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
+
+            <button
+                onClick={onCrop}
+                disabled={disabled}
+                className="p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors tooltip-trigger"
+                title="裁切圖片"
+            >
+                <Crop size={20} />
             </button>
 
             <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />

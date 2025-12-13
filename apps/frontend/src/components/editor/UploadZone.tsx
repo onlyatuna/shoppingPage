@@ -4,7 +4,7 @@ import { Upload, Check, Image as ImageIcon } from 'lucide-react';
 
 interface UploadZoneProps {
     onImageUpload: (file: File) => void;
-    onOpenLibrary: () => void;
+    onOpenLibrary?: () => void;
     uploadedImage: string | null;
 }
 
@@ -30,13 +30,15 @@ export default function UploadZone({ onImageUpload, onOpenLibrary, uploadedImage
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     1. 上傳商品圖
                 </h3>
-                <button
-                    onClick={onOpenLibrary}
-                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
-                >
-                    <ImageIcon size={12} />
-                    雲端圖庫
-                </button>
+                {onOpenLibrary && (
+                    <button
+                        onClick={onOpenLibrary}
+                        className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
+                    >
+                        <ImageIcon size={12} />
+                        雲端圖庫
+                    </button>
+                )}
             </div>
 
             <div

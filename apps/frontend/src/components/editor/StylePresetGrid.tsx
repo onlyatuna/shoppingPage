@@ -1,10 +1,13 @@
-import { Sparkles, Gem, Leaf, PartyPopper } from 'lucide-react';
+import { Sparkles, Gem, Leaf, PartyPopper, Plus, Palette } from 'lucide-react';
+import { CustomStyle } from './CustomStyleModal';
 
 export type StylePresetKey = 'minimalist' | 'luxury' | 'organic' | 'festival';
 
 interface StylePresetGridProps {
-    selectedStyle: StylePresetKey | null;
-    onSelectStyle: (style: StylePresetKey) => void;
+    selectedStyle: StylePresetKey | string | null;
+    onSelectStyle: (style: StylePresetKey | string) => void;
+    customStyles?: CustomStyle[];
+    onAddCustomStyle?: () => void;
     disabled?: boolean;
 }
 
@@ -51,14 +54,24 @@ export const presets = [
     }
 ];
 
-export default function StylePresetGrid({ selectedStyle, onSelectStyle, disabled }: StylePresetGridProps) {
+export default function StylePresetGrid({ selectedStyle, onSelectStyle, customStyles = [], onAddCustomStyle, disabled }: StylePresetGridProps) {
+    // Icon mapping for custom styles
+    const iconMap: Record<string, any> = {
+        Sparkles,
+        Gem,
+        Leaf,
+        PartyPopper,
+        Palette,
+    };
+
     return (
         <div className="mb-6">
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                2. 選擇風格
+                1. 選擇風格
             </h3>
 
             <div className="grid grid-cols-2 gap-3">
+                {/* Default Presets */}
                 {presets.map((preset) => (
                     <button
                         key={preset.key}
@@ -88,6 +101,61 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, disabled
                         )}
                     </button>
                 ))}
+
+                {/* Custom Styles */}
+                {customStyles.map((customStyle) => {
+                    const IconComponent = iconMap[customStyle.icon] || Palette;
+                    return (
+                        <button
+                            key={customStyle.key}
+                            onClick={() => onSelectStyle(customStyle.key)}
+                            disabled={disabled}
+                            className={`
+                                relative p-3 rounded-xl border-2 text-left transition-all
+                                ${customStyle.color}
+                                ${selectedStyle === customStyle.key
+                                    ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-[#2d2d2d] border-transparent scale-[1.02] shadow-md'
+                                    : `${customStyle.borderColor} opacity-80 hover:opacity-100 hover:scale-[1.01]`
+                                }
+                                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                            `}
+                        >
+                            <div className="flex items-start justify-between mb-1">
+                                <span className="text-sm font-bold">{customStyle.name}</span>
+                                <IconComponent size={16} />
+                            </div>
+                            <p className="text-xs font-medium opacity-80">{customStyle.engName}</p>
+                            <p className="text-[10px] mt-1 opacity-70 leading-tight">
+                                {customStyle.desc}
+                            </p>
+
+                            {selectedStyle === customStyle.key && (
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border border-white dark:border-gray-800" />
+                            )}
+                        </button>
+                    );
+                })}
+
+                {/* Add Custom Style Button */}
+                {onAddCustomStyle && (
+                    <button
+                        onClick={onAddCustomStyle}
+                        disabled={disabled}
+                        className={`
+                            relative p-3 rounded-xl border-2 border-dashed text-left transition-all
+                            bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400
+                            border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500
+                            hover:bg-gray-100 dark:hover:bg-gray-800
+                            ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                            flex items-center justify-center
+                        `}
+                    >
+                        <div className="flex flex-col items-center justify-center gap-1">
+                            <Plus size={24} className="text-gray-500 dark:text-gray-400" />
+                            <span className="text-xs font-medium">新增風格</span>
+                        </div>
+                    </button>
+                )}
             </div>
         </div>
     );
