@@ -122,6 +122,7 @@ router.delete('/:publicId', authenticateToken, requireAdmin, async (req, res) =>
         const productsUsingImage: any[] = await prisma.$queryRaw`
             SELECT id, name FROM products 
             WHERE JSON_SEARCH(images, 'one', ${'%' + publicId + '%'}) IS NOT NULL
+            AND deletedAt IS NULL
             LIMIT 1
         `;
 
