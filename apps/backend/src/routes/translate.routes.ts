@@ -5,7 +5,7 @@ import { StatusCodes } from 'http-status-codes';
 const router = Router();
 
 // DeepL Translation API
-router.post('/translate', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { text, targetLang = 'EN' } = req.body;
 
