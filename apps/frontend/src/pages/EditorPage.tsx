@@ -127,6 +127,24 @@ export default function EditorPage() {
     const [captionPrompt, setCaptionPrompt] = useState('');
     const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
 
+    // Helper: Check if user has unsaved changes
+    const hasUnsavedChanges = () => {
+        return !!(uploadedImage || editedImage || generatedCaption);
+    };
+
+    // Warn user before leaving page with unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges()) {
+                e.preventDefault();
+                e.returnValue = ''; // Required for Chrome
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [uploadedImage, editedImage, generatedCaption]);
+
     // Handlers
     const handleImageUpload = (file: File) => {
         const reader = new FileReader();
@@ -582,7 +600,15 @@ export default function EditorPage() {
                 <div className="flex items-center gap-4">
                     <button
                         type="button"
-                        onClick={() => navigate(-1)}
+                        onClick={() => {
+                            if (hasUnsavedChanges()) {
+                                if (window.confirm('您有未儲存的內容，確定要離開嗎？')) {
+                                    navigate(-1);
+                                }
+                            } else {
+                                navigate(-1);
+                            }
+                        }}
                         className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
                         aria-label="Go back"
                     >
