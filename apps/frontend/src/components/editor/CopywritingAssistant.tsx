@@ -47,7 +47,7 @@ export default function CopywritingAssistant({
                     type="button"
                     onClick={onGenerate}
                     disabled={disabled || isGenerating}
-                    className="text-xs flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+                    className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors shadow-sm"
                 >
                     <Sparkles size={12} />
                     {generatedCaption ? '重新生成' : '自動生成'}
