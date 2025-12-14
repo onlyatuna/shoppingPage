@@ -268,7 +268,6 @@ export default function Navbar() {
                         <div>
                             <button type="button" onClick={() => setMobileExpandCategory(!mobileExpandCategory)} className="w-full flex justify-between items-center px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
                                 <span>商品分類</span>
-                                <ChevronDown size={20} className={`transition-transform ${mobileExpandCategory ? 'rotate-180' : ''}`} />
                             </button>
                             {mobileExpandCategory && (
                                 <div className="bg-gray-50 px-4 py-2 space-y-2">
@@ -284,7 +283,6 @@ export default function Navbar() {
                         <div>
                             <button type="button" onClick={() => setMobileExpandFaq(!mobileExpandFaq)} className="w-full flex justify-between items-center px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
                                 <span>常見問題</span>
-                                <ChevronDown size={20} className={`transition-transform ${mobileExpandFaq ? 'rotate-180' : ''}`} />
                             </button>
                             {mobileExpandFaq && (
                                 <div className="bg-gray-50 px-4 py-2 space-y-2">
