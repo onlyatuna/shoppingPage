@@ -601,11 +601,22 @@ export default function EditorPage() {
                     <button
                         type="button"
                         onClick={() => {
+                            console.log('Back button clicked');
+                            console.log('uploadedImage:', uploadedImage);
+                            console.log('editedImage:', editedImage);
+                            console.log('generatedCaption:', generatedCaption);
+                            console.log('hasUnsavedChanges():', hasUnsavedChanges());
+
                             if (hasUnsavedChanges()) {
+                                console.log('Has unsaved changes, showing confirm dialog');
                                 if (window.confirm('您有未儲存的內容，確定要離開嗎？')) {
+                                    console.log('User confirmed, navigating back');
                                     navigate(-1);
+                                } else {
+                                    console.log('User cancelled navigation');
                                 }
                             } else {
+                                console.log('No unsaved changes, navigating back directly');
                                 navigate(-1);
                             }
                         }}
