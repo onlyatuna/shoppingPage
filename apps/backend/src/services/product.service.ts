@@ -102,11 +102,16 @@ export class ProductService {
 
     // --- 刪除商品 (軟刪除) ---
     static async delete(id: number) {
+        // 先找出該商品以獲取原始 slug
+        const product = await prisma.product.findUnique({ where: { id } });
+        if (!product) throw new Error('找不到該商品');
+
         return prisma.product.update({
             where: { id },
             data: {
                 isActive: false,
-                deletedAt: new Date() // [新增] 設定刪除時間
+                deletedAt: new Date(), // [新增] 設定刪除時間
+                slug: `${product.slug}-deleted-${Date.now()}` // [修正] 改名釋放 slug
             },
         });
     }

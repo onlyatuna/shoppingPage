@@ -90,6 +90,7 @@ export default function ProductFormModal({ isOpen, onClose, onSubmit, initialDat
         setIsUploading(true);
         const formData = new FormData();
         formData.append('image', file);
+        formData.append('type', 'product'); // Explicitly upload to product folder
 
         try {
             // 呼叫剛剛寫好的後端 API

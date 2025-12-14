@@ -43,13 +43,16 @@ router.post('/', authenticateToken, requireAdmin, upload.single('image'), async 
             return res.status(StatusCodes.BAD_REQUEST).json({ message: '未上傳檔案' });
         }
 
+        const type = req.query.type || req.body.type || 'product';
+        const folder = type === 'canvas' ? 'ecommerce-canvas' : 'ecommerce-product';
+
         // 將 Buffer 轉為 Base64 字串以便上傳
         const b64 = Buffer.from(req.file.buffer).toString('base64');
         const dataURI = 'data:' + req.file.mimetype + ';base64,' + b64;
 
         // 上傳到 Cloudinary
         const result = await cloudinary.uploader.upload(dataURI, {
-            folder: 'ecommerce-product', // 在 Cloudinary 建立的資料夾名稱
+            folder: folder, // 在 Cloudinary 建立的資料夾名稱
         });
 
         // 回傳 Cloudinary 給的網址
@@ -57,7 +60,8 @@ router.post('/', authenticateToken, requireAdmin, upload.single('image'), async 
             status: 'success',
             data: {
                 url: result.secure_url,
-                public_id: result.public_id // Must return public_id for future deletion
+                public_id: result.public_id, // Must return public_id for future deletion
+                folder: folder
             }
         });
     } catch (error: any) {
@@ -72,13 +76,14 @@ router.post('/', authenticateToken, requireAdmin, upload.single('image'), async 
 // 4. 取得 Cloudinary 圖片列表 (支援分頁)
 router.get('/resources', authenticateToken, requireAdmin, async (req, res) => {
     try {
-        const { next_cursor } = req.query;
+        const { next_cursor, type } = req.query;
+        const prefix = type === 'canvas' ? 'ecommerce-canvas' : 'ecommerce-product';
 
         // 使用 Admin API 取得資源列表
         // 注意：這需要 API Key 有足夠權限 (通常預設都有)
         const result = await cloudinary.api.resources({
             type: 'upload',
-            prefix: 'ecommerce-product', // 只撈取此專案的圖片
+            prefix: prefix, // 只撈取此專案的圖片
             max_results: 9, // 每頁顯示數量
             next_cursor: next_cursor as string
         });
@@ -91,12 +96,9 @@ router.get('/resources', authenticateToken, requireAdmin, async (req, res) => {
             }
         });
     } catch (error: any) {
+        // ... err
         console.error('Cloudinary List Error:', error);
-        console.error('Error details:', {
-            message: error.message,
-            statusCode: error.http_code,
-            name: error.name
-        });
+        // ...
 
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             message: '無法取得雲端圖庫',

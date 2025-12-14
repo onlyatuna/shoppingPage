@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Trash2, ChevronLeft, ChevronRight, Loader2, Image as ImageIcon, FilePenLine } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Trash2, ChevronLeft, ChevronRight, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/client';
@@ -23,6 +23,17 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
     const [loading, setLoading] = useState(false);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
+    // Interaction State
+    const [activeDeleteId, setActiveDeleteId] = useState<string | null>(null);
+    const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+    const [hoverId, setHoverId] = useState<string | null>(null);
+    const isLongPressRef = useRef(false);
+
+    // Folder State
+    const [viewType, setViewType] = useState<'product' | 'canvas'>('product');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isUploading, setIsUploading] = useState(false);
+
     // Let's rewrite pagination logic cleanly
     // cursorStack stores the cursor used to fetch the CURRENT and PREVIOUS pages.
     // Index 0: undefined (Page 1)
@@ -34,7 +45,10 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
         setLoading(true);
         try {
             const response = await apiClient.get('/upload/resources', {
-                params: { next_cursor: cursor }
+                params: {
+                    next_cursor: cursor,
+                    type: viewType
+                }
             });
             const { resources: newResources, next_cursor: newNextCursor } = response.data.data;
 
@@ -71,10 +85,13 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
         fetchImages(cursor);
     };
 
-    // Initial load
+    // Initial load & when viewType changes
     useEffect(() => {
+        // Reset pagination when switching tabs
+        setCursorStack([undefined]);
+        setNextCursor(null);
         fetchImages();
-    }, []);
+    }, [viewType]);
 
     const goToNext = () => {
         if (!nextCursor) return;
@@ -124,32 +141,153 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
         }
     };
 
-    const handleRedirectToAdmin = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        toast.info('如需刪除或管理架上商品圖片，請前往商品管理頁面操作');
-        navigate('/admin/products');
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('type', viewType); // Specify folder type
+
+            await apiClient.post('/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            toast.success('圖片上傳成功');
+            refresh(); // Reload list
+        } catch (error: any) {
+            console.error('Upload failed:', error);
+            toast.error(error.response?.data?.message || '上傳失敗');
+        } finally {
+            setIsUploading(false);
+            // Clear input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
     };
 
     return (
         <div className="flex flex-col h-full">
+            {/* Tabs & Upload Header */}
+            <div className="flex items-center justify-between p-2 pb-0 mb-2 border-b border-gray-100 dark:border-gray-700">
+                <div className="flex gap-4">
+                    <button
+                        onClick={() => setViewType('product')}
+                        className={`text-sm font-medium pb-2 border-b-2 transition-colors ${viewType === 'product'
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                            }`}
+                    >
+                        商品圖片
+                    </button>
+                    <button
+                        onClick={() => setViewType('canvas')}
+                        className={`text-sm font-medium pb-2 border-b-2 transition-colors ${viewType === 'canvas'
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                            }`}
+                    >
+                        畫布素材
+                    </button>
+                </div>
+
+                <div>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                    />
+                    <button
+                        onClick={handleUploadClick}
+                        disabled={isUploading}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                        {isUploading ? (
+                            <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                            <Upload size={14} />
+                        )}
+                        上傳圖片
+                    </button>
+                </div>
+            </div>
+
             {/* Grid */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-                {loading ? (
+            <div
+                className="flex-1 overflow-y-auto custom-scrollbar p-1"
+                onClick={() => setActiveDeleteId(null)}
+            >
+                {loading && resources.length === 0 ? (
                     <div className="flex items-center justify-center h-40">
                         <Loader2 className="animate-spin text-gray-400" size={24} />
                     </div>
                 ) : resources.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-40 text-gray-400 gap-2">
                         <ImageIcon size={32} />
-                        <span className="text-xs">雲端相簿是空的</span>
+                        <span className="text-xs">
+                            {viewType === 'product' ? '沒有商品圖片' : '沒有畫布素材'}
+                        </span>
                     </div>
                 ) : (
                     <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                         {resources.map((img) => (
                             <div
                                 key={img.public_id}
-                                onClick={() => onSelectImage(img.secure_url)}
-                                className="group relative aspect-square bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-blue-500 transition-all shadow-sm hover:shadow-md"
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Stop bubbling to prevent parent from clearing immediately
+
+                                    // If this click was triggered by a long press release, ignore it
+                                    if (isLongPressRef.current) {
+                                        isLongPressRef.current = false;
+                                        return;
+                                    }
+
+                                    // If we are in "delete mode" for this image (mobile), don't select it, just dismiss mode
+                                    if (activeDeleteId === img.public_id) {
+                                        setActiveDeleteId(null);
+                                        return;
+                                    }
+                                    onSelectImage(img.secure_url);
+                                }}
+                                onMouseEnter={() => setHoverId(img.public_id)}
+                                onMouseLeave={() => setHoverId(null)}
+                                onTouchStart={() => {
+                                    isLongPressRef.current = false; // Reset
+                                    const timer = setTimeout(() => {
+                                        setActiveDeleteId(img.public_id);
+                                        isLongPressRef.current = true; // Mark as long press captured
+                                        // Optional: vibrate to indicate long press
+                                        if (navigator.vibrate) navigator.vibrate(50);
+                                    }, 500); // 500ms long press
+                                    setLongPressTimer(timer);
+                                }}
+                                onTouchEnd={() => {
+                                    if (longPressTimer) {
+                                        clearTimeout(longPressTimer);
+                                        setLongPressTimer(null);
+                                    }
+                                }}
+                                onTouchMove={() => {
+                                    // If user scrolls, cancel long press
+                                    if (longPressTimer) {
+                                        clearTimeout(longPressTimer);
+                                        setLongPressTimer(null);
+                                    }
+                                }}
+                                className={`group relative aspect-square bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shadow-sm 
+                                    ${activeDeleteId === img.public_id || hoverId === img.public_id
+                                        ? 'border-blue-500 shadow-md'
+                                        : 'border-transparent'
+                                    }`}
                             >
                                 <img
                                     src={img.secure_url}
@@ -158,18 +296,10 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                                     loading="lazy"
                                 />
                                 {/* Overlay with actions */}
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center
+                                    ${activeDeleteId === img.public_id || hoverId === img.public_id ? 'opacity-100' : 'opacity-0'}
+                                `}>
                                     <div className="flex gap-2">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onSelectImage(img.secure_url);
-                                            }}
-                                            className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-transform hover:scale-110 shadow-lg"
-                                            title="編輯圖片"
-                                        >
-                                            <FilePenLine size={16} />
-                                        </button>
                                         <button
                                             onClick={(e) => handleDelete(img.public_id, e)}
                                             className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-transform hover:scale-110 shadow-lg"
@@ -179,7 +309,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                                         </button>
                                     </div>
                                     <span className="absolute bottom-2 text-xs text-white/90 bg-black/50 px-2 py-0.5 rounded-full">
-                                        點擊選用
+                                        {activeDeleteId === img.public_id ? '刪除' : '點擊選用'}
                                     </span>
                                 </div>
                             </div>
