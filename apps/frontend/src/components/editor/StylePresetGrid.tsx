@@ -70,10 +70,7 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
 
     return (
         <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    1. 選擇風格
-                </h3>
+            <div className="flex items-center gap-2 mb-2">
                 {customStyles.length > 0 && (
                     <button
                         type="button"
@@ -87,6 +84,11 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                         <Pencil size={16} />
                     </button>
                 )}
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex-1 text-center">
+                    選擇風格
+                </h3>
+                {/* Spacer to balance the edit button and center the title */}
+                {customStyles.length > 0 && <div className="w-[34px]"></div>}
             </div>
 
             <div className="grid grid-cols-2 gap-3">

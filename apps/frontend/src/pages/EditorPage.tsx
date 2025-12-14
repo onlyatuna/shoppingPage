@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sun, Moon, ArrowLeft } from 'lucide-react';
+import { Sun, Moon, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from '../contexts/ThemeContext';
 import { StylePresetKey, presets } from '../components/editor/StylePresetGrid';
@@ -49,6 +49,10 @@ export default function EditorPage() {
     // Mobile specific state
     const [mobileStep, setMobileStep] = useState<'edit' | 'caption' | 'publish'>('edit');
     const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+
+    // Panel collapse state
+    const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
+    const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
 
     // Product Modal State
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -630,19 +634,47 @@ export default function EditorPage() {
                 />
 
                 {/* Left Panel - Control Panel (Desktop Only) */}
-                <div className="hidden md:block h-full">
-                    <StylePresetGrid
-                        selectedStyle={selectedStyle}
-                        onSelectStyle={setSelectedStyle}
-                        customStyles={customStyles}
-                        onAddCustomStyle={() => setIsCustomStyleModalOpen(true)}
-                        onEditCustomStyle={(style) => {
-                            setEditingStyle(style);
-                            setIsCustomStyleModalOpen(true);
-                        }}
-                        onDeleteCustomStyle={handleDeleteCustomStyle}
-                        disabled={isProcessing}
-                    />
+                <div className={`hidden md:block bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-[280px]'
+                    }`}>
+                    {isLeftPanelCollapsed ? (
+                        // Collapsed state - show only toggle button
+                        <div className="h-full flex items-start justify-center pt-6">
+                            <button
+                                type="button"
+                                onClick={() => setIsLeftPanelCollapsed(false)}
+                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
+                                aria-label="展開選擇風格面板"
+                                title="展開"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
+                    ) : (
+                        // Expanded state - show full content with collapse button
+                        <div className="p-6 h-full overflow-y-auto custom-scrollbar relative">
+                            <button
+                                type="button"
+                                onClick={() => setIsLeftPanelCollapsed(true)}
+                                className="absolute top-6 right-6 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors z-10"
+                                aria-label="收折選擇風格面板"
+                                title="收折"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <StylePresetGrid
+                                selectedStyle={selectedStyle}
+                                onSelectStyle={setSelectedStyle}
+                                customStyles={customStyles}
+                                onAddCustomStyle={() => setIsCustomStyleModalOpen(true)}
+                                onEditCustomStyle={(style) => {
+                                    setEditingStyle(style);
+                                    setIsCustomStyleModalOpen(true);
+                                }}
+                                onDeleteCustomStyle={handleDeleteCustomStyle}
+                                disabled={isProcessing}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Center Stage - Canvas */}
@@ -716,35 +748,64 @@ export default function EditorPage() {
                 </div>
 
                 {/* Right Panel - Action Panel (Desktop Only) */}
-                <div className="hidden md:flex w-[280px] bg-white dark:bg-[#2d2d2d] border-l border-gray-200 dark:border-gray-700 flex-col h-full z-10">
-                    <div className="p-6 flex-1 overflow-y-auto flex flex-col custom-scrollbar">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                            操作面板
-                        </h2>
-
-                        <CopywritingAssistant
-                            instanceId="desktop-caption"
-                            imageUrl={editedImage || uploadedImage}
-                            generatedCaption={generatedCaption}
-                            onCaptionChange={setGeneratedCaption}
-                            captionPrompt={captionPrompt}
-                            onCaptionPromptChange={setCaptionPrompt}
-                            isGenerating={isGeneratingCaption}
-                            onGenerate={handleGenerateCaption}
-                            // Allow generating caption even if only uploaded image exists
-                            disabled={(!uploadedImage && !editedImage) || isProcessing}
-                        />
-
-                        <div className="mt-auto pt-6">
-                            <ExportControls
-                                onDownload={handleDownload}
-                                onPublishInstagram={handlePublish}
-                                onPublishProduct={handlePublishProduct}
-                                // Allow publish if ANY image exists
-                                disabled={(!editedImage && !uploadedImage) || isProcessing}
-                            />
+                <div className={`hidden md:flex bg-white dark:bg-[#2d2d2d] border-l border-gray-200 dark:border-gray-700 flex-col h-full z-10 transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-[280px]'
+                    }`}>
+                    {isRightPanelCollapsed ? (
+                        // Collapsed state - show only toggle button
+                        <div className="h-full flex items-start justify-center pt-6">
+                            <button
+                                type="button"
+                                onClick={() => setIsRightPanelCollapsed(false)}
+                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
+                                aria-label="展開操作面板"
+                                title="展開"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
                         </div>
-                    </div>
+                    ) : (
+                        // Expanded state - show full content with collapse button
+                        <div className="p-6 flex-1 overflow-y-auto flex flex-col custom-scrollbar relative">
+                            <div className="flex items-center justify-between mb-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsRightPanelCollapsed(true)}
+                                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+                                    aria-label="收折操作面板"
+                                    title="收折"
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex-1 text-center">
+                                    操作面板
+                                </h2>
+                                <div className="w-8"></div> {/* Spacer for balance */}
+                            </div>
+
+                            <CopywritingAssistant
+                                instanceId="desktop-caption"
+                                imageUrl={editedImage || uploadedImage}
+                                generatedCaption={generatedCaption}
+                                onCaptionChange={setGeneratedCaption}
+                                captionPrompt={captionPrompt}
+                                onCaptionPromptChange={setCaptionPrompt}
+                                isGenerating={isGeneratingCaption}
+                                onGenerate={handleGenerateCaption}
+                                // Allow generating caption even if only uploaded image exists
+                                disabled={(!uploadedImage && !editedImage) || isProcessing}
+                            />
+
+                            <div className="mt-auto pt-6">
+                                <ExportControls
+                                    onDownload={handleDownload}
+                                    onPublishInstagram={handlePublish}
+                                    onPublishProduct={handlePublishProduct}
+                                    // Allow publish if ANY image exists
+                                    disabled={(!editedImage && !uploadedImage) || isProcessing}
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile Components */}
