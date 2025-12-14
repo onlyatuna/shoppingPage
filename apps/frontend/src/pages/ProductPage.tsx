@@ -37,22 +37,18 @@ export default function ProductPage() {
         enabled: !!slug,
     });
 
-    // Auto-select first variant options when product loads
-    useEffect(() => {
-        if (product?.options && product.options.length > 0 && Object.keys(selectedOptions).length === 0) {
-            const defaults: Record<string, string> = {};
-            product.options.forEach(opt => {
-                if (opt.values.length > 0) {
-                    defaults[opt.name] = opt.values[0];
-                }
-            });
-            setSelectedOptions(defaults);
-        }
-    }, [product]);
+    // Auto-select removed as per user request
+    // useEffect(() => { ... }, [product]);
 
     // Update current variant based on selection
     useEffect(() => {
         if (!product?.variants || !product.options || product.options.length === 0) {
+            setCurrentVariant(null);
+            return;
+        }
+
+        // Fix: If no options selected, do not match any variant (vacuous truth of .every())
+        if (Object.keys(selectedOptions).length === 0) {
             setCurrentVariant(null);
             return;
         }
@@ -92,7 +88,23 @@ export default function ProductPage() {
     };
 
     // Derived Display Values
-    const displayPrice = currentVariant ? currentVariant.price : (product ? Number(product.price) : 0);
+    const getDisplayPrice = () => {
+        if (currentVariant) return `$${Number(currentVariant.price).toLocaleString()}`;
+        if (!product) return '$0';
+
+        if (product.variants && product.variants.length > 0) {
+            const prices = product.variants.map(v => Number(v.price));
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            if (minPrice !== maxPrice) {
+                return `$${minPrice.toLocaleString()} - $${maxPrice.toLocaleString()}`;
+            }
+            return `$${minPrice.toLocaleString()}`;
+        }
+
+        return `$${Number(product.price).toLocaleString()}`;
+    };
+    const displayPriceString = getDisplayPrice();
     const displayStock = currentVariant ? currentVariant.stock : (product ? product.stock : 0);
     const isOutOfStock = displayStock <= 0;
 
@@ -103,7 +115,13 @@ export default function ProductPage() {
         .filter((value, index, self) => self.indexOf(value) === index) || [];
 
     const handleOptionSelect = (optionName: string, value: string) => {
-        setSelectedOptions(prev => ({ ...prev, [optionName]: value }));
+        // Update options
+        setSelectedOptions(prev => {
+            const next = { ...prev, [optionName]: value };
+            return next;
+        });
+        // Unlock manually locked image to allow variant image to show
+        setLockedImage(null);
     };
 
     // Handle global click to unlock image
@@ -150,7 +168,8 @@ export default function ProductPage() {
         );
     }
 
-    const displayImage = previewImage || lockedImage || product.images[selectedImageIndex];
+    // Priority: Preview (Hover) > Locked (Thumbnail Click) > Current Variant Image (Option Select) > Default Product Image
+    const displayImage = previewImage || lockedImage || currentVariant?.image || product.images[selectedImageIndex];
 
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in zoom-in-95 duration-300">
@@ -178,21 +197,43 @@ export default function ProductPage() {
                         )}
                     </div>
 
-                    {/* Standard Product Images Thumbnails */}
-                    {product.images.length > 1 && (
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                            {product.images.map((img, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => setSelectedImageIndex(idx)}
-                                    className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${selectedImageIndex === idx && !previewImage ? 'border-black opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
-                                        }`}
-                                >
-                                    <img src={img} alt={`${product.name} ${idx}`} className="w-full h-full object-cover" />
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                    {/* Unified Image Gallery Thumbnails */}
+                    {(() => {
+                        // Combine main images and variant images, ensuring uniqueness
+                        const allImages = Array.from(new Set([
+                            ...(product.images || []),
+                            ...variantImages
+                        ]));
+
+                        if (allImages.length <= 1) return null;
+
+                        return (
+                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                {allImages.map((img, idx) => (
+                                    <button
+                                        key={idx}
+                                        data-variant-thumb="true" // Enable click-outside unlock for all thumbs
+                                        onClick={() => {
+                                            setLockedImage(img);
+                                            // Optional: If this image matches a variant, maybe select that variant? 
+                                            // But for now just lock the image. 
+                                            // Also update selectedImageIndex if it's one of the original main images
+                                            const mainIndex = product.images.indexOf(img);
+                                            if (mainIndex !== -1) setSelectedImageIndex(mainIndex);
+                                        }}
+                                        onMouseEnter={() => setPreviewImage(img)}
+                                        onMouseLeave={() => setPreviewImage(null)}
+                                        className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${(previewImage === img || lockedImage === img || (!previewImage && !lockedImage && product.images[selectedImageIndex] === img))
+                                            ? 'border-black opacity-100'
+                                            : 'border-transparent opacity-60 hover:opacity-100'
+                                            }`}
+                                    >
+                                        <img src={img} alt={`${product.name} ${idx}`} className="w-full h-full object-cover" />
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    })()}
 
 
                 </div>
@@ -207,29 +248,10 @@ export default function ProductPage() {
                         )}
                         <h1 className="text-3xl md:text-4xl font-extrabold mt-3 text-gray-900">{product.name}</h1>
                         <div className="text-2xl font-bold mt-2 text-gray-900">
-                            ${displayPrice.toLocaleString()}
+                            {displayPriceString}
                         </div>
 
-                        {/* Variant Images Thumbnails */}
-                        {variantImages.length > 0 && (
-                            <div className="mt-4">
 
-                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                                    {variantImages.map((img, idx) => (
-                                        <button
-                                            key={`var-img-${idx}`}
-                                            data-variant-thumb="true"
-                                            onClick={() => setLockedImage(img)}
-                                            onMouseEnter={() => setPreviewImage(img)}
-                                            onMouseLeave={() => setPreviewImage(null)}
-                                            className={`relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${previewImage === img || lockedImage === img ? 'border-black opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                                        >
-                                            <img src={img} alt={`Variant ${idx}`} className="w-full h-full object-cover" />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     <div className="prose prose-sm text-gray-600 border-t border-b py-6">
