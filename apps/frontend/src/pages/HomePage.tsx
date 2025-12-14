@@ -1,17 +1,16 @@
 //HomePage.tsx
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, Search, X } from 'lucide-react';
 import apiClient from '../api/client';
 import { Product, Category } from '../types';
-import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/Skeleton';
 import InstagramGallery from '../components/InstagramGallery';
 import ProductCard from '../components/ProductCard';
 
 export default function HomePage() {
-    const queryClient = useQueryClient();
+
 
     // --- 1. URL 參數同步邏輯 ---
     const [searchParams, setSearchParams] = useSearchParams();
@@ -57,18 +56,7 @@ export default function HomePage() {
     });
 
     // --- 4. 加入購物車 Mutation ---
-    const addToCartMutation = useMutation({
-        mutationFn: async (productId: number) => {
-            return apiClient.post('/cart/items', { productId, quantity: 1 });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
-            toast.success('已加入購物車');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || '加入失敗');
-        }
-    });
+
 
     // 清除所有篩選條件
     const clearFilters = () => {
@@ -182,7 +170,6 @@ export default function HomePage() {
                                 <ProductCard
                                     key={product.id}
                                     product={product}
-                                    addToCartMutation={addToCartMutation}
                                 />
                             ))}
                         </div>

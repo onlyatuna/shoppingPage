@@ -39,16 +39,35 @@ export class CartService {
     // --- 加入商品到購物車 ---
     // apps/backend/src/services/cart.service.ts
 
-    static async addItem(userId: number, productId: number, quantity: number) {
+    static async addItem(userId: number, productId: number, quantity: number, variantId?: string) {
         // 1. 撈取商品資訊
         const product = await prisma.product.findUnique({ where: { id: productId } });
         if (!product) throw new Error('商品不存在');
         if (!product.isActive) throw new Error('商品已下架');
 
-        // --- 修正點 1: 基本檢查 (單次加入不能超過庫存) ---
-        if (quantity > product.stock) {
-            throw new Error(`庫存不足，僅剩 ${product.stock} 件`);
+        // --- 庫存檢查 (支援變體) ---
+        let currentStock = product.stock;
+
+        if (variantId) {
+            // 如果有指定變體，檢查該變體是否存在且有庫存
+            const variants = product.variants as any[];
+            const targetVariant = variants?.find((v: any) => v.id === variantId);
+
+            if (!targetVariant) {
+                throw new Error('無效的規格變體');
+            }
+            currentStock = Number(targetVariant.stock);
+
+            if (quantity > currentStock) {
+                throw new Error(`該規格庫存不足，僅剩 ${currentStock} 件`);
+            }
+        } else {
+            // 無變體，檢查總庫存 (或主庫存)
+            if (quantity > currentStock) {
+                throw new Error(`庫存不足，僅剩 ${currentStock} 件`);
+            }
         }
+
 
         // 2. 取得或建立購物車
         let cart = await prisma.cart.findUnique({ where: { userId } });
@@ -56,36 +75,51 @@ export class CartService {
             cart = await prisma.cart.create({ data: { userId } });
         }
 
-        // 3. 檢查商品是否已在車內
+        // 3. 檢查商品是否已在車內 (符合 ProductId AND VariantId)
         const existingItem = await prisma.cartItem.findUnique({
             where: {
-                cartId_productId: {
+                cartId_productId_variantId: { // 使用新的複合鍵
                     cartId: cart.id,
                     productId: productId,
+                    variantId: variantId ?? '', // Prisma String? needs explicit handling if unique constraint treats key differently? 
+                    // Wait, Prisma 'String?' unique composite works with nulls usually, BUT
+                    // in MySQL, unique constraint allowing multiple NULLs means we might get duplicates if we rely on NULL.
+                    // Ideally, avoiding NULL in unique index is safer, or we ensure code handles it.
+                    // Actually, let's use check findFirst for safety if unique index behavior varies.
+                    // But schema says @@unique([cartId, productId, variantId])
+                    // For null variantId, we should query where variantId is null.
                 },
             },
+        } as any);
+        // Note: The unique key name might be generated differently or we need to query differently since 'variantId' is optional.
+        // Let's use findFirst to be safe and robust against NULL handling in Unique constraints logic
+
+        const existingItemSafe = await prisma.cartItem.findFirst({
+            where: {
+                cartId: cart.id,
+                productId: productId,
+                variantId: variantId || null,
+            }
         });
 
-        if (existingItem) {
-            // --- 修正點 2: 累加檢查 (關鍵！) ---
-            // 計算「目前的數量」+「想加入的數量」
-            const newTotalQuantity = existingItem.quantity + quantity;
+        if (existingItemSafe) {
+            // 累加檢查
+            const newTotalQuantity = existingItemSafe.quantity + quantity;
 
-            if (newTotalQuantity > product.stock) {
-                throw new Error(`庫存不足！購物車已有 ${existingItem.quantity} 件，再加 ${quantity} 件會超過庫存 (${product.stock} 件)`);
+            if (newTotalQuantity > currentStock) {
+                throw new Error(`庫存不足！購物車已有 ${existingItemSafe.quantity} 件，再加 ${quantity} 件會超過庫存 (${currentStock} 件)`);
             }
 
-            // 檢查通過，執行更新
             return prisma.cartItem.update({
-                where: { id: existingItem.id },
+                where: { id: existingItemSafe.id },
                 data: { quantity: newTotalQuantity },
             });
         } else {
-            // 如果原本不在車內，前面已經檢查過 quantity > stock，直接建立即可
             return prisma.cartItem.create({
                 data: {
                     cartId: cart.id,
                     productId,
+                    variantId, // Can be null
                     quantity,
                 },
             });

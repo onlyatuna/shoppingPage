@@ -19,9 +19,9 @@ export const getMyCart = async (req: Request, res: Response) => {
 export const addItemToCart = async (req: Request, res: Response) => {
     try {
         const userId = req.user!.userId;
-        const { productId, quantity } = addToCartSchema.parse(req.body);
+        const { productId, quantity, variantId } = addToCartSchema.parse(req.body);
 
-        await CartService.addItem(userId, productId, quantity);
+        await CartService.addItem(userId, productId, quantity, variantId);
 
         // 為了前端方便，新增完通常會重新撈一次最新的購物車狀態回傳
         const updatedCart = await CartService.getCart(userId);

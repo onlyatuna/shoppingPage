@@ -223,20 +223,19 @@ export default function AdminProductFormPage() {
 
     // Auto-generate variants when options change OR when variants are enabled
     useEffect(() => {
-        console.log('Variant generation effect triggered. enableVariants:', enableVariants, 'options:', options);
+        // Prevent running this effect immediately after initialization if data hasn't actually changed in a way that requires regeneration
+        // But we rely on 'options' changing to trigger this.
 
         if (!enableVariants) {
             setVariants([]);
             return;
         }
 
-
-
         // Cartesian Product
         // Only generate if all options have at least one value
         const validOptions = options.filter(o => o.values.length > 0);
         if (validOptions.length === 0) {
-            console.log('No valid options with values, clearing variants');
+            // console.log('No valid options with values, clearing variants');
             setVariants([]);
             return;
         }
@@ -254,9 +253,13 @@ export default function AdminProductFormPage() {
             });
 
             // Check if existing variant matches to preserve price/stock
+            // 1. Search in current 'variants' state (for user edits)
+            // 2. Search in 'product.variants' (for initial load stability)
             const existing = variants.find(v =>
-                Object.entries(combinationMap).every(([key, val]) => v.combination[key] === val)
-            );
+                Object.entries(combinationMap).every(([key, val]) => v.combination?.[key] === val)
+            ) || product?.variants?.find(v =>
+                v.combination && Object.entries(combinationMap).every(([key, val]) => v.combination[key] === val)
+            ) as ProductVariant | undefined;
 
             return {
                 id: existing?.id || `var_${Date.now()}_${idx}`,
@@ -267,14 +270,20 @@ export default function AdminProductFormPage() {
             };
         });
 
-        if (JSON.stringify(newVariants.map(v => v.combination)) !== JSON.stringify(variants.map(v => v.combination))) {
-            console.log('Generated variants:', newVariants);
+        // Only update if the combinations (keys) have changed or if the count changed.
+        // We do NOT want to overwrite if the calculated newVariants has default (NaN) values but 'variants' has real values (initially loaded).
+        // Actually, if 'existing' logic works, newVariants SHOULD have real values.
+
+        // The problem might be that during the first run of this effect (triggered by setOptions), 'variants' (state) might still be empty in the closure?
+        // No, if setOptions and setVariants are called in the same batch, the next render sees both updated.
+
+        // Let's compare JSON stringify to avoid loop
+        if (JSON.stringify(newVariants) !== JSON.stringify(variants)) {
+            // console.log('Generated variants:', newVariants);
             setVariants(newVariants);
-        } else {
-            console.log('Variants unchanged, skipping update');
         }
 
-    }, [options, enableVariants]);
+    }, [options, enableVariants]); // We intentionally do NOT include 'variants' here to avoid loop.
 
 
     const updateVariantField = (index: number, field: 'price' | 'stock', value: number) => {
@@ -331,11 +340,17 @@ export default function AdminProductFormPage() {
 
         const imageArray = data.images.trim() === '' ? [] : data.images.split(',').map(s => s.trim()).filter(Boolean);
 
+        // Calculate total stock from variants if enabled
+        let totalStock = Number(data.stock);
+        if (enableVariants) {
+            totalStock = variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+        }
+
         const payload = {
             ...data,
             images: imageArray,
             price: Number(data.price),
-            stock: Number(data.stock),
+            stock: totalStock, // Use calculated total stock
 
             options: enableVariants ? options.filter(o => o.name && o.values.length > 0) : [],
             variants: enableVariants ? variants : []
@@ -425,9 +440,23 @@ export default function AdminProductFormPage() {
                                     const checked = e.target.checked;
                                     console.log('Toggle changed to:', checked, 'Current options:', options);
                                     setEnableVariants(checked);
-                                    if (checked && options.length === 0) {
-                                        console.log('Initializing first option');
-                                        setOptions([{ id: 'opt_1', name: '規格', values: [] }]);
+
+                                    if (checked) {
+                                        // Switching from Single to Multi
+                                        if (options.length === 0) {
+                                            console.log('Initializing first option');
+                                            setOptions([{ id: 'opt_1', name: '規格', values: [] }]);
+                                        }
+                                    } else {
+                                        // Switching from Multi to Single
+                                        // Sync total stock back to single stock field
+                                        const totalStock = variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0);
+                                        setValue('stock', totalStock);
+
+                                        // Sync first variant price back if available
+                                        if (variants.length > 0 && variants[0].price) {
+                                            setValue('price', variants[0].price);
+                                        }
                                     }
                                 }}
                                 className="sr-only peer"
@@ -443,7 +472,7 @@ export default function AdminProductFormPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold mb-1">價格</label>
-                                    <input type="number" {...register('price', { required: !enableVariants, min: 1 })} className="w-full border p-2 rounded" />
+                                    <input type="number" {...register('price', { required: !enableVariants, min: !enableVariants ? 1 : undefined })} className="w-full border p-2 rounded" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold mb-1">庫存</label>

@@ -69,6 +69,7 @@ export default function ProductPage() {
             if (!product) return;
             return apiClient.post('/cart/items', {
                 productId: product.id,
+                variantId: currentVariant?.id, // [New] Pass variantId
                 quantity
             });
         },

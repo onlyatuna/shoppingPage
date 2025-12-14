@@ -107,18 +107,46 @@ export default function CartPage() {
                     {cart.items.map((item) => (
                         <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-white shadow-sm items-center">
                             {/* 商品圖片 */}
+                            {/* 商品圖片 */}
                             <div className="w-24 h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
-                                {item.product.images[0] ? (
-                                    <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
-                                )}
+                                {(() => {
+                                    const variant = item.variantId ? item.product.variants?.find(v => v.id === item.variantId) : null;
+                                    const displayImage = variant?.image || item.product.images[0];
+
+                                    return displayImage ? (
+                                        <img src={displayImage} alt={item.product.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
+                                    );
+                                })()}
                             </div>
 
                             {/* 商品資訊 */}
                             <div className="flex-1">
-                                <h3 className="font-bold text-lg">{item.product.name}</h3>
-                                <p className="text-gray-600">${Number(item.product.price).toLocaleString()}</p>
+                                <h3 className="font-bold text-lg">
+                                    <Link to={`/products/${item.product.slug}`} className="hover:underline">
+                                        {item.product.name}
+                                    </Link>
+                                </h3>
+                                {(() => {
+                                    const variant = item.variantId ? item.product.variants?.find(v => v.id === item.variantId) : null;
+                                    return (
+                                        <div className="space-y-1">
+                                            <p className="text-gray-600 font-medium">
+                                                ${Number(variant?.price ?? item.product.price).toLocaleString()}
+                                            </p>
+                                            {variant && (
+                                                <div className="text-sm text-gray-500 flex flex-wrap gap-2">
+                                                    {Object.entries(variant.combination).map(([key, val]) => (
+                                                        <span key={key} className="bg-gray-100 px-2 py-0.5 rounded">
+                                                            {key}: {val}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
                             </div>
 
                             {/* 數量調整器 */}

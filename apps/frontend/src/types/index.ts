@@ -47,6 +47,7 @@ export interface ProductVariant {
 export interface CartItem {
     id: number;
     quantity: number;
+    variantId?: string; // [New]
     product: Product;
 }
 

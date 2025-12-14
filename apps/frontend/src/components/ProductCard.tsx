@@ -1,17 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
 import { Product } from '../types';
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { useAuthStore } from '../store/authStore';
-
-interface ProductCardProps {
-    product: Product;
-    addToCartMutation: any;
-}
-
-export default function ProductCard({ product, addToCartMutation }: ProductCardProps) {
-    const { user } = useAuthStore();
+export default function ProductCard({ product }: { product: Product }) {
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     // Get unique variant images
@@ -88,23 +78,7 @@ export default function ProductCard({ product, addToCartMutation }: ProductCardP
                     </div>
                 </Link>
 
-                <div className="mt-auto pt-2">
-                    <button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            if (!user) return toast.error('請先登入');
-                            addToCartMutation.mutate(product.id);
-                        }}
-                        disabled={addToCartMutation.isPending || product.stock <= 0}
-                        className={`w-full py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors ${product.stock <= 0
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-black text-white hover:bg-gray-800 active:scale-95'
-                            }`}
-                    >
-                        <ShoppingCart size={18} />
-                        {product.stock <= 0 ? '補貨中' : '加入購物車'}
-                    </button>
-                </div>
+
             </div>
         </div>
     );

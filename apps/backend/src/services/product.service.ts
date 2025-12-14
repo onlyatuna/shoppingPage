@@ -79,7 +79,7 @@ export class ProductService {
         return prisma.product.findMany({
             where,
             orderBy: { id: 'desc' }, // 新的在前
-            include: { category: true },
+            include: { category: true }, // Admin List doesn't necessarily need variants, but good for potential filtering
         });
     }
 
