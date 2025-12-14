@@ -41,7 +41,8 @@ export interface ProductVariant {
     id: string;
     price: number;
     stock: number;
-    combination: Record<string, string>; // { "顏色": "紅", "尺寸": "S" } OR use ID mapping { "opt_id": "value" }
+    image?: string; // [New] Variant specific image
+    combination: Record<string, string>; // { "顏色": "紅", "尺寸": "S" }
 }
 
 export interface CartItem {

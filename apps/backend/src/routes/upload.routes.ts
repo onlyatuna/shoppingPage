@@ -44,7 +44,16 @@ router.post('/', authenticateToken, requireAdmin, upload.single('image'), async 
         }
 
         const type = req.query.type || req.body.type || 'product';
-        const folder = type === 'canvas' ? 'ecommerce-canvas' : 'ecommerce-product';
+        const subfolder = req.query.subfolder || req.body.subfolder;
+        let folder = type === 'canvas' ? 'ecommerce-canvas' : 'ecommerce-product';
+
+        if (subfolder && typeof subfolder === 'string') {
+            // Remove invalid characters to ensure clean folder name
+            const cleanSubfolder = subfolder.replace(/[#%&{}\\<>*?/$!'":@+`|=]/g, '').trim();
+            if (cleanSubfolder) {
+                folder = `${folder}/${cleanSubfolder}`;
+            }
+        }
 
         // 將 Buffer 轉為 Base64 字串以便上傳
         const b64 = Buffer.from(req.file.buffer).toString('base64');
