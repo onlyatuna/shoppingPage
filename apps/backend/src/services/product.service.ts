@@ -81,22 +81,32 @@ export class ProductService {
         });
         if (!categoryExists) throw new Error('分類不存在');
 
+        const createData: any = {
+            ...data,
+            images: data.images ?? [],
+            options: data.options ?? [],
+            variants: data.variants ?? [],
+            detailImages: data.detailImages ?? [],
+        };
+
         return prisma.product.create({
-            data: {
-                ...data,
-                images: data.images ?? [], // 處理 JSON 欄位
-            },
+            data: createData,
         });
     }
 
     // --- 更新商品 (Admin) ---
     static async update(id: number, data: Partial<CreateProductInput>) {
+        const updateData: any = {
+            ...data,
+            images: data.images ?? undefined,
+            options: data.options ?? undefined,
+            variants: data.variants ?? undefined,
+            detailImages: data.detailImages ?? undefined,
+        };
+
         return prisma.product.update({
             where: { id },
-            data: {
-                ...data,
-                images: data.images ?? undefined,
-            },
+            data: updateData,
         });
     }
 

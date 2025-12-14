@@ -5,7 +5,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Edit, Plus, Search, Package, DollarSign, Layers, Trash2, Sparkles } from 'lucide-react';
 import apiClient from '../../api/client';
 import { Product } from '../../types';
-import ProductFormModal from '../../components/ProductFormModal';
 
 export default function AdminProductsPage() {
     const queryClient = useQueryClient();
@@ -13,28 +12,19 @@ export default function AdminProductsPage() {
     const navigate = useNavigate();
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    // Support Partial Product for pre-filling Create Form
-    const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
 
     // Check for navigation state (e.g. from Editor)
     useEffect(() => {
         if (location.state?.newProductImage) {
-            setEditingProduct({
-                name: '',
-                price: '0',
-                stock: 10,
-                isActive: true,
-                images: [location.state.newProductImage],
-                description: location.state.newProductDescription || '',
-                // No ID implies Create Mode
+            // Navigate to create page with pre-filled image
+            navigate('/admin/products/new', {
+                state: {
+                    initialImage: location.state.newProductImage,
+                    initialDescription: location.state.newProductDescription
+                }
             });
-            setIsModalOpen(true);
-
-            // Clear state so reload doesn't trigger again
-            window.history.replaceState({}, document.title);
         }
-    }, [location.state]);
+    }, [location.state, navigate]);
 
     const { data: products, isLoading } = useQuery({
         queryKey: ['admin-products', searchTerm],
@@ -51,7 +41,6 @@ export default function AdminProductsPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-products'] });
             queryClient.invalidateQueries({ queryKey: ['products'] });
-            setIsModalOpen(false);
         },
         onError: (err: any) => alert(err.response?.data?.message || '更新失敗')
     });
@@ -62,7 +51,6 @@ export default function AdminProductsPage() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-            setIsModalOpen(false);
         },
         onError: (err: any) => alert(err.response?.data?.message || '新增失敗')
     });
@@ -91,23 +79,7 @@ export default function AdminProductsPage() {
         });
     };
 
-    const handleFormSubmit = (data: any) => {
-        if (editingProduct && editingProduct.id) {
-            updateProductMutation.mutate({ id: editingProduct.id, data });
-        } else {
-            createProductMutation.mutate(data);
-        }
-    };
 
-    const openCreateModal = () => {
-        setEditingProduct(null);
-        setIsModalOpen(true);
-    };
-
-    const openEditModal = (product: Product) => {
-        setEditingProduct(product);
-        setIsModalOpen(true);
-    };
 
     if (isLoading) return <div className="p-10 text-center">載入中...</div>;
 
@@ -126,7 +98,7 @@ export default function AdminProductsPage() {
                     </button>
                     <button
                         type="button"
-                        onClick={openCreateModal}
+                        onClick={() => navigate('/admin/products/new')}
                         className="flex-1 md:flex-none bg-black text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
                     >
                         <Plus size={20} /> 新增商品
@@ -184,7 +156,7 @@ export default function AdminProductsPage() {
                                     </button>
                                 </td>
                                 <td className="p-4 flex gap-2">
-                                    <button type="button" onClick={() => openEditModal(product)} className="p-2 text-gray-600 hover:bg-gray-200 rounded" aria-label="編輯商品">
+                                    <button type="button" onClick={() => navigate(`/admin/products/edit/${product.id}`)} className="p-2 text-gray-600 hover:bg-gray-200 rounded" aria-label="編輯商品">
                                         <Edit size={18} />
                                     </button>
                                     <button type="button" onClick={() => handleDelete(product)} className="p-2 text-red-500 hover:bg-red-50 rounded" aria-label="刪除商品">
@@ -238,7 +210,7 @@ export default function AdminProductsPage() {
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => openEditModal(product)}
+                                        onClick={() => navigate(`/admin/products/edit/${product.id}`)}
                                         className="flex items-center gap-1 text-xs bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200"
                                     >
                                         <Edit size={14} /> 編輯
@@ -260,14 +232,6 @@ export default function AdminProductsPage() {
             {products?.length === 0 && (
                 <div className="p-8 text-center text-gray-500">查無商品</div>
             )}
-
-            <ProductFormModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={handleFormSubmit}
-                initialData={editingProduct}
-                isPending={updateProductMutation.isPending || createProductMutation.isPending}
-            />
         </div>
     );
 }

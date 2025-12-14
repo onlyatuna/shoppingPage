@@ -37,10 +37,12 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
+        console.log(`Updating Product ${id} Payload:`, JSON.stringify(req.body, null, 2));
         const data = createProductSchema.partial().parse(req.body); // partial() 允許只傳部分欄位
         const product = await ProductService.update(id, data);
         res.json({ status: 'success', data: product });
     } catch (error) {
+        console.error('Update Product Error:', error);
         res.status(StatusCodes.BAD_REQUEST).json({ message: '更新失敗' });
     }
 };

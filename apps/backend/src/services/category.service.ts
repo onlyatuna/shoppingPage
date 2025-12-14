@@ -13,6 +13,7 @@ export class CategoryService {
         const countCondition = includeInactive ? {} : { isActive: true };
 
         return prisma.category.findMany({
+            where: { deletedAt: null } as any,
             include: {
                 _count: {
                     select: {
@@ -41,25 +42,26 @@ export class CategoryService {
         // 1. 檢查是否有「上架中 (Active)」的商品
         // 我們只保護上架中的商品不被誤刪
         const activeProductsCount = await prisma.product.count({
-            where: { categoryId: id, isActive: true }
+            where: { categoryId: id, isActive: true, deletedAt: null }
         });
 
         if (activeProductsCount > 0) {
             throw new Error(`該分類下還有 ${activeProductsCount} 個上架商品，請先轉移或下架`);
         }
 
-        // 2. 如果只剩下「已下架 (Soft Deleted)」的商品，我們就執行「硬刪除」
-        // 使用 Transaction 確保乾淨
-        return prisma.$transaction(async (tx) => {
-            // 先清空該分類下的所有商品 (反正都是下架的垃圾資料了)
-            await tx.product.deleteMany({
-                where: { categoryId: id }
-            });
+        // 2. 執行軟刪除
+        // 改名 slug 釋放空間，並設定 deletedAt
+        const category = await prisma.category.findUnique({ where: { id } });
+        if (!category) throw new Error('分類不存在');
 
-            // 再刪除分類
-            return tx.category.delete({
-                where: { id }
-            });
+        const updateData: any = {
+            deletedAt: new Date(),
+            slug: `${category.slug}-deleted-${Date.now()}`
+        };
+
+        return prisma.category.update({
+            where: { id },
+            data: updateData
         });
     }
 }

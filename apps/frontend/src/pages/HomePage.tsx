@@ -207,7 +207,17 @@ export default function HomePage() {
 
                                             <div className="flex justify-between items-center mt-2">
                                                 <span className="text-xl font-bold text-gray-900">
-                                                    ${Number(product.price).toLocaleString()}
+                                                    {(() => {
+                                                        if (product.variants && product.variants.length > 0) {
+                                                            const prices = product.variants.map(v => v.price);
+                                                            const min = Math.min(...prices);
+                                                            const max = Math.max(...prices);
+                                                            return min === max
+                                                                ? `$${min.toLocaleString()}`
+                                                                : `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+                                                        }
+                                                        return `$${Number(product.price).toLocaleString()}`;
+                                                    })()}
                                                 </span>
                                                 <span className="text-sm text-gray-500">
                                                     庫存: {product.stock}

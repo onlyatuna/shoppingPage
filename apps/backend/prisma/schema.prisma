@@ -84,6 +84,7 @@ model Category {
   name     String
   slug     String    @unique
   products Product[]
+  deletedAt DateTime?
 
   @@map("categories")
 }
@@ -98,6 +99,15 @@ model Product {
   stock Int     @default(0)
 
   images Json?
+  
+  // [新增] 規格選項定義 (例如: [{id: "opt1", name: "顏色", values: ["紅", "藍"]}])
+  options Json?
+
+  // [新增] 規格變體組合 (例如: [{id: "v1", price: 100, stock: 10, combination: {opt1: "紅"}}])
+  variants Json?
+
+  // [新增] 商品詳情長圖 (例如: ["url1", "url2"])
+  detailImages Json?
 
   isActive Boolean @default(true)
 

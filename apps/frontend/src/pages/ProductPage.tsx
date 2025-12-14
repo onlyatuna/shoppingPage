@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ShoppingCart, ArrowLeft, Minus, Plus } from 'lucide-react';
 import apiClient from '../api/client';
-import { Product } from '../types';
+import { Product, ProductVariant } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -17,6 +17,10 @@ export default function ProductPage() {
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
 
+    // Variants State
+    const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+    const [currentVariant, setCurrentVariant] = useState<ProductVariant | null>(null);
+
     // 1. Fetch Product Data
     const { data: product, isLoading, error } = useQuery({
         queryKey: ['product', id],
@@ -26,6 +30,32 @@ export default function ProductPage() {
         },
         enabled: !!id,
     });
+
+    // Auto-select first variant options when product loads
+    useEffect(() => {
+        if (product?.options && product.options.length > 0 && Object.keys(selectedOptions).length === 0) {
+            const defaults: Record<string, string> = {};
+            product.options.forEach(opt => {
+                if (opt.values.length > 0) {
+                    defaults[opt.name] = opt.values[0];
+                }
+            });
+            setSelectedOptions(defaults);
+        }
+    }, [product]);
+
+    // Update current variant based on selection
+    useEffect(() => {
+        if (!product?.variants || !product.options || product.options.length === 0) {
+            setCurrentVariant(null);
+            return;
+        }
+
+        const variant = product.variants.find(v =>
+            Object.entries(selectedOptions).every(([key, val]) => v.combination[key] === val)
+        );
+        setCurrentVariant(variant || null);
+    }, [selectedOptions, product]);
 
     // 2. Add to Cart Mutation
     const addToCartMutation = useMutation({
@@ -52,6 +82,15 @@ export default function ProductPage() {
             return;
         }
         addToCartMutation.mutate();
+    };
+
+    // Derived Display Values
+    const displayPrice = currentVariant ? currentVariant.price : (product ? Number(product.price) : 0);
+    const displayStock = currentVariant ? currentVariant.stock : (product ? product.stock : 0);
+    const isOutOfStock = displayStock <= 0;
+
+    const handleOptionSelect = (optionName: string, value: string) => {
+        setSelectedOptions(prev => ({ ...prev, [optionName]: value }));
     };
 
     if (isLoading) {
@@ -137,7 +176,7 @@ export default function ProductPage() {
                         )}
                         <h1 className="text-3xl md:text-4xl font-extrabold mt-3 text-gray-900">{product.name}</h1>
                         <div className="text-2xl font-bold mt-2 text-gray-900">
-                            ${Number(product.price).toLocaleString()}
+                            ${displayPrice.toLocaleString()}
                         </div>
                     </div>
 
@@ -145,10 +184,39 @@ export default function ProductPage() {
                         <p className="whitespace-pre-line leading-relaxed">{product.description || '暫無商品描述'}</p>
                     </div>
 
+                    {/* Variants Selection */}
+                    {product.options && product.options.length > 0 && (
+                        <div className="space-y-4">
+                            {product.options.map(option => (
+                                <div key={option.id}>
+                                    <h3 className="text-sm font-medium text-gray-900 mb-2">{option.name}</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {option.values.map(val => {
+                                            const isSelected = selectedOptions[option.name] === val;
+                                            return (
+                                                <button
+                                                    key={val}
+                                                    onClick={() => handleOptionSelect(option.name, val)}
+                                                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all
+                                                            ${isSelected
+                                                            ? 'border-black bg-black text-white'
+                                                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                                                        }`}
+                                                >
+                                                    {val}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <span className="font-medium text-gray-700">數量</span>
-                            <span className="text-sm text-gray-500">庫存: {product.stock}</span>
+                            <span className="text-sm text-gray-500">庫存: {displayStock}</span>
                         </div>
 
                         <div className="flex items-center gap-4">
@@ -162,9 +230,9 @@ export default function ProductPage() {
                                 </button>
                                 <span className="w-12 text-center font-medium">{quantity}</span>
                                 <button
-                                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                                    onClick={() => setQuantity(Math.min(displayStock, quantity + 1))}
                                     className="p-3 hover:bg-gray-100 active:bg-gray-200 transition"
-                                    disabled={quantity >= product.stock}
+                                    disabled={quantity >= displayStock}
                                 >
                                     <Plus size={18} />
                                 </button>
@@ -172,14 +240,14 @@ export default function ProductPage() {
 
                             <button
                                 onClick={handleAddToCart}
-                                disabled={addToCartMutation.isPending || product.stock <= 0}
-                                className={`flex-1 py-3 px-6 rounded-lg font-bold flex items-center justify-center gap-2 text-lg shadow-md transition-all active:scale-95 ${product.stock <= 0
-                                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                        : 'bg-black text-white hover:bg-gray-800'
+                                disabled={addToCartMutation.isPending || isOutOfStock}
+                                className={`flex-1 py-3 px-6 rounded-lg font-bold flex items-center justify-center gap-2 text-lg shadow-md transition-all active:scale-95 ${isOutOfStock
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-black text-white hover:bg-gray-800'
                                     }`}
                             >
                                 <ShoppingCart size={20} />
-                                {product.stock <= 0 ? '已售完' : addToCartMutation.isPending ? '加入中...' : '加入購物車'}
+                                {isOutOfStock ? '已售完' : addToCartMutation.isPending ? '加入中...' : '加入購物車'}
                             </button>
                         </div>
                     </div>
@@ -191,6 +259,24 @@ export default function ProductPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Detailed Images Section */}
+            {product.detailImages && product.detailImages.length > 0 && (
+                <div className="mt-16 w-full max-w-4xl mx-auto">
+                    <h2 className="text-xl font-bold mb-6 text-center">商品詳情</h2>
+                    <div className="space-y-0 text-center">
+                        {product.detailImages.map((img, idx) => (
+                            <img
+                                key={idx}
+                                src={img}
+                                alt={`Detail ${idx + 1}`}
+                                className="w-full h-auto block mx-auto"
+                                loading="lazy"
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

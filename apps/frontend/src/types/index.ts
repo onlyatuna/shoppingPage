@@ -24,6 +24,24 @@ export interface Product {
     isActive: boolean;
     categoryId: number;
     category?: Category; // 關聯資料
+
+    // [新增] 規格與詳情
+    options?: ProductOption[];
+    variants?: ProductVariant[];
+    detailImages?: string[];
+}
+
+export interface ProductOption {
+    id: string;
+    name: string;
+    values: string[];
+}
+
+export interface ProductVariant {
+    id: string;
+    price: number;
+    stock: number;
+    combination: Record<string, string>; // { "顏色": "紅", "尺寸": "S" } OR use ID mapping { "opt_id": "value" }
 }
 
 export interface CartItem {

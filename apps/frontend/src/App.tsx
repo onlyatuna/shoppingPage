@@ -14,6 +14,7 @@ import ProductPage from './pages/ProductPage';
 
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminProductFormPage from './pages/admin/AdminProductFormPage';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import PaymentCallbackPage from './pages/PaymentCallbackPage';
@@ -109,6 +110,19 @@ function App() {
                     <Route path="/admin/products" element={
                         <AdminRoute>
                             <AdminProductsPage />
+                        </AdminRoute>
+                    } />
+
+                    {/* 後台商品新增/編輯路由 */}
+                    <Route path="/admin/products/new" element={
+                        <AdminRoute>
+                            <AdminProductFormPage />
+                        </AdminRoute>
+                    } />
+
+                    <Route path="/admin/products/edit/:id" element={
+                        <AdminRoute>
+                            <AdminProductFormPage />
                         </AdminRoute>
                     } />
 
