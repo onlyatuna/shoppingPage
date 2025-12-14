@@ -59,6 +59,16 @@ export class ProductService {
         return product;
     }
 
+    // --- 透過 Slug 取得單一商品詳情 ---
+    static async findBySlug(slug: string) {
+        const product = await prisma.product.findUnique({
+            where: { slug },
+            include: { category: true },
+        });
+        if (!product || product.deletedAt) throw new Error('找不到該商品');
+        return product;
+    }
+
     // [新增] 給後台用：撈出所有商品 (包含下架)，並支援搜尋
     static async findAllAdmin(search?: string) {
         const where: Prisma.ProductWhereInput = {
@@ -86,7 +96,6 @@ export class ProductService {
             images: data.images ?? [],
             options: data.options ?? [],
             variants: data.variants ?? [],
-            detailImages: data.detailImages ?? [],
         };
 
         return prisma.product.create({
@@ -101,7 +110,6 @@ export class ProductService {
             images: data.images ?? undefined,
             options: data.options ?? undefined,
             variants: data.variants ?? undefined,
-            detailImages: data.detailImages ?? undefined,
         };
 
         return prisma.product.update({

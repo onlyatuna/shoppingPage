@@ -106,8 +106,7 @@ model Product {
   // [新增] 規格變體組合 (例如: [{id: "v1", price: 100, stock: 10, combination: {opt1: "紅"}}])
   variants Json?
 
-  // [新增] 商品詳情長圖 (例如: ["url1", "url2"])
-  detailImages Json?
+
 
   isActive Boolean @default(true)
 

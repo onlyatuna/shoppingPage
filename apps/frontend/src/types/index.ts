@@ -28,7 +28,6 @@ export interface Product {
     // [新增] 規格與詳情
     options?: ProductOption[];
     variants?: ProductVariant[];
-    detailImages?: string[];
 }
 
 export interface ProductOption {

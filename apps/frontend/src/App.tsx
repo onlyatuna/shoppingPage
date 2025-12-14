@@ -158,7 +158,7 @@ function App() {
                         </AdminRoute>} />
 
                     {/* 商品詳細頁 (公開) */}
-                    <Route path="/products/:id" element={<ProductPage />} />
+                    <Route path="/products/:slug" element={<ProductPage />} />
                 </Routes>
             </div>
             <PWAInstallPrompt />

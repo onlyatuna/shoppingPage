@@ -21,6 +21,15 @@ interface ProductFormData {
     slug: string;
 }
 
+const slugify = (text: string) => {
+    return text.toString().toLowerCase()
+        .replace(/\s+/g, '-')           // Replace spaces with -
+        .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+        .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+        .replace(/^-+/, '')             // Trim - from start
+        .replace(/-+$/, '');            // Trim - from end
+};
+
 export default function AdminProductFormPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -48,9 +57,7 @@ export default function AdminProductFormPage() {
     // Drag state for visual feedback
     const [dragState, setDragState] = useState<{ optionIdx: number; valueIdx: number; targetIdx: number; lastSwap?: number } | null>(null);
 
-    // Detail Images State
-    const [detailImages, setDetailImages] = useState<string[]>([]);
-    const [isUploadingDetail, setIsUploadingDetail] = useState(false);
+
 
     // Fetch categories
     const { data: categories } = useQuery({
@@ -97,8 +104,7 @@ export default function AdminProductFormPage() {
             setVariants([]);
         }
 
-        // Init Detail Images
-        setDetailImages(initialData?.detailImages || []);
+
     }, [product, categories, editorState, reset]);
 
     // Create/Update mutations
@@ -144,9 +150,25 @@ export default function AdminProductFormPage() {
     };
 
     const updateOptionName = (index: number, name: string) => {
+        const oldName = options[index].name;
+
+        // Update options
         const newOptions = [...options];
         newOptions[index].name = name;
         setOptions(newOptions);
+
+        // Update existing variants to preserve data
+        if (variants.length > 0) {
+            const newVariants = variants.map(v => {
+                const newCombination = { ...v.combination };
+                if (oldName in newCombination) {
+                    newCombination[name] = newCombination[oldName];
+                    delete newCombination[oldName];
+                }
+                return { ...v, combination: newCombination };
+            });
+            setVariants(newVariants);
+        }
     };
 
     const addOptionValue = (optionIndex: number, value: string) => {
@@ -165,9 +187,26 @@ export default function AdminProductFormPage() {
     };
 
     const updateOptionValue = (optionIndex: number, valueIndex: number, newValue: string) => {
+        const option = options[optionIndex];
+        const oldValue = option.values[valueIndex];
+        const optionName = option.name;
+
+        // Update options
         const newOptions = [...options];
         newOptions[optionIndex].values[valueIndex] = newValue;
         setOptions(newOptions);
+
+        // Update existing variants to preserve data
+        if (variants.length > 0) {
+            const newVariants = variants.map(v => {
+                const newCombination = { ...v.combination };
+                if (newCombination[optionName] === oldValue) {
+                    newCombination[optionName] = newValue;
+                }
+                return { ...v, combination: newCombination };
+            });
+            setVariants(newVariants);
+        }
     };
 
     const reorderOptionValue = (optionIndex: number, fromIndex: number, toIndex: number) => {
@@ -261,25 +300,7 @@ export default function AdminProductFormPage() {
         finally { setIsUploading(false); e.target.value = ''; }
     };
 
-    const handleDetailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        setIsUploadingDetail(true);
-        try {
-            const formData = new FormData();
-            formData.append('image', file);
-            formData.append('type', 'detail');
-            const res = await apiClient.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-            setDetailImages([...detailImages, res.data.data.url]);
-        } catch { toast.error('Upload failed'); }
-        finally { setIsUploadingDetail(false); e.target.value = ''; }
-    };
 
-    const removeDetailImage = (index: number) => {
-        const newDetails = [...detailImages];
-        newDetails.splice(index, 1);
-        setDetailImages(newDetails);
-    };
 
     const removeImage = (urlToRemove: string) => {
         const updated = currentImages.filter(url => url !== urlToRemove).join(',');
@@ -316,11 +337,16 @@ export default function AdminProductFormPage() {
             price: Number(data.price),
             stock: Number(data.stock),
 
-            // New Fields
             options: enableVariants ? options.filter(o => o.name && o.values.length > 0) : [],
-            variants: enableVariants ? variants : [],
-            detailImages: detailImages
+            variants: enableVariants ? variants : []
         };
+
+        // Auto-generate slug if it is default "new-..." or empty, or if we are creating a new product
+        if (!payload.slug || payload.slug.startsWith('new-')) {
+            const rawSlug = slugify(payload.name);
+            // If slug becomes empty (e.g. Chinese name only), use timestamp to ensure validity
+            payload.slug = rawSlug || `product-${Date.now()}`;
+        }
 
         console.log('Submitting Product Payload:', payload);
 
@@ -765,29 +791,7 @@ export default function AdminProductFormPage() {
                     </div>
                 </div>
 
-                {/* Detailed Images */}
-                <div>
-                    <label className="block text-sm font-bold mb-2">詳情長圖</label>
-                    <div className="space-y-2">
-                        {detailImages.map((url, index) => (
-                            <div key={index} className="relative group w-full bg-gray-100 rounded overflow-hidden border">
-                                <img src={url} alt="Detail" className="w-full h-auto object-contain max-h-[200px]" />
-                                <button
-                                    type="button"
-                                    onClick={() => removeDetailImage(index)}
-                                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded shadow opacity-0 group-hover:opacity-100 transition"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        ))}
 
-                        <label className={`w-full h-24 border-2 border-dashed rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 ${isUploadingDetail ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                            {isUploadingDetail ? <Loader2 className="animate-spin text-gray-400" /> : <><Upload className="text-gray-400 mb-1" size={24} /><span className="text-xs text-gray-500">新增詳情圖片</span></>}
-                            <input type="file" className="hidden" accept="image/*" onChange={handleDetailUpload} disabled={isUploadingDetail} />
-                        </label>
-                    </div>
-                </div>
 
                 <div>
                     <label className="block text-sm font-bold mb-1">描述</label>

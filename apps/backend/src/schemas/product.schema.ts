@@ -10,7 +10,6 @@ export const createProductSchema = z.object({
     stock: z.number().int().min(0, '庫存不能小於 0'),
     categoryId: z.number().int(),
     images: z.array(z.string().url()).optional(), // 接收圖片 URL 陣列
-    detailImages: z.array(z.string().url()).optional(), // 詳情長圖
     options: z.array(z.any()).optional(), // 規格選項
     variants: z.array(z.any()).optional(), // 規格組合
     isActive: z.boolean().optional(),

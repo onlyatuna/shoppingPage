@@ -9,26 +9,32 @@ import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/Skeleton';
 
 export default function ProductPage() {
-    const { id } = useParams<{ id: string }>();
+    const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const queryClient = useQueryClient();
 
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [lockedImage, setLockedImage] = useState<string | null>(null);
     const [quantity, setQuantity] = useState(1);
 
     // Variants State
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [currentVariant, setCurrentVariant] = useState<ProductVariant | null>(null);
 
+
+
+    // ... (query & effects) ...
+
     // 1. Fetch Product Data
     const { data: product, isLoading, error } = useQuery({
-        queryKey: ['product', id],
+        queryKey: ['product', slug],
         queryFn: async () => {
-            const res = await apiClient.get<{ data: Product }>(`/products/${id}`);
+            const res = await apiClient.get<{ data: Product }>(`/products/${slug}`);
             return res.data.data;
         },
-        enabled: !!id,
+        enabled: !!slug,
     });
 
     // Auto-select first variant options when product loads
@@ -89,9 +95,29 @@ export default function ProductPage() {
     const displayStock = currentVariant ? currentVariant.stock : (product ? product.stock : 0);
     const isOutOfStock = displayStock <= 0;
 
+    // Get unique variant images
+    const variantImages = product?.variants
+        ?.filter(v => v.image)
+        .map(v => v.image as string)
+        .filter((value, index, self) => self.indexOf(value) === index) || [];
+
     const handleOptionSelect = (optionName: string, value: string) => {
         setSelectedOptions(prev => ({ ...prev, [optionName]: value }));
     };
+
+    // Handle global click to unlock image
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            // If click is NOT inside a variant thumbnail button
+            if (!target.closest('[data-variant-thumb="true"]')) {
+                setLockedImage(null);
+            }
+        };
+
+        window.addEventListener('click', handleClickOutside);
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, []);
 
     if (isLoading) {
         return (
@@ -123,6 +149,8 @@ export default function ProductPage() {
         );
     }
 
+    const displayImage = previewImage || lockedImage || product.images[selectedImageIndex];
+
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in zoom-in-95 duration-300">
             {/* Breadcrumb / Back */}
@@ -138,9 +166,9 @@ export default function ProductPage() {
                 <div className="w-full md:w-1/2 space-y-4">
                     {/* Main Image */}
                     <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-sm border">
-                        {product.images[selectedImageIndex] ? (
+                        {displayImage ? (
                             <img
-                                src={product.images[selectedImageIndex]}
+                                src={displayImage}
                                 alt={product.name}
                                 className="w-full h-full object-contain md:object-cover hover:scale-105 transition-transform duration-500"
                             />
@@ -149,14 +177,14 @@ export default function ProductPage() {
                         )}
                     </div>
 
-                    {/* Thumbnails */}
+                    {/* Standard Product Images Thumbnails */}
                     {product.images.length > 1 && (
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                             {product.images.map((img, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => setSelectedImageIndex(idx)}
-                                    className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${selectedImageIndex === idx ? 'border-black opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
+                                    className={`relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${selectedImageIndex === idx && !previewImage ? 'border-black opacity-100' : 'border-transparent opacity-60 hover:opacity-100'
                                         }`}
                                 >
                                     <img src={img} alt={`${product.name} ${idx}`} className="w-full h-full object-cover" />
@@ -164,6 +192,8 @@ export default function ProductPage() {
                             ))}
                         </div>
                     )}
+
+
                 </div>
 
                 {/* --- Right: Product Info --- */}
@@ -178,6 +208,27 @@ export default function ProductPage() {
                         <div className="text-2xl font-bold mt-2 text-gray-900">
                             ${displayPrice.toLocaleString()}
                         </div>
+
+                        {/* Variant Images Thumbnails */}
+                        {variantImages.length > 0 && (
+                            <div className="mt-4">
+
+                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                    {variantImages.map((img, idx) => (
+                                        <button
+                                            key={`var-img-${idx}`}
+                                            data-variant-thumb="true"
+                                            onClick={() => setLockedImage(img)}
+                                            onMouseEnter={() => setPreviewImage(img)}
+                                            onMouseLeave={() => setPreviewImage(null)}
+                                            className={`relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all ${previewImage === img || lockedImage === img ? 'border-black opacity-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                        >
+                                            <img src={img} alt={`Variant ${idx}`} className="w-full h-full object-cover" />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="prose prose-sm text-gray-600 border-t border-b py-6">
@@ -216,7 +267,6 @@ export default function ProductPage() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <span className="font-medium text-gray-700">數量</span>
-                            <span className="text-sm text-gray-500">庫存: {displayStock}</span>
                         </div>
 
                         <div className="flex items-center gap-4">
@@ -260,23 +310,7 @@ export default function ProductPage() {
                 </div>
             </div>
 
-            {/* Detailed Images Section */}
-            {product.detailImages && product.detailImages.length > 0 && (
-                <div className="mt-16 w-full max-w-4xl mx-auto">
-                    <h2 className="text-xl font-bold mb-6 text-center">商品詳情</h2>
-                    <div className="space-y-0 text-center">
-                        {product.detailImages.map((img, idx) => (
-                            <img
-                                key={idx}
-                                src={img}
-                                alt={`Detail ${idx + 1}`}
-                                className="w-full h-auto block mx-auto"
-                                loading="lazy"
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 }

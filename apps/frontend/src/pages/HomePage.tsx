@@ -1,17 +1,16 @@
 //HomePage.tsx
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams, Link } from 'react-router-dom';
-import { ShoppingCart, Filter, Search, X } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Filter, Search, X } from 'lucide-react';
 import apiClient from '../api/client';
 import { Product, Category } from '../types';
-import { useAuthStore } from '../store/authStore';
 import { toast } from 'sonner';
 import { Skeleton } from '../components/ui/Skeleton';
 import InstagramGallery from '../components/InstagramGallery';
+import ProductCard from '../components/ProductCard';
 
 export default function HomePage() {
-    const { user } = useAuthStore();
     const queryClient = useQueryClient();
 
     // --- 1. URL 參數同步邏輯 ---
@@ -180,70 +179,11 @@ export default function HomePage() {
                         // 商品列表
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {products.map((product) => (
-                                <div key={product.id} className="group bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
-                                    <Link to={`/products/${product.id}`} className="block">
-                                        {/* 圖片 */}
-                                        <div className="relative aspect-square h-auto md:h-64 md:aspect-auto bg-gray-100 overflow-hidden">
-                                            {product.images[0] ? (
-                                                <img
-                                                    src={product.images[0]}
-                                                    alt={product.name}
-                                                    className="w-full h-full object-contain md:object-cover group-hover:scale-105 transition-transform duration-500"
-                                                />
-                                            ) : (
-                                                <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
-                                            )}
-                                            {/* 售完遮罩 */}
-                                            {product.stock <= 0 && (
-                                                <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                                                    <span className="bg-gray-800 text-white px-4 py-1 text-sm font-bold rounded">已售完</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* 內容 */}
-                                        <div className="p-4 flex flex-col gap-2">
-                                            <h3 className="font-bold text-lg truncate" title={product.name}>{product.name}</h3>
-
-                                            <div className="flex justify-between items-center mt-2">
-                                                <span className="text-xl font-bold text-gray-900">
-                                                    {(() => {
-                                                        if (product.variants && product.variants.length > 0) {
-                                                            const prices = product.variants.map(v => v.price);
-                                                            const min = Math.min(...prices);
-                                                            const max = Math.max(...prices);
-                                                            return min === max
-                                                                ? `$${min.toLocaleString()}`
-                                                                : `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-                                                        }
-                                                        return `$${Number(product.price).toLocaleString()}`;
-                                                    })()}
-                                                </span>
-                                                <span className="text-sm text-gray-500">
-                                                    庫存: {product.stock}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </Link>
-
-                                    <div className="px-4 pb-4">
-                                        <button
-                                            onClick={(e) => {
-                                                e.preventDefault(); // Prevent link navigation
-                                                if (!user) return toast.error('請先登入');
-                                                addToCartMutation.mutate(product.id);
-                                            }}
-                                            disabled={addToCartMutation.isPending || product.stock <= 0}
-                                            className={`mt-3 w-full py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors ${product.stock <= 0
-                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                : 'bg-black text-white hover:bg-gray-800 active:scale-95'
-                                                }`}
-                                        >
-                                            <ShoppingCart size={18} />
-                                            {product.stock <= 0 ? '補貨中' : '加入購物車'}
-                                        </button>
-                                    </div>
-                                </div>
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                    addToCartMutation={addToCartMutation}
+                                />
                             ))}
                         </div>
                     ) : (

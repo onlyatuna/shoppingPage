@@ -14,10 +14,20 @@ export const getProducts = async (req: Request, res: Response) => {
     }
 };
 
-export const getProductById = async (req: Request, res: Response) => {
+export const getProduct = async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.id);
-        const product = await ProductService.findById(id);
+        const { key } = req.params;
+        let product;
+
+        // Check if key is numeric (and not just a slug that happens to be a number, though unlikely given slug rules)
+        // Strong assumption: IDs are numeric, Slugs are strings.
+        // Actually, simple regex check: if purely digits, treat as ID.
+        if (/^\d+$/.test(key)) {
+            product = await ProductService.findById(Number(key));
+        } else {
+            product = await ProductService.findBySlug(key);
+        }
+
         res.json({ status: 'success', data: product });
     } catch (error) {
         res.status(StatusCodes.NOT_FOUND).json({ message: '找不到商品' });

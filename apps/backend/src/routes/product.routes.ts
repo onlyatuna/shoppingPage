@@ -10,7 +10,8 @@ const router = Router();
 router.get('/admin/all', authenticateToken, requireAdmin, ProductController.getAdminProducts);
 // --- 公開路由 (所有人都能看) ---
 router.get('/', ProductController.getProducts);
-router.get('/:id', ProductController.getProductById);
+// 統一入口，Controller 內部判斷是 ID 還是 Slug
+router.get('/:key', ProductController.getProduct);
 
 // --- 管理員路由 (需登入 + Admin) ---
 // 先過 authenticateToken 確保有登入，再過 requireAdmin 確保身分
