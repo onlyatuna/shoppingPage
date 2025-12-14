@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, Image as ImageIcon, X, Check, X as CancelIcon, Eye } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 import getCroppedImg from '../../utils/canvasUtils';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 
 interface ImageCanvasProps {
     originalImage: string | null;
@@ -104,7 +104,7 @@ export default function ImageCanvas({
         return (
             <div
                 {...getRootProps()}
-                className={`w-[500px] h-[500px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors
+                className={`w-full max-w-[500px] aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors
                     ${isDragActive
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                         : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750'
@@ -114,11 +114,12 @@ export default function ImageCanvas({
                 <div className="p-4 rounded-full bg-white dark:bg-gray-700 shadow-sm mb-4">
                     <Upload className="w-8 h-8 text-indigo-500" />
                 </div>
-                <p className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">
+                <p className="hidden md:block text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">
                     {isDragActive ? '放開以已上傳' : '拖曳圖片至此'}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                    或點擊選擇檔案
+                <p className="text-base md:text-sm font-bold md:font-normal text-gray-700 dark:text-gray-200 md:text-gray-500 md:dark:text-gray-400">
+                    <span className="md:hidden">點擊選擇檔案</span>
+                    <span className="hidden md:inline">或點擊選擇檔案</span>
                 </p>
 
                 <div className="mt-6 flex items-center gap-2">

@@ -186,7 +186,7 @@ export default function CustomStyleModal({ isOpen, onClose, onSave, initialStyle
                                     type="text"
                                     value={desc}
                                     onChange={(e) => setDesc(e.target.value)}
-                                    placeholder="例：懷舊、溫暖、底片感"
+                                    placeholder="例：懷舊、溫暖"
                                     className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1e1e1e] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                                 />
 
@@ -198,7 +198,7 @@ export default function CustomStyleModal({ isOpen, onClose, onSave, initialStyle
                                     className="w-full mt-3 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
                                     <Sparkles size={18} />
-                                    {isGeneratingPrompt ? '生成中...' : '✨ 點我一鍵生成詳細提示詞'}
+                                    {isGeneratingPrompt ? '生成中...' : '點我一鍵生成提示詞'}
                                 </button>
                             </div>
                         </div>
@@ -335,6 +335,18 @@ export default function CustomStyleModal({ isOpen, onClose, onSave, initialStyle
                         <textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
+                            onClick={(e) => {
+                                // On mobile, scroll this element into view when clicked/focused
+                                setTimeout(() => {
+                                    e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }, 300);
+                            }}
+                            onFocus={(e) => {
+                                // On mobile, scroll this element into view when clicked/focused
+                                setTimeout(() => {
+                                    e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }, 300);
+                            }}
                             placeholder="詳細描述你想要的場景、氛圍、燈光等... 例：將產品放在復古木質桌面上，背景有溫暖的黃色調光線..."
                             rows={6}
                             className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1e1e1e] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"

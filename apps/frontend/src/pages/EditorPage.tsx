@@ -680,7 +680,7 @@ export default function EditorPage() {
                 {/* Center Stage - Canvas */}
                 {/* Show on Mobile only if step is 'edit'. Show on Desktop always. */}
                 <div className={`
-                flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden relative
+                flex-1 flex flex-col items-center justify-center p-4 pb-32 md:p-8 overflow-hidden relative
                 ${mobileStep !== 'edit' ? 'hidden md:flex' : 'flex'}
             `}>
                     {/* Mobile Style Change Button (Top Right on Mobile) */}
@@ -821,10 +821,14 @@ export default function EditorPage() {
                             setIsMobileSheetOpen(false); // Close sheet after selection for auto-generation
                         }}
                         customStyles={customStyles}
-                        onAddCustomStyle={() => setIsCustomStyleModalOpen(true)}
+                        onAddCustomStyle={() => {
+                            setIsCustomStyleModalOpen(true);
+                            setIsMobileSheetOpen(false); // Close bottom sheet
+                        }}
                         onEditCustomStyle={(style) => {
                             setEditingStyle(style);
                             setIsCustomStyleModalOpen(true);
+                            setIsMobileSheetOpen(false); // Close bottom sheet
                         }}
                         onDeleteCustomStyle={handleDeleteCustomStyle}
                         disabled={isProcessing}
