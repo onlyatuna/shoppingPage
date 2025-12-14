@@ -198,7 +198,7 @@ export default function CustomStyleModal({ isOpen, onClose, onSave, initialStyle
                                     className="w-full mt-3 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                 >
                                     <Sparkles size={18} />
-                                    {isGeneratingPrompt ? '生成中...' : '點我一鍵生成提示詞'}
+                                    {isGeneratingPrompt ? '生成中...' : '一鍵提示詞'}
                                 </button>
                             </div>
                         </div>
@@ -213,7 +213,7 @@ export default function CustomStyleModal({ isOpen, onClose, onSave, initialStyle
                             <div className="flex flex-col gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600">
                                 {/* Button Preview - Matches style preset button appearance */}
                                 <div className={`
-                                    max-w-[150px] mx-auto aspect-[4/3] relative p-3 rounded-xl border-2 text-left transition-all flex flex-col justify-between
+                                    max-w-[150px] mx-auto aspect-[5/4] relative p-3 rounded-xl border-2 text-left transition-all flex flex-col justify-between
                                     ${selectedTheme.color}
                                     ${selectedTheme.borderColor}
                                     opacity-80 hover:opacity-100
@@ -234,17 +234,17 @@ export default function CustomStyleModal({ isOpen, onClose, onSave, initialStyle
                                 </div>
 
                                 {/* Change Buttons */}
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setIsIconDrawerOpen(true)}
-                                        className="flex-1 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                        className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                                         更換圖示
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setIsColorDrawerOpen(true)}
-                                        className="flex-1 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                        className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                                         更換主題
                                     </button>
                                 </div>

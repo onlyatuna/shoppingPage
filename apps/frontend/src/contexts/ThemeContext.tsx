@@ -15,10 +15,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const savedTheme = localStorage.getItem('theme_v2') as Theme | null;
         if (savedTheme) return savedTheme;
 
-        // Check system preference
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return 'dark';
-        }
+        // Check system preference - DISABLED to force default light mode
+        // if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        //     return 'dark';
+        // }
 
         return 'light';
     });
