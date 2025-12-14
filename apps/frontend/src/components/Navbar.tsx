@@ -1,6 +1,6 @@
 //Navbar.tsx
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client';
@@ -73,6 +73,13 @@ export default function Navbar() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    // 監聽路由變化，自動關閉手機版選單
+    const location = useLocation();
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+        setIsUserDropdownOpen(false); // 切換頁面時也順便關閉使用者選單
+    }, [location]);
 
     return (
         <header className="w-full bg-white shadow-sm sticky top-0 z-50">
