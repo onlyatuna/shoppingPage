@@ -1,7 +1,7 @@
 //HomePage.tsx
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { ShoppingCart, Filter, Search, X } from 'lucide-react';
 import apiClient from '../api/client';
 import { Product, Category } from '../types';
@@ -181,40 +181,45 @@ export default function HomePage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {products.map((product) => (
                                 <div key={product.id} className="group bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
-                                    {/* 圖片 */}
-                                    <div className="relative aspect-square h-auto md:h-64 md:aspect-auto bg-gray-100 overflow-hidden">
-                                        {product.images[0] ? (
-                                            <img
-                                                src={product.images[0]}
-                                                alt={product.name}
-                                                className="w-full h-full object-contain md:object-cover group-hover:scale-105 transition-transform duration-500"
-                                            />
-                                        ) : (
-                                            <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
-                                        )}
-                                        {/* 售完遮罩 */}
-                                        {product.stock <= 0 && (
-                                            <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                                                <span className="bg-gray-800 text-white px-4 py-1 text-sm font-bold rounded">已售完</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* 內容 */}
-                                    <div className="p-4 flex flex-col gap-2">
-                                        <h3 className="font-bold text-lg truncate" title={product.name}>{product.name}</h3>
-
-                                        <div className="flex justify-between items-center mt-2">
-                                            <span className="text-xl font-bold text-gray-900">
-                                                ${Number(product.price).toLocaleString()}
-                                            </span>
-                                            <span className="text-sm text-gray-500">
-                                                庫存: {product.stock}
-                                            </span>
+                                    <Link to={`/products/${product.id}`} className="block">
+                                        {/* 圖片 */}
+                                        <div className="relative aspect-square h-auto md:h-64 md:aspect-auto bg-gray-100 overflow-hidden">
+                                            {product.images[0] ? (
+                                                <img
+                                                    src={product.images[0]}
+                                                    alt={product.name}
+                                                    className="w-full h-full object-contain md:object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                            ) : (
+                                                <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
+                                            )}
+                                            {/* 售完遮罩 */}
+                                            {product.stock <= 0 && (
+                                                <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                                                    <span className="bg-gray-800 text-white px-4 py-1 text-sm font-bold rounded">已售完</span>
+                                                </div>
+                                            )}
                                         </div>
 
+                                        {/* 內容 */}
+                                        <div className="p-4 flex flex-col gap-2">
+                                            <h3 className="font-bold text-lg truncate" title={product.name}>{product.name}</h3>
+
+                                            <div className="flex justify-between items-center mt-2">
+                                                <span className="text-xl font-bold text-gray-900">
+                                                    ${Number(product.price).toLocaleString()}
+                                                </span>
+                                                <span className="text-sm text-gray-500">
+                                                    庫存: {product.stock}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Link>
+
+                                    <div className="px-4 pb-4">
                                         <button
-                                            onClick={() => {
+                                            onClick={(e) => {
+                                                e.preventDefault(); // Prevent link navigation
                                                 if (!user) return toast.error('請先登入');
                                                 addToCartMutation.mutate(product.id);
                                             }}

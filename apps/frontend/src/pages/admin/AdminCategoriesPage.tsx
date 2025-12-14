@@ -1,18 +1,53 @@
 //AdminCategoriesPage.tsx
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, Plus, Save, X, Tag, Link as LinkIcon } from 'lucide-react';
+import { Trash2, Plus, Save, X, Tag, Link as LinkIcon, Wand2, Loader2 } from 'lucide-react';
 import apiClient from '../../api/client';
 import { Category } from '../../types';
 
 export default function AdminCategoriesPage() {
     const queryClient = useQueryClient();
     const [isCreating, setIsCreating] = useState(false);
+    const [isTranslating, setIsTranslating] = useState(false);
     const [newCategory, setNewCategory] = useState({ name: '', slug: '' });
+
+
+
+    const handleCreateCategory = async () => {
+        if (!newCategory.name) return;
+
+        setIsTranslating(true);
+        try {
+            // 1. Auto-generate Slug via Translation
+            const response = await apiClient.post('/translate', {
+                text: newCategory.name,
+                targetLang: 'EN'
+            });
+
+            const translatedText = response.data.data.translated;
+            const slug = translatedText
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+
+            // 2. Create Category
+            await createMutation.mutateAsync({
+                name: newCategory.name,
+                slug: slug
+            });
+
+        } catch (error) {
+            console.error('Operation failed:', error);
+            alert('建立失敗，請稍後再試');
+        } finally {
+            setIsTranslating(false);
+        }
+    };
 
     // 1. 讀取分類 (加入 scope=admin 參數)
     const { data: categories, isLoading } = useQuery({
-        queryKey: ['categories', 'admin'], // key 稍微改一下避免跟前台混用
+        queryKey: ['categories', 'admin'],
         queryFn: async () => {
             const res = await apiClient.get<{ data: Category[] }>('/categories?scope=admin');
             return res.data.data;
@@ -70,15 +105,16 @@ export default function AdminCategoriesPage() {
                             value={newCategory.name}
                             onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
                         />
-                        <input
-                            className="border p-2 rounded flex-1"
-                            placeholder="Slug 網址代號 (如: electronics)"
-                            value={newCategory.slug}
-                            onChange={(e) => setNewCategory({ ...newCategory, slug: e.target.value })}
-                        />
+
                         <div className="flex gap-2 mt-2 md:mt-0">
-                            <button type="button" onClick={() => createMutation.mutate(newCategory)} className="flex-1 md:flex-none bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center justify-center gap-2">
-                                <Save size={18} /> 儲存
+                            <button
+                                type="button"
+                                onClick={handleCreateCategory}
+                                disabled={!newCategory.name || isTranslating}
+                                className="flex-1 md:flex-none bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {isTranslating ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                                {isTranslating ? '處理中' : '儲存'}
                             </button>
                             <button type="button" onClick={() => setIsCreating(false)} className="flex-1 md:flex-none bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 flex items-center justify-center gap-2">
                                 <X size={18} /> 取消

@@ -10,6 +10,7 @@ import LoginPage from './pages/auth/LoginPage';
 import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
 import ProfilePage from './pages/ProfilePage';
+import ProductPage from './pages/ProductPage';
 
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
@@ -141,6 +142,9 @@ function App() {
                         <AdminRoute>
                             <CloudLibraryPage />
                         </AdminRoute>} />
+
+                    {/* 商品詳細頁 (公開) */}
+                    <Route path="/products/:id" element={<ProductPage />} />
                 </Routes>
             </div>
             <PWAInstallPrompt />
