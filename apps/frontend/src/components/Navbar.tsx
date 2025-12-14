@@ -91,7 +91,7 @@ export default function Navbar() {
 
                     {/* Logo */}
                     <div className="absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none md:flex-shrink-0">
-                        <Link to="/" className="text-2xl font-extrabold tracking-tighter flex items-center gap-2">
+                        <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-extrabold tracking-tighter flex items-center gap-2">
                             <div className="bg-black text-white p-1 rounded">M</div>
                         </Link>
                     </div>

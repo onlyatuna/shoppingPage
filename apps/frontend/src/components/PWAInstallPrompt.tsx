@@ -73,7 +73,7 @@ export default function PWAInstallPrompt() {
                     ) : (
                         <div>
                             <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                                安裝到您的裝置以獲得更好的體驗 (全螢幕、離線存取)。
+                                安裝到您的裝置以獲得更好的體驗。
                             </p>
                             <button
                                 onClick={handleInstallClick}

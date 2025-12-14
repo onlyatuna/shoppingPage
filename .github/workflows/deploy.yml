@@ -95,8 +95,10 @@ jobs:
             echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
             echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
             echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
+            echo "IG_ACCESS_TOKEN=${{ secrets.IG_ACCESS_TOKEN }}" >> .env
+            echo "IG_USER_ID=${{ secrets.IG_USER_ID }}" >> .env
 
-            # 5. 重啟服務 (現在找得到設定檔，不會報錯了)
+            # 5. 重啟服務
             docker compose up -d --force-recreate
 
             # 6. 資料庫遷移

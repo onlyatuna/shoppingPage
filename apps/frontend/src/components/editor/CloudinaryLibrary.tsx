@@ -26,7 +26,6 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
     // Interaction State
     const [activeDeleteId, setActiveDeleteId] = useState<string | null>(null);
     const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-    const [hoverId, setHoverId] = useState<string | null>(null);
     const isLongPressRef = useRef(false);
 
     // Folder State
@@ -258,8 +257,6 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                                     }
                                     onSelectImage(img.secure_url);
                                 }}
-                                onMouseEnter={() => setHoverId(img.public_id)}
-                                onMouseLeave={() => setHoverId(null)}
                                 onTouchStart={() => {
                                     isLongPressRef.current = false; // Reset
                                     const timer = setTimeout(() => {
@@ -284,7 +281,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                                     }
                                 }}
                                 className={`group relative aspect-square bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shadow-sm 
-                                    ${activeDeleteId === img.public_id || hoverId === img.public_id
+                                    ${activeDeleteId === img.public_id
                                         ? 'border-blue-500 shadow-md'
                                         : 'border-transparent'
                                     }`}
@@ -297,7 +294,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                                 />
                                 {/* Overlay with actions */}
                                 <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center
-                                    ${activeDeleteId === img.public_id || hoverId === img.public_id ? 'opacity-100' : 'opacity-0'}
+                                    ${activeDeleteId === img.public_id ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'}
                                 `}>
                                     <div className="flex gap-2">
                                         <button
@@ -338,6 +335,6 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                     <ChevronRight size={18} />
                 </button>
             </div>
-        </div>
+        </div >
     );
 }
