@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import { Toaster } from 'sonner';
 import Navbar from './components/Navbar';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/auth/LoginPage';
@@ -142,6 +143,7 @@ function App() {
                         </AdminRoute>} />
                 </Routes>
             </div>
+            <PWAInstallPrompt />
         </div>
     );
 }
