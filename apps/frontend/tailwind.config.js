@@ -7,11 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        'vintage-navy': '#1D2D45', // Ink Navy
-        'paper-white': '#F5F0E6',  // Cream
-        'muted-teal': '#5A9EA3',   // New Primary
-        'pale-cyan': '#8CC5C9',    // Keeping as secondary accent? Or replace? User didn't specify deletion, but Muted Teal is primary.
-        'brand-orange': '#E85D3F', // Sunset Orange
+        'card': '6px 6px 0px #1D2D45',
+        'card-hover': '4px 4px 0px #1D2D45',
+        'input': '4px 4px 0px #1D2D45',
+        'input-focus': '2px 2px 0px #1D2D45',
       },
       fontFamily: {
         'heading': ['"GenSekiGothic TW"', '"Noto Sans TC"', 'sans-serif'],
