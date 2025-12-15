@@ -689,7 +689,7 @@ export default function EditorPage() {
                             </button>
                             <StylePresetGrid
                                 selectedStyle={selectedStyle}
-                                onSelectStyle={setSelectedStyle}
+                                onSelectStyle={handleStyleSelect}
                                 customStyles={customStyles}
                                 onAddCustomStyle={() => setIsCustomStyleModalOpen(true)}
                                 onEditCustomStyle={(style) => {
