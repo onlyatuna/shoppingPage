@@ -19,7 +19,7 @@ export default function Footer() {
                     {/* Brand Section */}
                     <div className="col-span-2 md:col-span-1 space-y-4">
                         <Link to="/" className="text-2xl font-extrabold tracking-tighter flex items-center gap-2">
-                            <div className="bg-[#F5F0E6] text-[#1A2B42] p-1 rounded">M</div>
+                            <img src="/icon.png" alt="Logo" className="w-8 h-8 object-contain rounded" />
                             <span className="text-[#F5F0E6]">MiniShop</span>
                         </Link>
                         <p className="text-white/90 text-sm leading-relaxed">

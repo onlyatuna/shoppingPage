@@ -100,7 +100,7 @@ export default function Navbar() {
                     {/* Logo */}
                     <div className="absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none md:flex-shrink-0">
                         <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-extrabold tracking-tighter flex items-center gap-2 text-white relative">
-                            <div className="bg-paper-white text-vintage-navy p-1 rounded">M</div>
+                            <img src="/icon.png" alt="Logo" className="w-16 h-16 object-contain rounded" />
                             {/* Sakura Petal Decoration */}
 
                             {/* [New] Falling Sakura Petals for Decoration */}
@@ -244,7 +244,7 @@ export default function Navbar() {
             {/* ========================================== */}
             {
                 isMobileMenuOpen && (
-                    <div className="md:hidden bg-white border-b h-[calc(100vh-64px)] overflow-y-auto">
+                    <div className="md:hidden bg-[#F5F0E6] border-b h-[calc(100vh-64px)] overflow-y-auto">
                         <div className="p-4 space-y-1">
 
                             <form onSubmit={handleSearch} className="mb-4 relative">
@@ -269,7 +269,7 @@ export default function Navbar() {
                                     <span>商品分類</span>
                                 </button>
                                 {mobileExpandCategory && (
-                                    <div className="bg-gray-50 px-4 py-2 space-y-2">
+                                    <div className="bg-white/40 px-4 py-2 space-y-2">
                                         {categories?.map(cat => (
                                             <Link key={cat.id} to={`/?categoryId=${cat.id}`} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-600 pl-2 border-l-2 border-transparent hover:border-black">
                                                 {cat.name}
@@ -284,7 +284,7 @@ export default function Navbar() {
                                     <span>常見問題</span>
                                 </button>
                                 {mobileExpandFaq && (
-                                    <div className="bg-gray-50 px-4 py-2 space-y-2">
+                                    <div className="bg-white/40 px-4 py-2 space-y-2">
                                         {FAQS.map(faq => (
                                             <Link key={faq.id} to={faq.link} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-600 pl-2 border-l-2 border-transparent hover:border-black">
                                                 {faq.title}
@@ -298,9 +298,9 @@ export default function Navbar() {
                                 <div className="mt-6 pt-6 border-t border-gray-100">
                                     <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">後台管理</p>
                                     <div className="grid grid-cols-2 gap-2 px-2">
-                                        <Link to="/admin/products" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-lg text-sm font-medium text-gray-700"><Package className="mb-1" size={20} /> 商品</Link>
-                                        <Link to="/admin/categories" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-lg text-sm font-medium text-gray-700"><Tag className="mb-1" size={20} /> 分類</Link>
-                                        <Link to="/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-lg text-sm font-medium text-gray-700"><Shield className="mb-1" size={20} /> 訂單</Link>
+                                        <Link to="/admin/products" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Package className="mb-1" size={20} /> 商品</Link>
+                                        <Link to="/admin/categories" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Tag className="mb-1" size={20} /> 分類</Link>
+                                        <Link to="/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Shield className="mb-1" size={20} /> 訂單</Link>
                                         {user.role === 'DEVELOPER' && (
                                             <Link to="/admin/users" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-green-50 text-green-800 rounded-lg text-sm font-medium"><Users className="mb-1" size={20} /> 帳號</Link>
                                         )}

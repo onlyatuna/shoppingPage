@@ -8,7 +8,7 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['icon.svg'],
+            includeAssets: ['icon.png'],
             manifest: {
                 name: 'Shop App',
                 short_name: 'Shop',
@@ -21,9 +21,9 @@ export default defineConfig({
                 orientation: 'portrait',
                 icons: [
                     {
-                        src: 'icon.svg',
-                        sizes: 'any', // SVG works for any size
-                        type: 'image/svg+xml',
+                        src: 'icon.png',
+                        sizes: '512x512',
+                        type: 'image/png',
                         purpose: 'any maskable'
                     }
                 ]

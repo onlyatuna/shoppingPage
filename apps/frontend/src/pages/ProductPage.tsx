@@ -264,7 +264,7 @@ export default function ProductPage() {
                         <div className="mt-2 flex items-baseline gap-3">
                             {(currentVariant ? (currentVariant.isOnSale && currentVariant.salePrice) : (!product.variants?.length && product.isOnSale && product.salePrice)) ? (
                                 <>
-                                    <span className="text-3xl font-bold text-brand-orange">
+                                    <span className="text-3xl font-bold text-[#E85D3F]">
                                         ${Number(currentVariant ? currentVariant.salePrice : product.salePrice).toLocaleString()}
                                     </span>
                                     <span className="text-xl text-gray-400 line-through decoration-gray-400/50">
@@ -281,7 +281,7 @@ export default function ProductPage() {
                                             {displayOriginalPriceString}
                                         </span>
                                     )}
-                                    <span className="text-2xl font-bold text-brand-orange">
+                                    <span className="text-2xl font-bold text-[#E85D3F]">
                                         {displayPriceString}
                                     </span>
                                 </div>
