@@ -270,52 +270,10 @@ export default function ProductPage() {
                     })()}
 
 
-                </div>
 
-                {/* --- Right: Product Info --- */}
-                <div className="flex-1 space-y-6">
-                    <div>
-                        {product.category && (
-                            <span className="text-sm text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">
-                                {product.category.name}
-                            </span>
-                        )}
-                        <h1 className="text-3xl md:text-4xl font-extrabold mt-3 text-vintage-navy">{product.name}</h1>
-                        <div className="mt-2 flex items-baseline gap-3">
-                            {(currentVariant ? (currentVariant.isOnSale && currentVariant.salePrice) : (!product.variants?.length && product.isOnSale && product.salePrice)) ? (
-                                <>
-                                    <span className="text-3xl font-bold text-[#E85D3F]">
-                                        ${Number(currentVariant ? currentVariant.salePrice : product.salePrice).toLocaleString()}
-                                    </span>
-                                    <span className="text-xl text-gray-400 line-through decoration-gray-400/50">
-                                        ${Number(currentVariant ? currentVariant.price : product.price).toLocaleString()}
-                                    </span>
-                                    <span className="bg-[#E85D3F] text-white px-2 py-1 text-xs font-bold rounded-full animate-pulse shadow-md">
-                                        SALE
-                                    </span>
-                                </>
-                            ) : (
-                                <div className="flex flex-col">
-                                    {displayOriginalPriceString !== displayPriceString && (
-                                        <span className="text-lg text-gray-400 line-through decoration-gray-400/50">
-                                            {displayOriginalPriceString}
-                                        </span>
-                                    )}
-                                    <span className="text-2xl font-bold text-[#E85D3F]">
-                                        {displayPriceString}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="prose prose-sm text-gray-600 border-t border-b py-6">
-                        <p className="whitespace-pre-line leading-relaxed">{product.description || '暫無商品描述'}</p>
-                    </div>
-
-                    {/* Variants Selection */}
+                    {/* Variants Selection moved here */}
                     {product.options && product.options.length > 0 && (
-                        <div className="space-y-4">
+                        <div className="space-y-4 mt-6">
                             {product.options.map(option => (
                                 <div key={option.id}>
                                     <h3 className="text-sm font-medium text-gray-900 mb-2">{option.name}</h3>
@@ -351,8 +309,8 @@ export default function ProductPage() {
                         </div>
                     )}
 
-                    {/* Quantity Selector */}
-                    <div className="flex items-center gap-4 mb-8">
+                    {/* Quantity Selector moved here */}
+                    <div className="flex items-center gap-4 mt-8">
                         <span className="font-bold text-[#1D2D45]">數量</span>
                         <div className="flex items-center gap-4">
                             <div className="flex items-center border-2 border-[#1D2D45] rounded-lg overflow-hidden shadow-[4px_4px_0px_#1D2D45]">
@@ -397,11 +355,59 @@ export default function ProductPage() {
                         </div>
                     </div>
 
-                    {/* Extra Info / Policies can go here */}
+                    {/* Extra Info / Policies */}
                     <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-500 space-y-2">
                         <p>✓ 24小時快速出貨</p>
                         <p>✓ 7天鑑賞期，安心退換貨</p>
                     </div>
+
+
+                </div>
+
+                {/* --- Right: Product Info --- */}
+                <div className="flex-1 space-y-6">
+                    <div>
+                        {product.category && (
+                            <span className="text-sm text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">
+                                {product.category.name}
+                            </span>
+                        )}
+                        <h1 className="text-3xl md:text-4xl font-extrabold mt-3 text-vintage-navy">{product.name}</h1>
+                        <div className="mt-2 flex items-baseline gap-3">
+                            {(currentVariant ? (currentVariant.isOnSale && currentVariant.salePrice) : (!product.variants?.length && product.isOnSale && product.salePrice)) ? (
+                                <>
+                                    <span className="text-3xl font-bold text-[#E85D3F]">
+                                        ${Number(currentVariant ? currentVariant.salePrice : product.salePrice).toLocaleString()}
+                                    </span>
+                                    <span className="text-xl text-gray-400 line-through decoration-gray-400/50">
+                                        ${Number(currentVariant ? currentVariant.price : product.price).toLocaleString()}
+                                    </span>
+                                    <span className="bg-[#E85D3F] text-white px-2 py-1 text-xs font-bold rounded-full animate-pulse shadow-md">
+                                        SALE
+                                    </span>
+                                </>
+                            ) : (
+                                <div className="flex flex-col">
+                                    {displayOriginalPriceString !== displayPriceString && (
+                                        <span className="text-lg text-gray-400 line-through decoration-gray-400/50">
+                                            {displayOriginalPriceString}
+                                        </span>
+                                    )}
+                                    <span className="text-2xl font-bold text-[#E85D3F]">
+                                        {displayPriceString}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="prose prose-sm text-gray-600 border-t border-b py-6">
+                        <p className="whitespace-pre-line leading-relaxed">{product.description || '暫無商品描述'}</p>
+                    </div>
+
+
+
+
                 </div>
             </div>
 
