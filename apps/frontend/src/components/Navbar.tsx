@@ -87,7 +87,7 @@ export default function Navbar() {
             {/* ========================================== */}
             {/* 第一排：Main Header (Logo, User, Cart) */}
             {/* ========================================== */}
-            <div className="border-b border-[#1D2D45]/10">
+            <div className="border-b border-[#1D2D45]/10 relative z-50">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between relative">
 
                     {/* 手機版漢堡按鈕 */}
@@ -109,16 +109,16 @@ export default function Navbar() {
                     {/* 右側功能區 */}
                     <div className="flex items-center gap-1 md:gap-3 z-10">
                         {user && isStaff && (
-                            <div className="hidden md:block mr-4 border-r pr-4 border-gray-300">
+                            <div className="hidden md:block mr-4 border-r pr-4 border-white/20">
                                 <div className="group relative">
-                                    <button type="button" className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-black uppercase tracking-wide py-2">
+                                    <button type="button" className="flex items-center gap-1 text-xs font-bold text-white hover:text-[#1D2D45] uppercase tracking-wide py-2 transition-colors">
                                         後台管理 <ChevronDown size={14} />
                                     </button>
-                                    <div className="absolute top-full right-0 w-48 bg-white border border-gray-100 shadow-xl rounded-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50">
+                                    <div className="absolute top-full right-0 w-48 bg-white border-2 border-[#1D2D45] shadow-[4px_4px_0px_#1D2D45] rounded-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50 text-left">
                                         <div className="px-4 py-2 text-xs font-bold text-gray-400 border-b border-gray-50">管理功能</div>
-                                        <Link to="/admin/products" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black"><Package size={16} /> 商品管理</Link>
-                                        <Link to="/admin/categories" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black"><Tag size={16} /> 分類管理</Link>
-                                        <Link to="/admin/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-black"><Shield size={16} /> 訂單管理</Link>
+                                        <Link to="/admin/products" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1D2D45] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Package size={16} /> 商品管理</Link>
+                                        <Link to="/admin/categories" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1D2D45] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Tag size={16} /> 分類管理</Link>
+                                        <Link to="/admin/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1D2D45] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Shield size={16} /> 訂單管理</Link>
                                         {user?.role === 'DEVELOPER' && (
                                             <Link to="/admin/users" className="flex items-center gap-2 px-4 py-2.5 text-sm text-green-700 hover:bg-green-50 border-t border-gray-50 mt-1"><Users size={16} /> 帳號管理</Link>
                                         )}
@@ -128,19 +128,18 @@ export default function Navbar() {
                         )}
 
                         {/* 購物車 */}
-                        {/* 購物車 */}
-                        <Link to="/cart" className="relative p-2 text-white hover:text-pale-cyan transition" title="購物車">
+                        <Link to="/cart" className="relative p-2 text-white hover:text-[#1D2D45] transition-colors" title="購物車">
                             <ShoppingBag size={24} />
                             {cartCount > 0 && (
-                                <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-vintage-navy rounded-full flex items-center justify-center border-2 border-white">
+                                <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#E85D3F] rounded-full flex items-center justify-center border-2 border-[#1D2D45]">
                                     {cartCount}
                                 </span>
                             )}
                         </Link>
 
-                        {/* [修改] 我的訂單 (移到這裡) */}
+                        {/* 我的訂單 */}
                         {user && (
-                            <Link to="/orders" className="relative p-2 text-white hover:text-pale-cyan transition" title="我的訂單">
+                            <Link to="/orders" className="relative p-2 text-white hover:text-[#1D2D45] transition-colors" title="我的訂單">
                                 <Package size={26} />
                             </Link>
                         )}
@@ -151,14 +150,14 @@ export default function Navbar() {
                                 <button
                                     type="button"
                                     onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                                    className="flex items-center justify-center w-9 h-9 rounded-full text-white hover:bg-white/10 transition focus:outline-none"
+                                    className="flex items-center justify-center w-9 h-9 rounded-full text-white hover:text-[#1D2D45] transition-colors focus:outline-none"
                                     aria-label="使用者選單"
                                 >
                                     {/* 外部按鈕維持 User Icon */}
                                     <User size={26} />
                                 </button>
                             ) : (
-                                <Link to="/login" className="text-sm font-bold px-3 py-2 rounded-md hover:bg-white/10 text-white transition">登入</Link>
+                                <Link to="/login" className="text-sm font-bold px-3 py-2 rounded-md text-white hover:text-[#1D2D45] transition-colors">登入</Link>
                             )}
 
                             {isUserDropdownOpen && user && (
