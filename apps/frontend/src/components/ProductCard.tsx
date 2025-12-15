@@ -42,11 +42,10 @@ export default function ProductCard({ product }: { product: Product }) {
 
             <div className="p-4 flex flex-col flex-1 gap-2">
                 {/* Variant Thumbnails */}
-                {variantImages.length > 0 && (
-                    <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200">
-                        {/* Variant Thumbnails - Only show variant images */}
-
-                        {variantImages.map((img, idx) => (
+                {/* Variant Thumbnails - Always render container for consistent height */}
+                <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200 h-[3.5rem]">
+                    {variantImages.length > 0 ? (
+                        variantImages.map((img, idx) => (
                             <button
                                 key={idx}
                                 onMouseEnter={() => setPreviewImage(img)}
@@ -55,9 +54,12 @@ export default function ProductCard({ product }: { product: Product }) {
                             >
                                 <img src={img} alt={`Variant ${idx}`} className="w-full h-full object-cover" />
                             </button>
-                        ))}
-                    </div>
-                )}
+                        ))
+                    ) : (
+                        /* Spacer for products without variants to maintain alignment */
+                        <div className="w-10 h-10"></div>
+                    )}
+                </div>
 
                 <Link to={`/products/${product.slug}`} className="block">
                     <h3 className="font-bold text-lg truncate" title={product.name}>{product.name}</h3>
@@ -114,9 +116,7 @@ export default function ProductCard({ product }: { product: Product }) {
                                 </div>
                             );
                         })()}
-                        <span className="text-sm text-gray-500">
-                            庫存: {product.stock}
-                        </span>
+
                     </div>
                 </Link>
             </div>

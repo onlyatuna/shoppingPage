@@ -8,6 +8,8 @@ export const createOrderSchema = z.object({
     phone: z.string().min(10, '電話格式不正確'),
     city: z.string().min(1, '城市不能為空'),
     address: z.string().min(5, '地址太短'),
+    deliveryMethod: z.string().min(1, '請選擇送貨方式'),
+    paymentMethod: z.string().min(1, '請選擇付款方式'),
 });
 
 // [新增] 更新訂單狀態 Schema

@@ -1,17 +1,40 @@
 //CartPage.tsx
-import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { Cart } from '../types';
-import CheckoutModal from '../components/CheckoutModal';
+import { useCartStore } from '../store/useCartStore';
+
 import { Skeleton } from '../components/ui/Skeleton';
 import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+
+import CheckoutProgress from '../components/CheckoutProgress';
+import clsx from 'clsx';
 
 export default function CartPage() {
-    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
+    const { checkoutInfo, setCheckoutInfo } = useCartStore();
+
+    const { register, handleSubmit, watch } = useForm<{
+        deliveryMethod: string;
+        paymentMethod: string;
+    }>({
+        defaultValues: {
+            deliveryMethod: checkoutInfo?.deliveryMethod || 'HOME_DELIVERY',
+            paymentMethod: checkoutInfo?.paymentMethod || 'CREDIT_CARD'
+        }
+    });
+
+    const watchedDelivery = watch('deliveryMethod');
+    const watchedPayment = watch('paymentMethod');
+
+    const onSubmit = (data: { deliveryMethod: string; paymentMethod: string }) => {
+        setCheckoutInfo(data);
+        navigate('/checkout/info');
+    };
 
     // 1. 取得購物車資料
     const { data: cart, isLoading } = useQuery({
@@ -57,7 +80,7 @@ export default function CartPage() {
     if (isLoading) {
         return (
             <div className="p-4 md:p-8">
-                <h1 className="text-3xl font-bold mb-8">我的購物車</h1>
+                <CheckoutProgress step={1} />
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* 左側列表骨架 */}
                     <div className="flex-1 space-y-4">
@@ -99,7 +122,7 @@ export default function CartPage() {
 
     return (
         <div className="p-4 md:p-8">
-            <h1 className="text-3xl font-bold mb-8">我的購物車</h1>
+            <CheckoutProgress step={1} />
 
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* 左側：商品列表 */}
@@ -130,11 +153,37 @@ export default function CartPage() {
                                 </h3>
                                 {(() => {
                                     const variant = item.variantId ? item.product.variants?.find(v => v.id === item.variantId) : null;
+                                    const price = Number(variant?.price ?? item.product.price);
+
+                                    // Calculate sale price
+                                    let salePrice: number | null = null;
+                                    if (variant) {
+                                        if (variant.isOnSale && variant.salePrice) {
+                                            salePrice = Number(variant.salePrice);
+                                        }
+                                    } else {
+                                        if (item.product.isOnSale && item.product.salePrice) {
+                                            salePrice = Number(item.product.salePrice);
+                                        }
+                                    }
+
                                     return (
                                         <div className="space-y-1">
-                                            <p className="text-gray-600 font-medium">
-                                                ${Number(variant?.price ?? item.product.price).toLocaleString()}
-                                            </p>
+                                            {salePrice ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-red-500 font-bold">
+                                                        ${salePrice.toLocaleString()}
+                                                    </span>
+                                                    <span className="text-gray-400 text-sm line-through">
+                                                        ${price.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <p className="text-gray-600 font-medium">
+                                                    ${price.toLocaleString()}
+                                                </p>
+                                            )}
+
                                             {variant && (
                                                 <div className="text-sm text-gray-500 flex flex-wrap gap-2">
                                                     {Object.entries(variant.combination).map(([key, val]) => (
@@ -204,42 +253,111 @@ export default function CartPage() {
                     ))}
                 </div>
 
-                {/* 右側：結帳摘要 */}
-                <div className="lg:w-80">
-                    <div className="bg-gray-50 p-6 rounded-lg sticky top-24">
-                        <h2 className="text-xl font-bold mb-4">訂單摘要</h2>
+                {/* 右側：結帳摘要 & 表單 */}
+                <div className="lg:w-96">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                        {/* 送貨方式 */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm border">
+                            <h3 className="text-lg font-bold mb-4">送貨方式</h3>
+                            <div className="space-y-3">
+                                <label className={clsx("flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all",
+                                    watchedDelivery === 'HOME_DELIVERY' ? 'border-black bg-gray-50' : 'border-gray-200'
+                                )}>
+                                    <input
+                                        type="radio"
+                                        {...register('deliveryMethod')}
+                                        value="HOME_DELIVERY"
+                                        className="w-4 h-4 text-black focus:ring-black"
+                                    />
+                                    <span>宅配到府</span>
+                                </label>
+                                <label className={clsx("flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all",
+                                    watchedDelivery === 'STORE_PICKUP' ? 'border-black bg-gray-50' : 'border-gray-200'
+                                )}>
+                                    <input
+                                        type="radio"
+                                        {...register('deliveryMethod')}
+                                        value="STORE_PICKUP"
+                                        className="w-4 h-4 text-black focus:ring-black"
+                                    />
+                                    <span>超商取貨</span>
+                                </label>
+                            </div>
+                        </div>
 
-                        <div className="space-y-2 mb-4 text-gray-600">
-                            <div className="flex justify-between">
-                                <span>小計</span>
+
+
+                        {/* 付款方式 */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm border">
+                            <h3 className="text-lg font-bold mb-4">付款方式</h3>
+                            <div className="space-y-3">
+                                <label className={clsx("flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all",
+                                    watchedPayment === 'CREDIT_CARD' ? 'border-black bg-gray-50' : 'border-gray-200'
+                                )}>
+                                    <input
+                                        type="radio"
+                                        {...register('paymentMethod')}
+                                        value="CREDIT_CARD"
+                                        className="w-4 h-4 text-black focus:ring-black"
+                                    />
+                                    <span>信用卡一次付清</span>
+                                </label>
+                                <label className={clsx("flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all",
+                                    watchedPayment === 'ATM' ? 'border-black bg-gray-50' : 'border-gray-200'
+                                )}>
+                                    <input
+                                        type="radio"
+                                        {...register('paymentMethod')}
+                                        value="ATM"
+                                        className="w-4 h-4 text-black focus:ring-black"
+                                    />
+                                    <span>ATM 轉帳</span>
+                                </label>
+                                <label className={clsx("flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all",
+                                    watchedPayment === 'LINE_PAY' ? 'border-black bg-gray-50' : 'border-gray-200'
+                                )}>
+                                    <input
+                                        type="radio"
+                                        {...register('paymentMethod')}
+                                        value="LINE_PAY"
+                                        className="w-4 h-4 text-black focus:ring-black"
+                                    />
+                                    <span>LINE Pay</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* 訂單摘要 Sticky */}
+                        <div className="bg-gray-50 p-6 rounded-lg border sticky top-24">
+                            <h2 className="text-xl font-bold mb-4">訂單摘要</h2>
+
+                            <div className="space-y-2 mb-4 text-gray-600">
+                                <div className="flex justify-between">
+                                    <span>小計</span>
+                                    <span>${cart.totalAmount.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>運費</span>
+                                    <span>$0</span>
+                                </div>
+                            </div>
+
+                            <div className="border-t pt-4 mb-6 flex justify-between font-bold text-xl">
+                                <span>總金額</span>
                                 <span>${cart.totalAmount.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span>運費</span>
-                                <span>$0</span>
-                            </div>
-                        </div>
 
-                        <div className="border-t pt-4 mb-6 flex justify-between font-bold text-xl">
-                            <span>總金額</span>
-                            <span>${cart.totalAmount.toLocaleString()}</span>
+                            <button
+                                type="submit"
+                                className="w-full bg-[#E85A32] text-white py-3 rounded-lg font-bold border-2 border-[#1B2F4A] shadow-[4px_4px_0px_#1B2F4A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#1B2F4A] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]"
+                            >
+                                下一步：填寫資料
+                            </button>
                         </div>
-
-                        <button
-                            onClick={() => setIsCheckoutOpen(true)}
-                            className="w-full bg-[#E85A32] text-white py-3 rounded-lg font-bold border-2 border-[#1B2F4A] shadow-[4px_4px_0px_#1B2F4A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#1B2F4A] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]"
-                        >
-                            前往結帳
-                        </button>
-                    </div>
+                    </form>
                 </div>
             </div>
 
-            {/* 結帳 Modal */}
-            <CheckoutModal
-                isOpen={isCheckoutOpen}
-                onClose={() => setIsCheckoutOpen(false)}
-            />
         </div>
     );
 }

@@ -66,6 +66,8 @@ export interface OrderInput {
     phone: string;
     city: string;
     address: string;
+    deliveryMethod: string;
+    paymentMethod: string;
 }
 
 export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED';

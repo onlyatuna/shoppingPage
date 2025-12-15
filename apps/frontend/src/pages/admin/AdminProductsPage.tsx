@@ -81,6 +81,27 @@ export default function AdminProductsPage() {
 
 
 
+    const getPriceDisplay = (product: Product) => {
+        if (product.variants && product.variants.length > 0) {
+            const prices = product.variants.map(v => {
+                const isSale = v.isOnSale && v.salePrice;
+                return isSale ? Number(v.salePrice) : Number(v.price);
+            });
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+
+            if (minPrice === maxPrice) {
+                return `$${minPrice.toLocaleString()}`;
+            }
+            return `$${minPrice.toLocaleString()} - $${maxPrice.toLocaleString()}`;
+        }
+
+        // Fallback for single product
+        const isSale = product.isOnSale && product.salePrice;
+        const price = isSale ? Number(product.salePrice) : Number(product.price);
+        return `$${price.toLocaleString()}`;
+    };
+
     if (isLoading) return <div className="p-10 text-center">載入中...</div>;
 
     return (
@@ -149,7 +170,7 @@ export default function AdminProductsPage() {
                                     </div>
                                 </td>
                                 <td className="p-4 font-medium">{product.name}</td>
-                                <td className="p-4">${Number(product.price).toLocaleString()}</td>
+                                <td className="p-4">{getPriceDisplay(product)}</td>
                                 <td className={`p-4 ${product.stock < 5 ? 'text-red-500 font-bold' : ''}`}>{product.stock}</td>
                                 <td className="p-4">
                                     <button
@@ -198,7 +219,7 @@ export default function AdminProductsPage() {
                                     </span>
                                 </div>
                                 <div className="mt-1 flex items-center gap-3 text-sm text-gray-600">
-                                    <span className="flex items-center gap-1"><DollarSign size={14} /> {Number(product.price).toLocaleString()}</span>
+                                    <span className="flex items-center gap-1"><DollarSign size={14} /> {getPriceDisplay(product).replace('$', '')}</span>
                                     <span className={`flex items-center gap-1 ${product.stock < 5 ? 'text-red-500 font-bold' : ''}`}>
                                         <Layers size={14} /> 庫存: {product.stock}
                                     </span>

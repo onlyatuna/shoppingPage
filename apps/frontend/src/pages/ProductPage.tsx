@@ -76,6 +76,24 @@ export default function ProductPage() {
             navigate('/login');
             return;
         }
+
+        // Validate Variant Selection
+        if (product?.options && product.options.length > 0 && !currentVariant) {
+            // Find missing options for better error message
+            const missingOptions = product.options
+                .filter(opt => !selectedOptions[opt.name])
+                .map(opt => opt.name);
+
+            if (missingOptions.length > 0) {
+                toast.error(`請選擇 ${missingOptions.join(' / ')}`);
+                return;
+            }
+
+            // If all options selected but no variant found (shouldn't happen in valid data)
+            toast.error('目前無此規格組合');
+            return;
+        }
+
         addToCartMutation.mutate();
     };
 
@@ -121,6 +139,8 @@ export default function ProductPage() {
     const displayOriginalPriceString = getDisplayOriginalPrice();
     const displayStock = currentVariant ? currentVariant.stock : (product ? product.stock : 0);
     const isOutOfStock = displayStock <= 0;
+    const hasOptions = product?.options && product.options.length > 0;
+    const isSelectionIncomplete = hasOptions && !currentVariant;
 
     // Get unique variant images
     const variantImages = product?.variants
@@ -308,7 +328,7 @@ export default function ProductPage() {
                                                     onClick={() => handleOptionSelect(option.name, val)}
                                                     onMouseEnter={() => {
                                                         const nextOptions = { ...selectedOptions, [option.name]: val };
-                                                        const variant = product.variants.find(v =>
+                                                        const variant = product.variants?.find(v =>
                                                             Object.entries(nextOptions).every(([key, value]) => v.combination[key] === value)
                                                         );
                                                         if (variant?.image) setPreviewImage(variant.image);
@@ -359,14 +379,20 @@ export default function ProductPage() {
                             </div>
                             <button
                                 onClick={handleAddToCart}
-                                disabled={addToCartMutation.isPending || isOutOfStock}
-                                className={`flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-lg border-2 border-[#1D2D45] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${isOutOfStock
+                                disabled={addToCartMutation.isPending || isOutOfStock || isSelectionIncomplete}
+                                className={`flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-lg border-2 border-[#1D2D45] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${(isOutOfStock || isSelectionIncomplete)
                                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300'
                                     : 'bg-[#E85D3F] text-white shadow-[6px_6px_0px_#1D2D45] hover:bg-[#E85D3F]/90 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[5px_5px_0px_#1D2D45]'
                                     }`}
                             >
                                 <ShoppingCart size={20} />
-                                {isOutOfStock ? '已售完' : addToCartMutation.isPending ? '加入中...' : '加入購物車'}
+                                {isOutOfStock
+                                    ? '已售完'
+                                    : isSelectionIncomplete
+                                        ? '請選擇規格'
+                                        : addToCartMutation.isPending
+                                            ? '加入中...'
+                                            : '加入購物車'}
                             </button>
                         </div>
                     </div>

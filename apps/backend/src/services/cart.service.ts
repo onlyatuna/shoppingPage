@@ -29,8 +29,31 @@ export class CartService {
         }
 
         // 計算總金額 (可選，通常前端算也可以，但在後端算更安全)
+        // 計算總金額 (可選，通常前端算也可以，但在後端算更安全)
         const totalAmount = cart.items.reduce((sum, item) => {
-            return sum + Number(item.product.price) * item.quantity;
+            let price = Number(item.product.price);
+
+            // 嘗試尋找對應的變體價格
+            if (item.variantId && item.product.variants) {
+                const variants = item.product.variants as any[];
+                const variant = variants.find((v: any) => v.id === item.variantId);
+
+                if (variant) {
+                    // Check for variant sale price
+                    if (variant.isOnSale && variant.salePrice) {
+                        price = Number(variant.salePrice);
+                    } else {
+                        price = Number(variant.price);
+                    }
+                }
+            } else {
+                // Check for product sale price (if no variant selected)
+                if (item.product.isOnSale && item.product.salePrice) {
+                    price = Number(item.product.salePrice);
+                }
+            }
+
+            return sum + price * item.quantity;
         }, 0);
 
         return { ...cart, totalAmount };

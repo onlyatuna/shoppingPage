@@ -20,7 +20,7 @@ export default function Footer() {
                     <div className="col-span-2 md:col-span-1 space-y-4">
                         <Link to="/" className="text-2xl font-extrabold tracking-tighter flex items-center gap-2">
                             <img src="/icon.png" alt="Logo" className="w-8 h-8 object-contain rounded" />
-                            <span className="text-[#F5F0E6]">MiniShop</span>
+                            <span className="text-[#F5F0E6]">EvanShop</span>
                         </Link>
                         <p className="text-white/90 text-sm leading-relaxed">
                             我們致力於提供最優質的商品與服務，為您的生活增添品味與質感。探索我們的精選系列，發現更多美好。
@@ -29,7 +29,7 @@ export default function Footer() {
                             <a href="#" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
                                 <Facebook size={20} />
                             </a>
-                            <a href="#" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
+                            <a href="https://www.instagram.com/evandaiguo/" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
                                 <Instagram size={20} />
                             </a>
                             <a href="#" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
@@ -78,11 +78,11 @@ export default function Footer() {
                         <div className="space-y-2">
                             <div className="flex items-center gap-2 text-white/90 text-sm">
                                 <MapPin size={16} />
-                                <span>台北市信義區快樂路 123 號</span>
+                                <span>台中市沙鹿區福至路111巷18號</span>
                             </div>
                             <div className="flex items-center gap-2 text-white/90 text-sm">
                                 <Mail size={16} />
-                                <span>support@minishop.com.tw</span>
+                                <span>evanchen940628@gmail.com</span>
                             </div>
                         </div>
                     </div>

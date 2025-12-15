@@ -9,15 +9,25 @@ interface CartItem {
 
 interface CartState {
     items: CartItem[];
+    checkoutInfo: {
+        deliveryMethod: string;
+        paymentMethod: string;
+    };
     addItem: (productId: number, quantity?: number) => void;
     removeItem: (productId: number) => void;
     clearCart: () => void;
+    setCheckoutInfo: (info: { deliveryMethod: string; paymentMethod: string }) => void;
 }
 
 export const useCartStore = create<CartState>()(
     persist(
         (set) => ({
             items: [],
+            checkoutInfo: {
+                deliveryMethod: 'HOME_DELIVERY',
+                paymentMethod: 'CREDIT_CARD',
+            },
+            setCheckoutInfo: (info) => set((state) => ({ checkoutInfo: { ...state.checkoutInfo, ...info } })),
             addItem: (productId, quantity = 1) =>
                 set((state) => {
                     const existingItem = state.items.find((item) => item.productId === productId);

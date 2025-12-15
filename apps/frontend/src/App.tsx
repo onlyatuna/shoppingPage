@@ -12,6 +12,8 @@ import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
 import ProfilePage from './pages/ProfilePage';
 import ProductPage from './pages/ProductPage';
+import CheckoutInfoPage from './pages/CheckoutInfoPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
 
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
@@ -95,6 +97,20 @@ function App() {
                     <Route path="/cart" element={
                         <ProtectedRoute>
                             <CartPage />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* Step 2: 填寫資料 (受保護) */}
+                    <Route path="/checkout/info" element={
+                        <ProtectedRoute>
+                            <CheckoutInfoPage />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* Step 3: 訂單確認 (受保護) */}
+                    <Route path="/orders/success/:id" element={
+                        <ProtectedRoute>
+                            <OrderSuccessPage />
                         </ProtectedRoute>
                     } />
 

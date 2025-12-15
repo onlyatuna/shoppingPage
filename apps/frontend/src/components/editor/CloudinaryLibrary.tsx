@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Trash2, ChevronLeft, ChevronRight, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight, Loader2, Image as ImageIcon, Upload, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/client';
@@ -24,6 +24,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
     const [nextCursor, setNextCursor] = useState<string | null>(null);
 
     // Interaction State
+    const [isEditMode, setIsEditMode] = useState(false);
     const [activeDeleteId, setActiveDeleteId] = useState<string | null>(null);
     const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
     const isLongPressRef = useRef(false);
@@ -90,6 +91,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
         setCursorStack([undefined]);
         setNextCursor(null);
         fetchImages();
+        setIsEditMode(false); // Reset edit mode on tab switch
     }, [viewType]);
 
     const goToNext = () => {
@@ -197,7 +199,20 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                     </button>
                 </div>
 
-                <div>
+                <div className="flex items-center gap-2">
+                    {/* Toggle Edit Mode */}
+                    <button
+                        onClick={() => setIsEditMode(!isEditMode)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                            ${isEditMode
+                                ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                    >
+                        <Pencil size={14} />
+                        {isEditMode ? '完成編輯' : '編輯'}
+                    </button>
+
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -242,49 +257,31 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                             <div
                                 key={img.public_id}
                                 onClick={(e) => {
-                                    e.stopPropagation(); // Stop bubbling to prevent parent from clearing immediately
+                                    e.stopPropagation(); // Stop bubbling
 
-                                    // If this click was triggered by a long press release, ignore it
-                                    if (isLongPressRef.current) {
-                                        isLongPressRef.current = false;
-                                        return;
-                                    }
-
-                                    // If we are in "delete mode" for this image (mobile), don't select it, just dismiss mode
+                                    // If we are in "delete mode" for this image (mobile), don't select it
                                     if (activeDeleteId === img.public_id) {
                                         setActiveDeleteId(null);
                                         return;
                                     }
-                                    onSelectImage(img.secure_url);
-                                }}
-                                onTouchStart={() => {
-                                    isLongPressRef.current = false; // Reset
-                                    const timer = setTimeout(() => {
-                                        setActiveDeleteId(img.public_id);
-                                        isLongPressRef.current = true; // Mark as long press captured
-                                        // Optional: vibrate to indicate long press
-                                        if (navigator.vibrate) navigator.vibrate(50);
-                                    }, 500); // 500ms long press
-                                    setLongPressTimer(timer);
-                                }}
-                                onTouchEnd={() => {
-                                    if (longPressTimer) {
-                                        clearTimeout(longPressTimer);
-                                        setLongPressTimer(null);
+
+                                    // Only select if NOT in edit mode
+                                    if (!isEditMode) {
+                                        onSelectImage(img.secure_url);
                                     }
                                 }}
-                                onTouchMove={() => {
-                                    // If user scrolls, cancel long press
-                                    if (longPressTimer) {
-                                        clearTimeout(longPressTimer);
-                                        setLongPressTimer(null);
-                                    }
-                                }}
+                                // Keep mobile long press for now, mostly for touch devices w/o easy edit button access?
+                                // Or does the edit button cover it? 
+                                // Let's disable long press trigger of "activeDeleteId" if we have explicit edit mode.
+                                // Actually, user might still want long press? Let's leave it but it might act weird with edit mode.
+                                // Simplest is to rely on the global Edit Mode.
                                 className={`group relative aspect-square bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shadow-sm 
-                                    ${activeDeleteId === img.public_id
+                                    ${activeDeleteId === img.public_id || isEditMode
                                         ? 'border-blue-500 shadow-md'
                                         : 'border-transparent'
-                                    }`}
+                                    }
+                                    ${isEditMode ? 'hover:border-red-400' : ''}
+                                `}
                             >
                                 <img
                                     src={img.secure_url}
@@ -294,20 +291,21 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                                 />
                                 {/* Overlay with actions */}
                                 <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center
-                                    ${activeDeleteId === img.public_id ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'}
+                                    ${activeDeleteId === img.public_id || isEditMode ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'}
                                 `}>
-                                    <div className="flex gap-2">
+                                    {isEditMode ? (
                                         <button
                                             onClick={(e) => handleDelete(img.public_id, e)}
-                                            className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-transform hover:scale-110 shadow-lg"
+                                            className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-transform hover:scale-110 shadow-lg animate-in zoom-in duration-200"
                                             title="刪除"
                                         >
-                                            <Trash2 size={16} />
+                                            <Trash2 size={20} />
                                         </button>
-                                    </div>
-                                    <span className="absolute bottom-2 text-xs text-white/90 bg-black/50 px-2 py-0.5 rounded-full">
-                                        {activeDeleteId === img.public_id ? '刪除' : '點擊選用'}
-                                    </span>
+                                    ) : (
+                                        <span className="text-white/80 text-xs font-medium px-2 py-1 bg-black/40 rounded-full backdrop-blur-sm">
+                                            點擊選用
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         ))}
