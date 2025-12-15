@@ -13,8 +13,8 @@ interface FloatingToolbarProps {
 }
 
 export default function FloatingToolbar({
-    onAddText,
-    onAddWatermark,
+    // onAddText,      // Disabled
+    // onAddWatermark, // Disabled
     onCrop,
     onRegenerate,
     onSelectFrame,
@@ -39,9 +39,9 @@ export default function FloatingToolbar({
             onMouseLeave={onMouseLeave}
         >
             <button
-                onClick={onAddText}
-                disabled={disabled}
-                className="p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors tooltip-trigger"
+                type="button"
+                disabled={true}
+                className="p-3 rounded-full text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
                 title="添加文字 (Coming Soon)"
             >
                 <Type size={20} />
@@ -72,9 +72,9 @@ export default function FloatingToolbar({
             <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
 
             <button
-                onClick={onAddWatermark}
-                disabled={disabled}
-                className="p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors tooltip-trigger"
+                type="button"
+                disabled={true}
+                className="p-3 rounded-full text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
                 title="添加浮水印 (Coming Soon)"
             >
                 <Stamp size={20} />

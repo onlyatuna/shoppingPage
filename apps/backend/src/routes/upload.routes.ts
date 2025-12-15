@@ -93,7 +93,7 @@ router.get('/resources', authenticateToken, requireAdmin, async (req, res) => {
         const result = await cloudinary.api.resources({
             type: 'upload',
             prefix: prefix, // 只撈取此專案的圖片
-            max_results: 9, // 每頁顯示數量
+            max_results: 50, // 每頁顯示數量 (Increased from 9)
             next_cursor: next_cursor as string
         });
 

@@ -373,7 +373,7 @@ export default function ProductPage() {
                             </span>
                         )}
                         <h1 className="text-3xl md:text-4xl font-extrabold mt-3 text-vintage-navy">{product.name}</h1>
-                        <div className="mt-2 flex items-baseline gap-3">
+                        <div className="mt-2 flex flex-wrap items-baseline gap-3">
                             {(currentVariant ? (currentVariant.isOnSale && currentVariant.salePrice) : (!product.variants?.length && product.isOnSale && product.salePrice)) ? (
                                 <>
                                     <span className="text-3xl font-bold text-[#E85D3F]">

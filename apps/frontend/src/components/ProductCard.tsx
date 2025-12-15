@@ -101,13 +101,13 @@ export default function ProductCard({ product }: { product: Product }) {
                             }
 
                             return (
-                                <div className="flex flex-col items-end">
+                                <div className="flex flex-col items-start pt-1">
                                     {hasSale && originalPriceDisplay && (
                                         <span className="text-xs text-gray-400 line-through decoration-gray-400/50">
                                             ${originalPriceDisplay.toLocaleString()}
                                         </span>
                                     )}
-                                    <span className={`text-xl font-bold ${hasSale ? 'text-[#E85A32]' : 'text-black'}`}>
+                                    <span className={`text-lg md:text-xl font-bold ${hasSale ? 'text-[#E85A32]' : 'text-black'}`}>
                                         {minPrice === maxPrice
                                             ? `$${minPrice.toLocaleString()}`
                                             : `$${minPrice.toLocaleString()} - $${maxPrice.toLocaleString()}`

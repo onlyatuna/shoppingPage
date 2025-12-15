@@ -199,13 +199,13 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                     <button
                         type="button"
                         onClick={onAddCustomStyle}
-                        disabled={disabled}
+                        // Always allow adding styles
                         className={`
                             relative p-3 rounded-xl border-2 border-dashed text-left transition-all
                             bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400
                             border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500
                             hover:bg-gray-100 dark:hover:bg-gray-800
-                            ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                            cursor-pointer
                             flex items-center justify-center
                         `}
                     >

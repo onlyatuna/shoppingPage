@@ -19,6 +19,8 @@ interface ImageCanvasProps {
     onRemove?: () => void;
     onSelectFrame: () => void;
     selectedFrame: Frame | null;
+    isCropping: boolean;
+    setIsCropping: (value: boolean) => void;
 }
 
 export default function ImageCanvas({
@@ -30,10 +32,11 @@ export default function ImageCanvas({
     onOpenLibrary,
     onRemove,
     onSelectFrame,
-    selectedFrame
+    selectedFrame,
+    isCropping,
+    setIsCropping
 }: ImageCanvasProps) {
-    // Cropping State
-    const [isCropping, setIsCropping] = useState(false);
+    // Cropping State - Lifted to parent
     const [crop, setCrop] = useState<Crop>();
     const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
     const imgRef = useRef<HTMLImageElement>(null);
@@ -99,7 +102,7 @@ export default function ImageCanvas({
             }
         },
         accept: {
-            'image/*': ['.png', '.jpg', '.jpeg', '.webp']
+            'image/*': []
         },
         multiple: false
     });
@@ -123,7 +126,7 @@ export default function ImageCanvas({
                     {isDragActive ? '放開以已上傳' : '拖曳圖片至此'}
                 </p>
                 <p className="text-base md:text-sm font-bold md:font-normal text-gray-700 dark:text-gray-200 md:text-gray-500 md:dark:text-gray-400">
-                    <span className="md:hidden">點擊選擇檔案</span>
+                    <span className="md:hidden">點擊拍照或上傳</span>
                     <span className="hidden md:inline">或點擊選擇檔案</span>
                 </p>
 
@@ -148,20 +151,21 @@ export default function ImageCanvas({
     return (
         <div className="relative w-full h-full flex items-center justify-center p-4">
             {/* 1080x1080 畫布容器 (維持正方形比例) */}
+            {/* 1080x1080 畫布容器 (維持正方形比例 - 類似 Instagram 預覽) */}
             <div
-                className="group relative aspect-square max-h-[85vh] max-w-[85vh] w-full bg-white dark:bg-black shadow-2xl rounded-sm overflow-hidden border border-gray-100 dark:border-gray-800"
+                className="group relative aspect-square max-h-[85vh] max-w-[85vh] w-full bg-white dark:bg-black shadow-2xl rounded-sm overflow-hidden border border-gray-100 dark:border-gray-800 flex items-center justify-center bg-checkered"
                 onMouseEnter={() => setIsHoveringCanvas(true)}
                 onMouseLeave={() => setIsHoveringCanvas(false)}
             >
 
                 {/* Remove Button - Top Right */}
-                {onRemove && (editedImage || originalImage) && !isProcessing && (
+                {onRemove && (editedImage || originalImage) && !isProcessing && !isCropping && (
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             onRemove();
                         }}
-                        className="absolute top-4 right-4 z-20 p-2 bg-white/80 dark:bg-black/60 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white dark:hover:bg-red-500"
+                        className="absolute top-4 right-4 z-20 p-2 bg-white/80 dark:bg-black/60 backdrop-blur-sm rounded-full shadow-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white dark:hover:bg-red-500"
                         title="移除圖片"
                     >
                         <X size={20} />
@@ -184,104 +188,96 @@ export default function ImageCanvas({
                 )}
 
                 {/* 圖片顯示區域 */}
-                <div className="absolute inset-0 flex items-center justify-center p-4">
-                    {isCropping ? (
-                        <>
-                            <ReactCrop
-                                crop={crop}
-                                onChange={(_, percentCrop) => setCrop(percentCrop)}
-                                onComplete={(c) => setCompletedCrop(c)}
-                                aspect={1} // Fixed 1:1 aspect ratio
-                                className="max-h-full max-w-full"
-                            >
-                                <img
-                                    ref={imgRef}
-                                    src={editedImage || originalImage || ''}
-                                    className="max-h-full max-w-full w-auto h-auto object-contain"
-                                    alt="Crop target"
-                                    onLoad={(e) => {
-                                        const { width, height } = e.currentTarget;
-                                        // Default crop: 90% of smallest dimension, centered square
-                                        const size = Math.min(width, height) * 0.9;
-                                        const x = (width - size) / 2;
-                                        const y = (height - size) / 2;
-
-                                        const newCrop: Crop = {
-                                            unit: 'px',
-                                            x,
-                                            y,
-                                            width: size,
-                                            height: size,
-                                        };
-
-                                        setCrop(newCrop);
-                                        setCompletedCrop({ ...newCrop, width: size, height: size } as PixelCrop);
-                                    }}
-                                />
-                            </ReactCrop>
-
-                            {/* Floating Controls */}
-                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-4 bg-black/80 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl border border-white/10">
-                                <button
-                                    onClick={() => setIsCropping(false)}
-                                    className="text-white/90 hover:text-white flex items-center gap-2 text-sm font-medium transition-colors"
+                {/* 圖片顯示區域 - Flex centered */}
+                <div className="relative flex items-center justify-center w-full h-full pointer-events-none">
+                    <div className="pointer-events-auto"> {/* Wrapper for pointer events */}
+                        {isCropping ? (
+                            <>
+                                <ReactCrop
+                                    crop={crop}
+                                    onChange={(_, percentCrop) => setCrop(percentCrop)}
+                                    onComplete={(c) => setCompletedCrop(c)}
+                                    aspect={1} // Fixed 1:1 aspect ratio
+                                    minWidth={100} // Minimum size constraint
+                                    keepSelection={true} // Prevent clearing selection
+                                    className="max-h-full max-w-full"
                                 >
-                                    <CancelIcon size={18} />
-                                    取消
-                                </button>
-                                <div className="w-px h-4 bg-white/20"></div>
-                                <span className="text-white/50 text-xs font-medium whitespace-nowrap hidden md:block">拖曳以裁切</span>
-                                <div className="w-px h-4 bg-white/20 hidden md:block"></div>
-                                <button
-                                    onClick={handleSaveCrop}
-                                    className="text-white hover:text-blue-400 flex items-center gap-2 text-sm font-bold transition-colors"
-                                >
-                                    <Check size={18} />
-                                    完成
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <AnimatePresence mode="wait">
-                            {editedImage && !showOriginal ? (
-                                <motion.img
-                                    key="edited-image"
-                                    src={editedImage}
-                                    alt="Edited Product"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.5 }}
-                                    className="max-h-full max-w-full w-auto h-auto object-contain"
-                                />
-                            ) : (
-                                <motion.img
-                                    key="original-image"
-                                    src={originalImage}
-                                    alt="Original Product"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="max-h-full max-w-full w-auto h-auto object-contain filter grayscale-[20%]"
-                                />
-                            )}
-                        </AnimatePresence>
-                    )}
+                                    <img
+                                        ref={imgRef}
+                                        src={editedImage || originalImage || ''}
+                                        className="max-h-[85vh] max-w-[85vh] w-auto h-auto"
+                                        style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} // Ensure it fits in parent
+                                        alt="Crop target"
+                                        onLoad={(e) => {
+                                            const { width, height } = e.currentTarget;
+                                            // Default crop: 90% of smallest dimension, centered square
+                                            const size = Math.min(width, height) * 0.9;
+                                            const x = (width - size) / 2;
+                                            const y = (height - size) / 2;
 
-                    {/* Frame Overlay - Only show if frame is selected and not showing original AND NOT CROPPING */}
-                    {selectedFrame && !showOriginal && !isCropping && selectedFrame.id !== 'none' && (
-                        <motion.img
-                            key={`frame-${selectedFrame.id}`}
-                            src={selectedFrame.url}
-                            alt="Frame"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                            style={{ zIndex: 10 }}
-                        />
-                    )}
+                                            const newCrop: Crop = {
+                                                unit: 'px',
+                                                x,
+                                                y,
+                                                width: size,
+                                                height: size,
+                                            };
+
+                                            setCrop(newCrop);
+                                            setCompletedCrop({ ...newCrop, width: size, height: size } as PixelCrop);
+                                        }}
+                                    />
+                                </ReactCrop>
+
+                            </>
+                        ) : (
+                            <AnimatePresence mode="wait">
+                                {editedImage && !showOriginal ? (
+                                    <motion.img
+                                        key="edited-image"
+                                        src={editedImage}
+                                        alt="Edited Product"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.5 }}
+                                        className="max-h-full max-w-full w-auto h-auto"
+                                        style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+                                    />
+                                ) : (
+                                    <motion.img
+                                        key="original-image"
+                                        src={originalImage}
+                                        alt="Original Product"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="max-h-full max-w-full w-auto h-auto filter grayscale-[20%]"
+                                        style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+                                    />
+                                )}
+                            </AnimatePresence>
+                        )}
+                    </div>
                 </div>
+
+                {/* Frame Overlay - Only show if frame is selected and not showing original AND NOT CROPPING */}
+                {selectedFrame && !showOriginal && !isCropping && selectedFrame.id !== 'none' && (
+                    <motion.img
+                        key={`frame-${selectedFrame.id}`}
+                        src={selectedFrame.url}
+                        alt="Frame"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                        style={{ zIndex: 10 }}
+                    />
+                )}
+
+
+
+
 
                 {/* 加載狀態遮罩 */}
                 {isProcessing && <LoadingState />}
@@ -310,6 +306,29 @@ export default function ImageCanvas({
                     />
                 )}
             </div>
+
+            {/* Crop Floating Controls - Moved to outer wrapper for better mobile positioning (below canvas) */}
+            {isCropping && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-4 bg-black/80 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl border border-white/10 pointer-events-auto w-max max-w-[90vw]">
+                    <button
+                        onClick={() => setIsCropping(false)}
+                        className="text-white/90 hover:text-white flex items-center gap-2 text-sm font-medium transition-colors"
+                    >
+                        <CancelIcon size={18} />
+                        取消
+                    </button>
+                    <div className="w-px h-4 bg-white/20"></div>
+                    <span className="text-white/50 text-xs font-medium whitespace-nowrap hidden md:block">拖曳以裁切</span>
+                    <div className="w-px h-4 bg-white/20 hidden md:block"></div>
+                    <button
+                        onClick={handleSaveCrop}
+                        className="text-white hover:text-blue-400 flex items-center gap-2 text-sm font-bold transition-colors"
+                    >
+                        <Check size={18} />
+                        完成
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

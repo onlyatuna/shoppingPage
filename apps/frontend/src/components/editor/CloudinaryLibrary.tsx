@@ -114,7 +114,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
         loadPage(currentCursor);
     }
 
-    const handleDelete = async (publicId: string, e: React.MouseEvent) => {
+    const handleDelete = async (publicId: string, e: React.MouseEvent | React.TouchEvent) => {
         e.stopPropagation();
         if (!confirm('確定要刪除這張圖片嗎？')) return;
 
@@ -124,6 +124,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
 
             toast.success('圖片已刪除');
             refresh();
+            setActiveDeleteId(null); // Reset active delete
         } catch (error: any) {
             const msg = error.response?.data?.message || '刪除失敗';
             // Check for specific error code if available, or just show message
@@ -139,6 +140,33 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                 toast.error(msg);
             }
             console.error('Delete failed:', error);
+        }
+    };
+
+    // Long Press Handlers
+    const handleTouchStart = (id: string) => {
+        isLongPressRef.current = false;
+        const timer = setTimeout(() => {
+            isLongPressRef.current = true;
+            setActiveDeleteId(id);
+            // Optional: Vibrate to indicate long press
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, 500); // 500ms long press
+        setLongPressTimer(timer);
+    };
+
+    const handleTouchEnd = () => {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            setLongPressTimer(null);
+        }
+    };
+
+    const handleTouchMove = () => {
+        // If user drags, cancel long press
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            setLongPressTimer(null);
         }
     };
 
@@ -203,7 +231,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                     {/* Toggle Edit Mode */}
                     <button
                         onClick={() => setIsEditMode(!isEditMode)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
+                        className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors
                             ${isEditMode
                                 ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                                 : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
@@ -270,11 +298,10 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                                         onSelectImage(img.secure_url);
                                     }
                                 }}
-                                // Keep mobile long press for now, mostly for touch devices w/o easy edit button access?
-                                // Or does the edit button cover it? 
-                                // Let's disable long press trigger of "activeDeleteId" if we have explicit edit mode.
-                                // Actually, user might still want long press? Let's leave it but it might act weird with edit mode.
-                                // Simplest is to rely on the global Edit Mode.
+                                // Mobile Long Press Handlers
+                                onTouchStart={() => handleTouchStart(img.public_id)}
+                                onTouchEnd={handleTouchEnd}
+                                onTouchMove={handleTouchMove}
                                 className={`group relative aspect-square bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden cursor-pointer border-2 transition-all shadow-sm 
                                     ${activeDeleteId === img.public_id || isEditMode
                                         ? 'border-blue-500 shadow-md'
@@ -293,7 +320,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                                 <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center
                                     ${activeDeleteId === img.public_id || isEditMode ? 'opacity-100' : 'opacity-0 md:group-hover:opacity-100'}
                                 `}>
-                                    {isEditMode ? (
+                                    {isEditMode || activeDeleteId === img.public_id ? (
                                         <button
                                             onClick={(e) => handleDelete(img.public_id, e)}
                                             className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-transform hover:scale-110 shadow-lg animate-in zoom-in duration-200"

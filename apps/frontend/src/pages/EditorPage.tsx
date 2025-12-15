@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sun, Moon, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from '../contexts/ThemeContext';
@@ -16,7 +16,7 @@ import MobileBottomSheet from '../components/mobile/MobileBottomSheet';
 import MobileWizardNav from '../components/mobile/MobileWizardNav';
 import StylePresetGrid from '../components/editor/StylePresetGrid';
 import { Sparkles } from 'lucide-react'; // For mobile trigger button icons
-import useSwipe from '../hooks/useSwipe';
+
 import CustomStyleModal, { CustomStyle } from '../components/editor/CustomStyleModal';
 import FrameSelector from '../components/editor/FrameSelector';
 import FrameUploadModal from '../components/editor/FrameUploadModal';
@@ -34,6 +34,7 @@ export default function EditorPage() {
     const [prompt, setPrompt] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+    const [isCropping, setIsCropping] = useState(false); // Cropping state lifted up
 
     // Custom Styles State
     const [customStyles, setCustomStyles] = useState<CustomStyle[]>([]);
@@ -132,7 +133,7 @@ export default function EditorPage() {
         return !!(uploadedImage || editedImage || generatedCaption);
     };
 
-    // Warn user before leaving page with unsaved changes
+    // Warn user before leaving page with unsaved changes (Desktop Refresh/Close)
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (hasUnsavedChanges()) {
@@ -144,6 +145,59 @@ export default function EditorPage() {
         window.addEventListener('beforeunload', handleBeforeUnload);
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [uploadedImage, editedImage, generatedCaption]);
+
+    // Prevent accidental exit (popstate) for mobile
+    // Track if we have pushed a history state for the current dirty session
+    const historyPushed = useRef(false);
+
+    // Prevent accidental exit (popstate) for mobile
+    useEffect(() => {
+        const handlePopState = () => {
+            // Prevent default behavior implies we handle the state
+            if (hasUnsavedChanges()) {
+                const confirmLeave = window.confirm('確定要離開嗎？您的編輯內容將會遺失。');
+
+                if (!confirmLeave) {
+                    // User stays. restore the "forward" state
+                    window.history.pushState(null, '', window.location.href);
+                    // historyPushed ref remains true because we just restored it manually
+                } else {
+                    // User wants to leave.
+                    // We are now at the state BEFORE the push.
+                    // If we navigate(-1), we go back one more step.
+                    navigate(-1);
+                }
+            } else {
+                // If clean, just let it happen (or maybe we shouldn't be here)
+                // If we are clean, historyPushed should be false.
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [uploadedImage, editedImage, generatedCaption]);
+
+    // Separate effect to push state ONCE when becoming dirty
+    useEffect(() => {
+        const isDirty = hasUnsavedChanges();
+
+        if (isDirty && !historyPushed.current) {
+            window.history.pushState(null, '', window.location.href);
+            historyPushed.current = true;
+        } else if (!isDirty) {
+            // If we become clean (e.g. saved or cleared), reset the tracking
+            // Note: we don't pop state here automatically because that might be confusing.
+            // We just reset internal tracking. 
+            // BUT: if we are "forward" in the trap state, and user saves, we are still "forward".
+            // Ideally we shouldn't mess with it too much.
+            // Just reset ref so if they dirty it again, we push again? 
+            // No, if we are still on the "pushed" state, pushing again would stack.
+            // Let's keep it simple: Only push if we transitioned from clean -> dirty.
+            // If we save, we might want to clear historyPushed? 
+            // For now, let's just handle the loop fix.
+            historyPushed.current = false;
+        }
+    }, [!!uploadedImage, !!editedImage, !!generatedCaption]);
 
     // Handlers
     const handleImageUpload = (file: File) => {
@@ -165,18 +219,18 @@ export default function EditorPage() {
         const preset = presets.find(p => p.key === style);
         const customPreset = customStyles.find(c => c.key === style);
 
+        let newPrompt = '';
         if (preset) {
-            setPrompt(preset.prompt);
+            newPrompt = preset.prompt;
         } else if (customPreset) {
-            setPrompt(customPreset.prompt);
+            newPrompt = customPreset.prompt;
         }
+
+        setPrompt(newPrompt);
 
         // Auto-generate if image is uploaded
         if (uploadedImage && !isProcessing) {
-            // Use setTimeout to ensure state is updated before generation
-            setTimeout(() => {
-                handleGenerate();
-            }, 100);
+            handleGenerate(newPrompt);
         }
     };
 
@@ -371,14 +425,15 @@ export default function EditorPage() {
         });
     };
 
-    const handleGenerate = async () => {
-        if (!uploadedImage || !prompt) return;
+    const handleGenerate = async (overridePrompt?: string) => {
+        const activePrompt = overridePrompt || prompt;
+        if (!uploadedImage || !activePrompt) return;
 
         setIsProcessing(true);
         try {
             const response = await apiClient.post('/gemini/edit-image', {
                 imageUrl: uploadedImage,
-                prompt: prompt
+                prompt: activePrompt
             });
 
             const data = response.data.data ? response.data.data : response.data;
@@ -576,24 +631,11 @@ export default function EditorPage() {
         return false;
     };
 
-    // Swipe Handling
-    const swipeHandlers = useSwipe({
-        onSwipeLeft: () => {
-            // Only allow swipe next if allowed (like button)
-            // And maybe exclude 'edit' step if it interferes with canvas panning, 
-            // but let's try allowing it for now. Canvas panning usually requires 2 fingers or specific drag.
-            // If this becomes annoying we can add `if (mobileStep !== 'edit')`
-            if (canGoNext()) handleMobileNext();
-        },
-        onSwipeRight: () => {
-            if (mobileStep !== 'edit') handleMobileBack();
-        },
-    });
+
 
     return (
         <div
             className="h-screen overflow-hidden bg-gray-50 dark:bg-[#1e1e1e] transition-colors flex flex-col"
-            {...swipeHandlers}
         >
             {/* Header */}
             <header className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] z-50 shrink-0">
@@ -697,7 +739,7 @@ export default function EditorPage() {
                                     setIsCustomStyleModalOpen(true);
                                 }}
                                 onDeleteCustomStyle={handleDeleteCustomStyle}
-                                disabled={isProcessing}
+                                disabled={isProcessing || !uploadedImage}
                             />
                         </div>
                     )}
@@ -713,7 +755,10 @@ export default function EditorPage() {
                     <button
                         type="button"
                         onClick={() => setIsMobileSheetOpen(true)}
-                        className="md:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm"
+                        disabled={!uploadedImage}
+                        className={`md:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm transition-all
+                            ${!uploadedImage ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95'}
+                        `}
                     >
                         <Sparkles size={16} className="text-blue-500" />
                         <span>風格</span>
@@ -729,6 +774,8 @@ export default function EditorPage() {
                         onRemove={handleRemoveImage}
                         onSelectFrame={() => setIsFrameSelectorOpen(true)}
                         selectedFrame={selectedFrame}
+                        isCropping={isCropping}
+                        setIsCropping={setIsCropping}
                     />
                 </div>
 
@@ -863,11 +910,19 @@ export default function EditorPage() {
 
                 <MobileWizardNav
                     step={mobileStep}
-                    onNext={handleMobileNext}
+
                     onBack={mobileStep !== 'edit' ? handleMobileBack : undefined}
                     canGoNext={canGoNext()}
                     nextLabel={mobileStep === 'publish' ? '完成' : undefined}
                     isProcessing={isProcessing}
+                    // Disable next button if cropping
+                    onNext={() => {
+                        if (isCropping) {
+                            toast.warning('請先完成或取消裁切');
+                            return;
+                        }
+                        handleMobileNext();
+                    }}
                 />
                 {/* Close Main Content Area */}
             </div>
