@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import { Toaster } from 'sonner';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 import HomePage from './pages/HomePage';
@@ -71,7 +72,7 @@ function App() {
         );
     }
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-[#121212] dark:text-gray-100 transition-colors">
+        <div className="min-h-screen bg-paper-white text-vintage-navy dark:bg-[#121212] dark:text-gray-100 transition-colors">
             <Toaster position="top-center" richColors />
             {!isEditorPage && <Navbar />}
             <div className={isEditorPage ? '' : 'max-w-7xl mx-auto'}>
@@ -161,6 +162,7 @@ function App() {
                     <Route path="/products/:slug" element={<ProductPage />} />
                 </Routes>
             </div>
+            {!isEditorPage && <Footer />}
             <PWAInstallPrompt />
         </div>
     );

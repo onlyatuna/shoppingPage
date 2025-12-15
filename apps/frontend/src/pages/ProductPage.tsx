@@ -246,8 +246,8 @@ export default function ProductPage() {
                                 {product.category.name}
                             </span>
                         )}
-                        <h1 className="text-3xl md:text-4xl font-extrabold mt-3 text-gray-900">{product.name}</h1>
-                        <div className="text-2xl font-bold mt-2 text-gray-900">
+                        <h1 className="text-3xl md:text-4xl font-extrabold mt-3 text-vintage-navy">{product.name}</h1>
+                        <div className="text-2xl font-bold mt-2 text-brand-orange">
                             {displayPriceString}
                         </div>
 
@@ -271,10 +271,11 @@ export default function ProductPage() {
                                                 <button
                                                     key={val}
                                                     onClick={() => handleOptionSelect(option.name, val)}
-                                                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all
-                                                            ${isSelected
-                                                            ? 'border-black bg-black text-white'
-                                                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                                                    className={`px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${
+                                                        // 選中狀態：深藍底 + 白字 / 未選中：白底 + 深藍框 + 深藍字
+                                                        selectedOptions[option.name] === val
+                                                            ? 'bg-[#5A9EA3] border-[#5A9EA3] text-white shadow-[2px_2px_0px_#1D2D45]'
+                                                            : 'bg-white border-[#1D2D45] text-[#1D2D45] hover:bg-gray-50'
                                                         }`}
                                                 >
                                                     {val}
@@ -287,36 +288,38 @@ export default function ProductPage() {
                         </div>
                     )}
 
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-700">數量</span>
-                        </div>
-
+                    {/* Quantity Selector */}
+                    <div className="flex items-center gap-4 mb-8">
+                        <span className="font-bold text-[#1D2D45]">數量</span>
                         <div className="flex items-center gap-4">
-                            <div className="flex items-center border rounded-lg overflow-hidden">
+                            <div className="flex items-center border-2 border-[#1D2D45] rounded-lg overflow-hidden shadow-[4px_4px_0px_#1D2D45]">
                                 <button
                                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                    className="p-3 hover:bg-gray-100 active:bg-gray-200 transition"
+                                    className="w-12 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-[#1D2D45] font-bold transition-colors active:bg-gray-300"
                                     disabled={quantity <= 1}
                                 >
-                                    <Minus size={18} />
+                                    <Minus size={18} strokeWidth={3} />
                                 </button>
-                                <span className="w-12 text-center font-medium">{quantity}</span>
+                                <input
+                                    type="text"
+                                    value={quantity}
+                                    readOnly
+                                    className="w-14 h-12 text-center font-bold text-lg text-[#1D2D45] border-x-2 border-[#1D2D45] bg-white outline-none selection:bg-none"
+                                />
                                 <button
                                     onClick={() => setQuantity(Math.min(displayStock, quantity + 1))}
-                                    className="p-3 hover:bg-gray-100 active:bg-gray-200 transition"
+                                    className="w-12 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-[#1D2D45] font-bold transition-colors active:bg-gray-300"
                                     disabled={quantity >= displayStock}
                                 >
-                                    <Plus size={18} />
+                                    <Plus size={18} strokeWidth={3} />
                                 </button>
                             </div>
-
                             <button
                                 onClick={handleAddToCart}
                                 disabled={addToCartMutation.isPending || isOutOfStock}
-                                className={`flex-1 py-3 px-6 rounded-lg font-bold flex items-center justify-center gap-2 text-lg shadow-md transition-all active:scale-95 ${isOutOfStock
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-black text-white hover:bg-gray-800'
+                                className={`flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-lg border-2 border-[#1D2D45] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${isOutOfStock
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300'
+                                    : 'bg-[#E85D3F] text-white shadow-[6px_6px_0px_#1D2D45] hover:bg-[#E85D3F]/90 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[5px_5px_0px_#1D2D45]'
                                     }`}
                             >
                                 <ShoppingCart size={20} />

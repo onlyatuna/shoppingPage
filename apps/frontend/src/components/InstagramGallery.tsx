@@ -52,7 +52,7 @@ export default function InstagramGallery() {
             {isLoading ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     {Array.from({ length: 6 }).map((_, i) => (
-                        <Skeleton key={i} className="aspect-square rounded-xl" />
+                        <Skeleton key={i} className="aspect-square rounded-[4px]" />
                     ))}
                 </div>
             ) : (
@@ -63,7 +63,7 @@ export default function InstagramGallery() {
                             href={post.permalink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group relative aspect-square block overflow-hidden rounded-xl bg-gray-100"
+                            className="group relative aspect-square block overflow-hidden rounded-[4px] bg-gray-100 border-2 border-[#1B2F4A]"
                         >
                             <img
                                 src={post.media_type === 'VIDEO' ? post.thumbnail_url : post.media_url}

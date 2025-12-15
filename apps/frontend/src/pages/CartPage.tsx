@@ -227,7 +227,7 @@ export default function CartPage() {
 
                         <button
                             onClick={() => setIsCheckoutOpen(true)}
-                            className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition"
+                            className="w-full bg-[#E85A32] text-white py-3 rounded-lg font-bold border-2 border-[#1B2F4A] shadow-[4px_4px_0px_#1B2F4A] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#1B2F4A] transition-all active:shadow-none active:translate-x-[4px] active:translate-y-[4px]"
                         >
                             前往結帳
                         </button>

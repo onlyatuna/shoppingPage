@@ -79,7 +79,7 @@ export default function HomePage() {
 
             {/* 標題與篩選狀態區 */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold">商品列表</h1>
+                <h1 className="text-3xl font-bold text-vintage-navy">商品列表</h1>
 
                 {/* 顯示目前的篩選標籤 */}
                 {(searchTerm || selectedCategoryId) && (
@@ -108,43 +108,7 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-col md:flex-row gap-8">
-
-                {/* --- 左側：分類側邊欄 (電腦版顯示) --- */}
-                <aside className="w-full md:w-64 flex-shrink-0 hidden md:block">
-                    <div className="bg-white p-4 rounded-lg border shadow-sm sticky top-24">
-                        <div className="flex items-center gap-2 font-bold text-lg mb-4 pb-2 border-b">
-                            <Filter size={20} />
-                            分類篩選
-                        </div>
-
-                        <div className="space-y-1">
-                            <button
-                                onClick={() => handleCategoryClick(null)}
-                                className={`w-full text-left px-4 py-2 rounded-md transition-colors ${selectedCategoryId === null
-                                    ? 'bg-black text-white font-bold'
-                                    : 'hover:bg-gray-100 text-gray-600'
-                                    }`}
-                            >
-                                全部商品
-                            </button>
-
-                            {categories?.map((category) => (
-                                <button
-                                    key={category.id}
-                                    onClick={() => handleCategoryClick(category.id)}
-                                    className={`w-full text-left px-4 py-2 rounded-md transition-colors flex justify-between ${selectedCategoryId === category.id
-                                        ? 'bg-black text-white font-bold'
-                                        : 'hover:bg-gray-100 text-gray-600'
-                                        }`}
-                                >
-                                    <span>{category.name}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </aside>
-
-                {/* --- 右側：商品網格 --- */}
+                {/* --- 右側：商品網格 (Now Full Width) --- */}
                 <main className="flex-1">
                     {isProductsLoading ? (
                         // Loading 骨架屏

@@ -13,7 +13,7 @@ export default function ProductCard({ product }: { product: Product }) {
     const displayImage = previewImage || product.images[0];
 
     return (
-        <div className="group bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full">
+        <div className="group bg-white rounded-xl border-2 border-[#1D2D45] shadow-[6px_6px_0px_#1D2D45] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_#1D2D45] transition-all duration-200 overflow-hidden flex flex-col h-full">
             <Link to={`/products/${product.slug}`} className="block relative">
                 {/* Main Image Area */}
                 <div className="relative aspect-square bg-gray-100 overflow-hidden">
@@ -59,7 +59,7 @@ export default function ProductCard({ product }: { product: Product }) {
                     <h3 className="font-bold text-lg truncate" title={product.name}>{product.name}</h3>
 
                     <div className="flex justify-between items-center mt-2">
-                        <span className="text-xl font-bold text-gray-900">
+                        <span className="text-xl font-bold text-[#E85A32]">
                             {(() => {
                                 if (product.variants && product.variants.length > 0) {
                                     const prices = product.variants.map(v => v.price);
@@ -77,9 +77,9 @@ export default function ProductCard({ product }: { product: Product }) {
                         </span>
                     </div>
                 </Link>
-
-
             </div>
+
+
         </div>
     );
 }
