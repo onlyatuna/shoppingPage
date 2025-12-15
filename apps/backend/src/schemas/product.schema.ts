@@ -7,6 +7,8 @@ export const createProductSchema = z.object({
     slug: z.string().min(1, 'Slug 不能為空').regex(/^[a-z0-9-]+$/, 'Slug 只能包含小寫字母、數字與連字號'),
     description: z.string().optional(),
     price: z.number().min(0, '價格不能小於 0'),
+    salePrice: z.number().min(0, '特價價格不能小於 0').optional(), // [New]
+    isOnSale: z.boolean().optional(), // [New]
     stock: z.number().int().min(0, '庫存不能小於 0'),
     categoryId: z.number().int(),
     images: z.array(z.string().url()).optional(), // 接收圖片 URL 陣列

@@ -23,10 +23,6 @@ export default function ProductPage() {
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [currentVariant, setCurrentVariant] = useState<ProductVariant | null>(null);
 
-
-
-    // ... (query & effects) ...
-
     // 1. Fetch Product Data
     const { data: product, isLoading, error } = useQuery({
         queryKey: ['product', slug],
@@ -37,9 +33,6 @@ export default function ProductPage() {
         enabled: !!slug,
     });
 
-    // Auto-select removed as per user request
-    // useEffect(() => { ... }, [product]);
-
     // Update current variant based on selection
     useEffect(() => {
         if (!product?.variants || !product.options || product.options.length === 0) {
@@ -47,7 +40,6 @@ export default function ProductPage() {
             return;
         }
 
-        // Fix: If no options selected, do not match any variant (vacuous truth of .every())
         if (Object.keys(selectedOptions).length === 0) {
             setCurrentVariant(null);
             return;
@@ -65,7 +57,7 @@ export default function ProductPage() {
             if (!product) return;
             return apiClient.post('/cart/items', {
                 productId: product.id,
-                variantId: currentVariant?.id, // [New] Pass variantId
+                variantId: currentVariant?.id,
                 quantity
             });
         },
@@ -93,6 +85,26 @@ export default function ProductPage() {
         if (!product) return '$0';
 
         if (product.variants && product.variants.length > 0) {
+            const prices = product.variants.map(v => {
+                const isSale = v.isOnSale && v.salePrice;
+                return isSale ? Number(v.salePrice) : Number(v.price);
+            });
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            if (minPrice !== maxPrice) {
+                return `$${minPrice.toLocaleString()} - $${maxPrice.toLocaleString()}`;
+            }
+            return `$${minPrice.toLocaleString()}`;
+        }
+
+        return `$${Number(product.price).toLocaleString()}`;
+    };
+
+    const getDisplayOriginalPrice = () => {
+        if (currentVariant) return `$${Number(currentVariant.price).toLocaleString()}`;
+        if (!product) return '$0';
+
+        if (product.variants && product.variants.length > 0) {
             const prices = product.variants.map(v => Number(v.price));
             const minPrice = Math.min(...prices);
             const maxPrice = Math.max(...prices);
@@ -104,7 +116,9 @@ export default function ProductPage() {
 
         return `$${Number(product.price).toLocaleString()}`;
     };
+
     const displayPriceString = getDisplayPrice();
+    const displayOriginalPriceString = getDisplayOriginalPrice();
     const displayStock = currentVariant ? currentVariant.stock : (product ? product.stock : 0);
     const isOutOfStock = displayStock <= 0;
 
@@ -247,11 +261,32 @@ export default function ProductPage() {
                             </span>
                         )}
                         <h1 className="text-3xl md:text-4xl font-extrabold mt-3 text-vintage-navy">{product.name}</h1>
-                        <div className="text-2xl font-bold mt-2 text-brand-orange">
-                            {displayPriceString}
+                        <div className="mt-2 flex items-baseline gap-3">
+                            {(currentVariant ? (currentVariant.isOnSale && currentVariant.salePrice) : (!product.variants?.length && product.isOnSale && product.salePrice)) ? (
+                                <>
+                                    <span className="text-3xl font-bold text-brand-orange">
+                                        ${Number(currentVariant ? currentVariant.salePrice : product.salePrice).toLocaleString()}
+                                    </span>
+                                    <span className="text-xl text-gray-400 line-through decoration-gray-400/50">
+                                        ${Number(currentVariant ? currentVariant.price : product.price).toLocaleString()}
+                                    </span>
+                                    <span className="bg-[#E85D3F] text-white px-2 py-1 text-xs font-bold rounded-full animate-pulse shadow-md">
+                                        SALE
+                                    </span>
+                                </>
+                            ) : (
+                                <div className="flex flex-col">
+                                    {displayOriginalPriceString !== displayPriceString && (
+                                        <span className="text-lg text-gray-400 line-through decoration-gray-400/50">
+                                            {displayOriginalPriceString}
+                                        </span>
+                                    )}
+                                    <span className="text-2xl font-bold text-brand-orange">
+                                        {displayPriceString}
+                                    </span>
+                                </div>
+                            )}
                         </div>
-
-
                     </div>
 
                     <div className="prose prose-sm text-gray-600 border-t border-b py-6">
@@ -271,6 +306,14 @@ export default function ProductPage() {
                                                 <button
                                                     key={val}
                                                     onClick={() => handleOptionSelect(option.name, val)}
+                                                    onMouseEnter={() => {
+                                                        const nextOptions = { ...selectedOptions, [option.name]: val };
+                                                        const variant = product.variants.find(v =>
+                                                            Object.entries(nextOptions).every(([key, value]) => v.combination[key] === value)
+                                                        );
+                                                        if (variant?.image) setPreviewImage(variant.image);
+                                                    }}
+                                                    onMouseLeave={() => setPreviewImage(null)}
                                                     className={`px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${
                                                         // 選中狀態：深藍底 + 白字 / 未選中：白底 + 深藍框 + 深藍字
                                                         selectedOptions[option.name] === val

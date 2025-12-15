@@ -17,6 +17,7 @@ router.get('/:key', ProductController.getProduct);
 // 先過 authenticateToken 確保有登入，再過 requireAdmin 確保身分
 router.post('/', authenticateToken, requireAdmin, ProductController.createProduct);
 router.put('/:id', authenticateToken, requireAdmin, ProductController.updateProduct);
+router.patch('/:id', authenticateToken, requireAdmin, ProductController.updateProduct);
 router.delete('/:id', authenticateToken, requireAdmin, ProductController.deleteProduct);
 
 export default router;

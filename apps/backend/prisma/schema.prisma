@@ -96,6 +96,8 @@ model Product {
   description String? @db.Text
 
   price Decimal @db.Decimal(10, 2)
+  salePrice Decimal? @db.Decimal(10, 2) // [New] 特價價格
+  isOnSale Boolean @default(false)      // [New] 是否特價
   stock Int     @default(0)
 
   images Json?

@@ -68,7 +68,7 @@ export default function InstagramGallery() {
                             <img
                                 src={post.media_type === 'VIDEO' ? post.thumbnail_url : post.media_url}
                                 alt={post.caption || 'Instagram Post'}
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                className="h-full w-full object-cover"
                             />
                             {/* Hover Overlay */}
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300 flex items-center justify-center">

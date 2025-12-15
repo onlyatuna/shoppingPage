@@ -16,6 +16,7 @@ import ProductPage from './pages/ProductPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminProductFormPage from './pages/admin/AdminProductFormPage';
+import AdminPromotionsPage from './pages/admin/AdminPromotionsPage'; // [New]
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import PaymentCallbackPage from './pages/PaymentCallbackPage';
@@ -127,17 +128,19 @@ function App() {
                         </AdminRoute>
                     } />
 
+                    {/* 後台促銷管理路由 */}
+                    <Route path="/admin/promotions" element={
+                        <AdminRoute>
+                            <AdminPromotionsPage />
+                        </AdminRoute>
+                    } />
+
                     {/* 後台分類管理路由 */}
                     <Route path="/admin/categories" element={
                         <AdminRoute>
                             <AdminCategoriesPage />
                         </AdminRoute>
                     } />
-
-                    <Route path="/admin/orders" element={
-                        <AdminRoute>
-                            <AdminOrdersPage />
-                        </AdminRoute>} />
 
                     {/* 後台使用者管理路由 */}
                     <Route path="/admin/users" element={

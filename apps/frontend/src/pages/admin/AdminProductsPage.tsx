@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Edit, Plus, Search, Package, DollarSign, Layers, Trash2, Sparkles } from 'lucide-react';
+import { Edit, Plus, Search, Package, DollarSign, Layers, Trash2, Sparkles, Tag } from 'lucide-react';
 import apiClient from '../../api/client';
 import { Product } from '../../types';
 
@@ -89,6 +89,13 @@ export default function AdminProductsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold">後台商品管理</h1>
                 <div className="flex gap-3 w-full md:w-auto">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/admin/promotions')}
+                        className="flex-1 md:flex-none bg-[#E85D3F] text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-[#D04C30] shadow-sm transition-colors"
+                    >
+                        <Tag size={20} /> 促銷活動
+                    </button>
                     <button
                         type="button"
                         onClick={() => navigate('/editor')}

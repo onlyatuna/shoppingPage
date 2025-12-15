@@ -83,11 +83,11 @@ export default function Navbar() {
     }, [location]);
 
     return (
-        <header className="w-full bg-[#5A9EA3] sticky top-0 z-50 border-b-2 border-[#1D2D45]">
+        <header className="w-full bg-[#5A9EA3] sticky top-0 z-50 border-b-2 border-[#1A2B42]">
             {/* ========================================== */}
             {/* 第一排：Main Header (Logo, User, Cart) */}
             {/* ========================================== */}
-            <div className="border-b border-[#1D2D45]/10 relative z-50">
+            <div className="border-b border-[#1A2B42]/10 relative z-50">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between relative">
 
                     {/* 手機版漢堡按鈕 */}
@@ -102,7 +102,10 @@ export default function Navbar() {
                         <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-extrabold tracking-tighter flex items-center gap-2 text-white relative">
                             <div className="bg-paper-white text-vintage-navy p-1 rounded">M</div>
                             {/* Sakura Petal Decoration */}
-                            <SakuraPetal className="absolute -top-2 -right-3 -rotate-12 opacity-80" size={20} delay={0} duration={4} />
+
+                            {/* [New] Falling Sakura Petals for Decoration */}
+                            <SakuraPetal className="absolute -top-20 left-10 opacity-60" size={14} delay={0} duration={8} animationType="fall" />
+                            <SakuraPetal className="absolute -top-10 right-20 opacity-50" size={18} delay={2} duration={10} color="text-pink-200" animationType="fall" />
                         </Link>
                     </div>
 
@@ -111,14 +114,14 @@ export default function Navbar() {
                         {user && isStaff && (
                             <div className="hidden md:block mr-4 border-r pr-4 border-white/20">
                                 <div className="group relative">
-                                    <button type="button" className="flex items-center gap-1 text-xs font-bold text-white hover:text-[#1D2D45] uppercase tracking-wide py-2 transition-colors">
+                                    <button type="button" className="flex items-center gap-1 text-xs font-bold text-white hover:text-[#1A2B42] uppercase tracking-wide py-2 transition-colors">
                                         後台管理 <ChevronDown size={14} />
                                     </button>
-                                    <div className="absolute top-full right-0 w-48 bg-white border-2 border-[#1D2D45] shadow-[4px_4px_0px_#1D2D45] rounded-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50 text-left">
+                                    <div className="absolute top-full right-0 w-48 bg-white border-2 border-[#1A2B42] shadow-[4px_4px_0px_#1A2B42] rounded-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50 text-left">
                                         <div className="px-4 py-2 text-xs font-bold text-gray-400 border-b border-gray-50">管理功能</div>
-                                        <Link to="/admin/products" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1D2D45] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Package size={16} /> 商品管理</Link>
-                                        <Link to="/admin/categories" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1D2D45] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Tag size={16} /> 分類管理</Link>
-                                        <Link to="/admin/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1D2D45] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Shield size={16} /> 訂單管理</Link>
+                                        <Link to="/admin/products" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A2B42] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Package size={16} /> 商品管理</Link>
+                                        <Link to="/admin/categories" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A2B42] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Tag size={16} /> 分類管理</Link>
+                                        <Link to="/admin/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A2B42] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Shield size={16} /> 訂單管理</Link>
                                         {user?.role === 'DEVELOPER' && (
                                             <Link to="/admin/users" className="flex items-center gap-2 px-4 py-2.5 text-sm text-green-700 hover:bg-green-50 border-t border-gray-50 mt-1"><Users size={16} /> 帳號管理</Link>
                                         )}
@@ -128,10 +131,10 @@ export default function Navbar() {
                         )}
 
                         {/* 購物車 */}
-                        <Link to="/cart" className="relative p-2 text-white hover:text-[#1D2D45] transition-colors" title="購物車">
+                        <Link to="/cart" className="relative p-2 text-white hover:text-[#1A2B42] transition-colors" title="購物車">
                             <ShoppingBag size={24} />
                             {cartCount > 0 && (
-                                <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#E85D3F] rounded-full flex items-center justify-center border-2 border-[#1D2D45]">
+                                <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#E85D3F] rounded-full flex items-center justify-center border-2 border-[#1A2B42]">
                                     {cartCount}
                                 </span>
                             )}
@@ -139,7 +142,7 @@ export default function Navbar() {
 
                         {/* 我的訂單 */}
                         {user && (
-                            <Link to="/orders" className="relative p-2 text-white hover:text-[#1D2D45] transition-colors" title="我的訂單">
+                            <Link to="/orders" className="relative p-2 text-white hover:text-[#1A2B42] transition-colors" title="我的訂單">
                                 <Package size={26} />
                             </Link>
                         )}
@@ -150,14 +153,14 @@ export default function Navbar() {
                                 <button
                                     type="button"
                                     onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                                    className="flex items-center justify-center w-9 h-9 rounded-full text-white hover:text-[#1D2D45] transition-colors focus:outline-none"
+                                    className="flex items-center justify-center w-9 h-9 rounded-full text-white hover:text-[#1A2B42] transition-colors focus:outline-none"
                                     aria-label="使用者選單"
                                 >
                                     {/* 外部按鈕維持 User Icon */}
                                     <User size={26} />
                                 </button>
                             ) : (
-                                <Link to="/login" className="text-sm font-bold px-3 py-2 rounded-md text-white hover:text-[#1D2D45] transition-colors">登入</Link>
+                                <Link to="/login" className="text-sm font-bold px-3 py-2 rounded-md text-white hover:text-[#1A2B42] transition-colors">登入</Link>
                             )}
 
                             {isUserDropdownOpen && user && (
@@ -200,36 +203,38 @@ export default function Navbar() {
                 <div className="max-w-7xl mx-auto px-4 h-12 flex items-center relative">
                     {/* Centered Navigation Links */}
                     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-8 text-base font-bold h-full items-center text-white">
-                        <Link to="/?sort=new" className="hover:text-[#1D2D45] transition-colors">最新商品</Link>
-                        <Link to="/?sort=popular" className="hover:text-[#1D2D45] transition-colors">熱銷排行</Link>
+                        <Link to="/?sort=new" className="hover:text-[#1A2B42] transition-colors">最新商品</Link>
+                        <Link to="/?sort=popular" className="hover:text-[#1A2B42] transition-colors">熱銷排行</Link>
                         <div className="group relative h-full flex items-center">
-                            <button type="button" className="flex items-center gap-1 hover:text-[#1D2D45] transition-colors cursor-pointer h-full">
+                            <button type="button" className="flex items-center gap-1 hover:text-[#1A2B42] transition-colors cursor-pointer h-full">
                                 商品分類 <ChevronDown size={14} />
                             </button>
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border-2 border-[#1D2D45] shadow-[4px_4px_0px_#1D2D45] rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-40 translate-y-2 group-hover:translate-y-0 text-left">
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border-2 border-[#1A2B42] shadow-[4px_4px_0px_#1A2B42] rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-40 translate-y-2 group-hover:translate-y-0 text-left">
                                 {categories?.map(cat => (
-                                    <Link key={cat.id} to={`/?categoryId=${cat.id}`} className="block px-4 py-2 hover:bg-gray-50 text-[#1D2D45] hover:text-[#E85D3F] font-medium border-b border-dashed border-gray-100 last:border-0">
+                                    <Link key={cat.id} to={`/?categoryId=${cat.id}`} className="block px-4 py-2 hover:bg-gray-50 text-[#1A2B42] hover:text-[#E85D3F] font-medium border-b border-dashed border-gray-100 last:border-0">
                                         {cat.name}
                                     </Link>
                                 ))}
                                 {categories?.length === 0 && <div className="px-4 py-2 text-gray-400 text-xs">暫無分類</div>}
                             </div>
                         </div>
-                        <Link to="/about" className="hover:text-[#1D2D45] transition-colors">關於我們</Link>
+                        <Link to="/about" className="hover:text-[#1A2B42] transition-colors">關於我們</Link>
                     </div>
 
                     {/* Right-aligned Search Form */}
-                    <form onSubmit={handleSearch} className="relative w-64 ml-auto">
-                        <input
-                            type="text"
-                            placeholder="搜尋商品..."
-                            className="relative z-10 w-full bg-white text-sm border-2 border-[#1D2D45] rounded-lg py-1.5 pl-4 pr-10 shadow-[4px_4px_0px_#1D2D45] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_#1D2D45] focus:bg-white focus:border-[#1D2D45] focus:ring-0 transition-all outline-none placeholder-gray-400 font-medium"
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                        />
-                        <button type="submit" className="absolute right-2 top-1.5 z-20 text-gray-400 hover:text-[#1D2D45] transition-colors" aria-label="搜尋">
-                            <Search size={16} />
-                        </button>
+                    <form onSubmit={handleSearch} className="ml-auto">
+                        <div className="relative w-64 bg-white border-2 border-[#1A2B42] rounded-lg shadow-[4px_4px_0px_#1A2B42] transition-all focus-within:translate-x-[2px] focus-within:translate-y-[2px] focus-within:shadow-[2px_2px_0px_#1A2B42] group">
+                            <input
+                                type="text"
+                                placeholder="搜尋商品..."
+                                className="w-full bg-transparent text-sm py-1.5 pl-4 pr-10 outline-none placeholder-gray-400 font-medium"
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                            />
+                            <button type="submit" className="absolute right-2 top-1.5 text-gray-400 hover:text-[#1A2B42] transition-colors" aria-label="搜尋">
+                                <Search size={16} />
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -246,7 +251,7 @@ export default function Navbar() {
                                 <input
                                     type="text"
                                     placeholder="搜尋商品..."
-                                    className="w-full bg-white border-2 border-[#1D2D45] rounded-lg py-2 pl-4 pr-10 shadow-[4px_4px_0px_#1D2D45] focus:ring-0 outline-none"
+                                    className="w-full bg-white border-2 border-[#1A2B42] rounded-lg py-2 pl-4 pr-10 shadow-[4px_4px_0px_#1A2B42] focus:ring-0 outline-none"
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
                                 />

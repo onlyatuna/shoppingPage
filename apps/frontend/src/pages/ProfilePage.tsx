@@ -8,7 +8,7 @@ import { useAuthStore } from '../store/authStore';
 
 export default function ProfilePage() {
     const { user, login } = useAuthStore(); // 為了更新 Store 中的 user info
-    const { register, handleSubmit, setValue } = useForm();
+    const { register, handleSubmit, reset, formState: { isDirty } } = useForm();
 
     // 1. 取得最新個人資料 (確保資料同步)
     useQuery({
@@ -16,8 +16,12 @@ export default function ProfilePage() {
         queryFn: async () => {
             const res = await apiClient.get('/users/profile');
             const userData = res.data.data;
-            // 填入表單預設值
-            setValue('name', userData.name);
+            // 設定表單初始值 (reset 會設定 isDirty 為 false)
+            reset({
+                name: userData.name,
+                password: '',
+                confirmPassword: ''
+            });
             return userData;
         }
     });
@@ -38,9 +42,12 @@ export default function ProfilePage() {
             const updatedUser = res.data.data;
             login(updatedUser);
 
-            // 清空密碼欄位
-            setValue('password', '');
-            setValue('confirmPassword', '');
+            // 重置表單狀態為 "已同步"，並清空密碼欄位
+            reset({
+                name: updatedUser.name,
+                password: '',
+                confirmPassword: ''
+            });
         },
         onError: (err: any) => toast.error(err.response?.data?.message || '更新失敗')
     });
@@ -116,8 +123,8 @@ export default function ProfilePage() {
 
                     <button
                         type="submit"
-                        disabled={updateProfileMutation.isPending}
-                        className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center gap-2"
+                        disabled={!isDirty || updateProfileMutation.isPending}
+                        className="w-full bg-[#E85D3F] text-white py-2.5 rounded-lg border border-[#22334F] shadow-[4px_4px_0px_#22334F] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_#22334F] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#22334F] transition-all disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 font-bold"
                     >
                         <Save size={18} />
                         {updateProfileMutation.isPending ? '儲存中...' : '儲存變更'}

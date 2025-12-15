@@ -18,6 +18,8 @@ export interface Product {
     id: number;
     name: string;
     price: string; // 注意：後端 Decimal 轉 JSON 會變字串，或是你在 fetch 時轉 number
+    salePrice?: string; // [New] 特價價格
+    isOnSale?: boolean; // [New] 是否特價
     images: string[];
     description: string;
     stock: number;
@@ -39,6 +41,8 @@ export interface ProductOption {
 export interface ProductVariant {
     id: string;
     price: number;
+    salePrice?: number; // [New]
+    isOnSale?: boolean; // [New]
     stock: number;
     image?: string; // [New] Variant specific image
     combination: Record<string, string>; // { "顏色": "紅", "尺寸": "S" }
