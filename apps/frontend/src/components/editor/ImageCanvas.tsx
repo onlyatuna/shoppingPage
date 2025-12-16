@@ -245,42 +245,52 @@ export default function ImageCanvas({
         multiple: false
     });
 
-    // 未上傳圖片時的預設骨架 -> 轉為上傳區
+    // Upload UI (when no image uploaded yet)
     if (!originalImage) {
         return (
-            <div
-                {...getRootProps()}
-                className={`w-full max-w-[500px] aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors
-                    ${isDragActive
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750'
-                    }`}
-            >
-                <input {...getInputProps()} aria-label="上傳圖片" />
-                <div className="p-4 rounded-full bg-white dark:bg-gray-700 shadow-sm mb-4">
-                    <Upload className="w-8 h-8 text-indigo-500" />
-                </div>
-                <p className="hidden md:block text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">
-                    {isDragActive ? '放開以已上傳' : '拖曳圖片至此'}
-                </p>
-                <p className="text-base md:text-sm font-bold md:font-normal text-gray-700 dark:text-gray-200 md:text-gray-500 md:dark:text-gray-400">
-                    <span className="md:hidden">點擊拍照或上傳</span>
-                    <span className="hidden md:inline">或點擊選擇檔案</span>
-                </p>
-
-                <div className="mt-6 flex items-center gap-2">
-                    <span className="text-sm text-gray-400">或</span>
-                    <button
-                        type="button"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenLibrary();
-                        }}
-                        className="text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors"
+            <div className="w-full h-full relative flex items-center justify-center p-4 md:p-8">
+                {/* Centered upload container */}
+                <div className="flex items-center justify-center w-full h-full">
+                    <div
+                        {...getRootProps()}
+                        className={`
+                            flex flex-col items-center justify-center gap-4 p-8 md:p-12
+                            border-2 border-dashed rounded-2xl cursor-pointer
+                            transition-all duration-200
+                            ${isDragActive
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20 scale-105'
+                                : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                            }
+                            max-w-md w-full
+                        `}
                     >
-                        <ImageIcon size={16} />
-                        從雲端圖庫選擇
-                    </button>
+                        <input {...getInputProps()} />
+                        <Upload size={48} className={isDragActive ? 'text-blue-500' : 'text-gray-400'} />
+                        <div className="text-center">
+                            <p className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                {isDragActive ? '放開以已上傳' : '拖曳圖片至此'}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                或點擊選擇檔案
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-400">
+                            <div className="h-px flex-1 bg-gray-300 dark:bg-gray-600"></div>
+                            <span className="text-xs">或</span>
+                            <div className="h-px flex-1 bg-gray-300 dark:bg-gray-600"></div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenLibrary();
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded-lg transition-colors"
+                        >
+                            <Cloud size={18} />
+                            從雲端圖庫選擇
+                        </button>
+                    </div>
                 </div>
             </div>
         );
