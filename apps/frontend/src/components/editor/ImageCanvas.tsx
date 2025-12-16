@@ -297,75 +297,81 @@ export default function ImageCanvas({
     }
 
     return (
-        // Outer container: Manages padding (inset)
+        // Outer container: Manages padding and boundaries
         <div className="w-full h-full relative flex items-center justify-center p-4 md:p-8">
 
-            {/* Canvas boundary container: Maximum area for image movement */}
-            {/* Using relative + w-full + h-full ensures it fills space after padding */}
-            <div
-                ref={canvasRef}
-                className="group relative w-full h-full flex items-center justify-center"
-            >
-                {/* Interactive layer (Pan/Zoom Wrapper) */}
+            {/* Crop mode (isolated for stability, no animation interference) */}
+            {isCropping ? (
+                <div className="relative w-full h-full flex items-center justify-center pointer-events-auto">
+                    <ReactCrop
+                        crop={crop}
+                        onChange={(_, percentCrop) => setCrop(percentCrop)}
+                        onComplete={(c) => setCompletedCrop(c)}
+                        aspect={1}
+                        minWidth={100}
+                        keepSelection={true}
+                        // Ensure ReactCrop doesn't expand parent
+                        style={{ maxWidth: '100%', maxHeight: '100%' }}
+                    >
+                        <img
+                            ref={imgRef}
+                            src={editedImage || originalImage || ''}
+                            // Critical: image must be contain and constrained during crop
+                            style={{ display: 'block', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                            alt="Crop target"
+                            onLoad={(e) => {
+                                const { width, height } = e.currentTarget;
+                                // Defensive check: ensure image has rendered correctly
+                                if (width === 0 || height === 0) return;
+
+                                const size = Math.min(width, height) * 0.9;
+                                const x = (width - size) / 2;
+                                const y = (height - size) / 2;
+                                const newCrop: Crop = { unit: 'px', x, y, width: size, height: size };
+                                setCrop(newCrop);
+                                setCompletedCrop({ ...newCrop, width: size, height: size } as PixelCrop);
+                            }}
+                        />
+                    </ReactCrop>
+                </div>
+            ) : (
+                // View and interaction mode (Zoom/Pan)
                 <div
-                    className={`relative flex items-center justify-center origin-center
-                        ${scale > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : ''}
-                    `}
-                    style={{
-                        // Force wrapper to not exceed parent, enforcing image scaling
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        transform: `translate(${isCropping ? 0 : position.x}px, ${isCropping ? 0 : position.y}px) scale(${isCropping ? 1 : scale})`,
-                        transition: isCropping ? 'transform 0.3s' : 'none',
-                        touchAction: 'none' // Prevent native browser scrolling on touch
-                    }}
-                    onMouseEnter={() => setIsHoveringCanvas(true)}
-                    onMouseLeave={() => {
-                        setIsHoveringCanvas(false);
-                        setIsDragging(false);
-                    }}
-                    onMouseDown={(e) => {
-                        if (isCropping || scale <= 1) return;
-                        e.preventDefault();
-                        setIsDragging(true);
-                        setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
-                    }}
-                    onMouseMove={(e) => {
-                        if (isDragging && scale > 1) {
-                            e.preventDefault();
-                            setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
-                        }
-                    }}
-                    onMouseUp={() => setIsDragging(false)}
+                    ref={canvasRef}
+                    className="group relative w-full h-full flex items-center justify-center"
                 >
-                    {isCropping ? (
-                        <ReactCrop
-                            crop={crop}
-                            onChange={(_, percentCrop) => setCrop(percentCrop)}
-                            onComplete={(c) => setCompletedCrop(c)}
-                            aspect={1}
-                            minWidth={100}
-                            keepSelection={true}
-                            className="max-w-full max-h-full"
-                        >
-                            <img
-                                ref={imgRef}
-                                src={editedImage || originalImage || ''}
-                                // Force image to fit, never overflow
-                                style={{ display: 'block', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                                alt="Crop target"
-                                onLoad={(e) => {
-                                    const { width, height } = e.currentTarget;
-                                    const size = Math.min(width, height) * 0.9;
-                                    const x = (width - size) / 2;
-                                    const y = (height - size) / 2;
-                                    const newCrop: Crop = { unit: 'px', x, y, width: size, height: size };
-                                    setCrop(newCrop);
-                                    setCompletedCrop({ ...newCrop, width: size, height: size } as PixelCrop);
-                                }}
-                            />
-                        </ReactCrop>
-                    ) : (
+                    <div
+                        className={`relative flex items-center justify-center origin-center
+                            ${scale > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : ''}
+                        `}
+                        style={{
+                            maxWidth: '100%',
+                            maxHeight: '100%',
+                            // Only handles view mode transformations
+                            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                            // Optimization: disable animation during drag for performance, enable for zoom
+                            transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                            touchAction: 'none'
+                        }}
+                        onMouseEnter={() => setIsHoveringCanvas(true)}
+                        onMouseLeave={() => {
+                            setIsHoveringCanvas(false);
+                            setIsDragging(false);
+                        }}
+                        onMouseDown={(e) => {
+                            if (scale <= 1) return;
+                            e.preventDefault();
+                            setIsDragging(true);
+                            setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+                        }}
+                        onMouseMove={(e) => {
+                            if (isDragging && scale > 1) {
+                                e.preventDefault();
+                                setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
+                            }
+                        }}
+                        onMouseUp={() => setIsDragging(false)}
+                    >
                         <AnimatePresence mode="wait">
                             {editedImage && !showOriginal ? (
                                 <motion.img
@@ -376,7 +382,6 @@ export default function ImageCanvas({
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.5 }}
-                                    // View mode image constraints
                                     className="block max-w-full max-h-full w-auto h-auto object-contain select-none shadow-sm"
                                     style={{ maxHeight: '100%', maxWidth: '100%' }}
                                 />
@@ -393,22 +398,22 @@ export default function ImageCanvas({
                                 />
                             )}
                         </AnimatePresence>
-                    )}
 
-                    {/* Frame Overlay */}
-                    {selectedFrame && !showOriginal && !isCropping && selectedFrame.id !== 'none' && (
-                        <div className="absolute inset-0 w-full h-full pointer-events-none flex items-center justify-center">
-                            <motion.img
-                                key={`frame-${selectedFrame.id}`}
-                                src={selectedFrame.url}
-                                alt="Frame"
-                                className="max-w-full max-h-full w-auto h-auto object-contain"
-                                style={{ zIndex: 10 }}
-                            />
-                        </div>
-                    )}
+                        {/* Frame Overlay */}
+                        {selectedFrame && !showOriginal && selectedFrame.id !== 'none' && (
+                            <div className="absolute inset-0 w-full h-full pointer-events-none flex items-center justify-center">
+                                <motion.img
+                                    key={`frame-${selectedFrame.id}`}
+                                    src={selectedFrame.url}
+                                    alt="Frame"
+                                    className="max-w-full max-h-full w-auto h-auto object-contain"
+                                    style={{ zIndex: 10 }}
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Peek Original Button */}
             {editedImage && !isProcessing && !isCropping && (
