@@ -49,6 +49,7 @@ export default function EditorPage() {
 
     // Mobile specific state
     const [mobileStep, setMobileStep] = useState<'edit' | 'caption' | 'publish'>('edit');
+    const [isMobileCaptionExpanded, setIsMobileCaptionExpanded] = useState(false);
     const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
     // Panel collapse state
@@ -155,21 +156,27 @@ export default function EditorPage() {
         const handlePopState = () => {
             // Prevent default behavior implies we handle the state
             if (hasUnsavedChanges()) {
+                // We are here because the user pressed Back.
+                // The history has already popped (we are at length-1).
+
                 const confirmLeave = window.confirm('確定要離開嗎？您的編輯內容將會遺失。');
 
                 if (!confirmLeave) {
-                    // User stays. restore the "forward" state
+                    // User stays. We need to push the state BACK to restore the "trap".
                     window.history.pushState(null, '', window.location.href);
-                    // historyPushed ref remains true because we just restored it manually
                 } else {
                     // User wants to leave.
-                    // We are now at the state BEFORE the push.
-                    // If we navigate(-1), we go back one more step.
-                    navigate(-1);
+                    // We are ALREADY at the previous state (because popstate happened).
+                    // So we just need to let it be.
+                    // BUT: if we want to force go back further (e.g. to home), we might need navigate(-1).
+                    // Typically, pressing back once is enough if we don't interfere.
+
+                    // Ideally, we should clean up.
+                    setUploadedImage(null); // Clear dirty state so any subsequent leave is clean
+                    historyPushed.current = false;
+                    // Force navigation to home to break loop
+                    setTimeout(() => navigate('/'), 0);
                 }
-            } else {
-                // If clean, just let it happen (or maybe we shouldn't be here)
-                // If we are clean, historyPushed should be false.
             }
         };
 
@@ -527,13 +534,35 @@ export default function EditorPage() {
             }
         }
 
-        const link = document.createElement('a');
-        link.href = downloadImage;
-        link.download = `edited-product-${Date.now()}.jpg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success('已開始下載');
+        try {
+            const toastId = toast.loading('正在準備下載...');
+
+            // If it's a remote URL, fetch it as a blob first to force download
+            // (Browser ignores 'download' attribute for cross-origin URLs)
+            let href = downloadImage;
+            if (downloadImage.startsWith('http')) {
+                const response = await fetch(downloadImage);
+                const blob = await response.blob();
+                href = URL.createObjectURL(blob);
+            }
+
+            const link = document.createElement('a');
+            link.href = href;
+            link.download = `edited-product-${Date.now()}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up blob URL
+            if (href.startsWith('blob:')) {
+                setTimeout(() => URL.revokeObjectURL(href), 100);
+            }
+
+            toast.success('已開始下載', { id: toastId });
+        } catch (error) {
+            console.error('Download failed:', error);
+            toast.error('下載失敗，請稍後再試');
+        }
     };
 
     const handlePublish = async () => {
@@ -639,7 +668,7 @@ export default function EditorPage() {
 
     return (
         <div
-            className="h-screen overflow-hidden bg-gray-50 dark:bg-[#1e1e1e] transition-colors flex flex-col"
+            className="h-screen w-full flex flex-col overflow-hidden bg-gray-50 dark:bg-[#1e1e1e] transition-colors"
         >
             {/* Header */}
             <header className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] z-50 shrink-0">
@@ -780,22 +809,28 @@ export default function EditorPage() {
                         selectedFrame={selectedFrame}
                         isCropping={isCropping}
                         setIsCropping={setIsCropping}
+                        isRegenerateDisabled={!selectedStyle}
                     />
                 </div>
 
+
                 {/* Mobile View: Caption Step */}
-                <div className={`flex-1 p-6 pb-32 overflow-y-auto ${mobileStep === 'caption' ? 'block md:hidden' : 'hidden'}`}>
-                    <div className="flex items-center justify-center mb-6">
-                        {(editedImage || uploadedImage) && (
-                            <div className="w-[90%] aspect-square rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-md shrink-0 bg-gray-100">
-                                <img
-                                    src={editedImage || uploadedImage || ''}
-                                    alt="Preview"
-                                    className="w-full h-full object-contain"
-                                />
-                            </div>
-                        )}
-                    </div>
+                <div className={`flex-1 flex flex-col h-full overflow-hidden pb-24 ${mobileStep === 'caption' ? 'block md:hidden' : 'hidden'}`}>
+
+                    {!isMobileCaptionExpanded && (
+                        <div className="flex items-center justify-center p-6 pb-2 transition-all duration-300">
+                            {(editedImage || uploadedImage) && (
+                                <div className="w-[90%] aspect-square rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-md shrink-0 bg-gray-100">
+                                    <img
+                                        src={editedImage || uploadedImage || ''}
+                                        alt="Preview"
+                                        className="w-full h-full object-contain"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <CopywritingAssistant
                         instanceId="mobile-caption"
                         generatedCaption={generatedCaption}
@@ -805,6 +840,8 @@ export default function EditorPage() {
                         isGenerating={isGeneratingCaption}
                         onGenerate={handleGenerateCaption}
                         disabled={(!uploadedImage && !editedImage) || isProcessing}
+                        onToggleExpand={() => setIsMobileCaptionExpanded(!isMobileCaptionExpanded)}
+                        isExpanded={isMobileCaptionExpanded}
                     />
                 </div>
 

@@ -2,11 +2,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LoadingState from './LoadingState';
 import FloatingToolbar from './FloatingToolbar';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Image as ImageIcon, X, Check, X as CancelIcon, Eye } from 'lucide-react';
+import { Upload, Image as ImageIcon, Check, X as CancelIcon, Eye } from 'lucide-react';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import getCroppedImg from '../../utils/canvasUtils';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Frame } from '../../types/frame';
 
 interface ImageCanvasProps {
@@ -21,6 +21,7 @@ interface ImageCanvasProps {
     selectedFrame: Frame | null;
     isCropping: boolean;
     setIsCropping: (value: boolean) => void;
+    isRegenerateDisabled?: boolean;
 }
 
 export default function ImageCanvas({
@@ -34,7 +35,8 @@ export default function ImageCanvas({
     onSelectFrame,
     selectedFrame,
     isCropping,
-    setIsCropping
+    setIsCropping,
+    isRegenerateDisabled
 }: ImageCanvasProps) {
     // Cropping State - Lifted to parent
     const [crop, setCrop] = useState<Crop>();
@@ -47,6 +49,142 @@ export default function ImageCanvas({
     // Toolbar Visibility State
     const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
     const [isHoveringToolbar, setIsHoveringToolbar] = useState(false);
+
+    // Zoom State
+    const [scale, setScale] = useState(1);
+    const [startDist, setStartDist] = useState(0);
+    const [startScale, setStartScale] = useState(1);
+
+    // Pan State
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+    // Reset zoom/pan when image changes or cropping starts
+    if (isCropping && (scale !== 1 || position.x !== 0 || position.y !== 0)) {
+        setScale(1);
+        setPosition({ x: 0, y: 0 });
+    }
+
+    // Reset zoom/pan when original image changes (new upload)
+    useEffect(() => {
+        if (originalImage) {
+            setScale(1);
+            setPosition({ x: 0, y: 0 });
+        }
+    }, [originalImage]);
+
+    // Refs for native event listeners
+
+    const canvasRef = useRef<HTMLDivElement>(null);
+    const stateRef = useRef({
+        scale,
+        position,
+        isDragging,
+        dragStart,
+        startDist,
+        startScale,
+        isCropping
+    });
+
+    // Update ref when state changes
+    useEffect(() => {
+        stateRef.current = {
+            scale,
+            position,
+            isDragging,
+            dragStart,
+            startDist,
+            startScale,
+            isCropping
+        };
+    }, [scale, position, isDragging, dragStart, startDist, startScale, isCropping]);
+
+    // Attach native event listeners
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const onWheel = (e: WheelEvent) => {
+            const { isCropping, scale } = stateRef.current;
+            if (isCropping) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const delta = -e.deltaY;
+            const newScale = Math.min(Math.max(1, scale + delta * 0.001), 3);
+            setScale(newScale);
+            if (newScale === 1) {
+                setPosition({ x: 0, y: 0 });
+            }
+        };
+
+        const onTouchStart = (e: TouchEvent) => {
+            const { isCropping, scale, position } = stateRef.current;
+            if (isCropping) return;
+
+            if (e.touches.length === 2) {
+                // Pinch Zoom
+                setIsDragging(false);
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+                setStartDist(dist);
+                setStartScale(scale);
+            } else if (e.touches.length === 1 && scale > 1) {
+                // Pan
+                const touch = e.touches[0];
+                setIsDragging(true);
+                setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y });
+            }
+        };
+
+        const onTouchMove = (e: TouchEvent) => {
+            const { isCropping, startDist, startScale, isDragging, scale, dragStart } = stateRef.current;
+            if (isCropping) return;
+
+            if (e.touches.length === 2 && startDist > 0) {
+                // Pinch Zoom
+                e.preventDefault(); // Critical: prevent browser zoom
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
+                const ratio = dist / startDist;
+                const newScale = Math.min(Math.max(1, startScale * ratio), 3);
+                setScale(newScale);
+                if (newScale === 1) {
+                    setPosition({ x: 0, y: 0 });
+                }
+            } else if (e.touches.length === 1 && isDragging && scale > 1) {
+                // Pan
+                e.preventDefault(); // Critical: prevent browser scroll
+                const touch = e.touches[0];
+                setPosition({
+                    x: touch.clientX - dragStart.x,
+                    y: touch.clientY - dragStart.y
+                });
+            }
+        };
+
+        const onTouchEnd = () => {
+            setStartDist(0);
+            setIsDragging(false);
+        };
+
+        // Passive: false is crucial for preventing default behavior
+        canvas.addEventListener('wheel', onWheel, { passive: false });
+        canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+        canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+        canvas.addEventListener('touchend', onTouchEnd);
+        canvas.addEventListener('touchcancel', onTouchEnd);
+
+        return () => {
+            canvas.removeEventListener('wheel', onWheel);
+            canvas.removeEventListener('touchstart', onTouchStart);
+            canvas.removeEventListener('touchmove', onTouchMove);
+            canvas.removeEventListener('touchend', onTouchEnd);
+            canvas.removeEventListener('touchcancel', onTouchEnd);
+        };
+    }, [originalImage, editedImage]); // Re-bind when image state changes (and canvas renders)
 
     const handleSaveCrop = async () => {
         if (!originalImage && !editedImage) return;
@@ -149,28 +287,36 @@ export default function ImageCanvas({
     }
 
     return (
-        <div className="relative w-full h-full flex items-center justify-center p-4">
-            {/* 1080x1080 畫布容器 (維持正方形比例) */}
-            {/* 1080x1080 畫布容器 (維持正方形比例 - 類似 Instagram 預覽) */}
+        <div className="relative w-full h-full flex items-center justify-center p-8 md:p-12">
+            {/* Canvas Container - Dynamically adapts to image aspect ratio */}
             <div
-                className="group relative aspect-square max-h-[85vh] max-w-[85vh] w-full bg-white dark:bg-black shadow-2xl rounded-sm overflow-hidden border border-gray-100 dark:border-gray-800 flex items-center justify-center bg-checkered"
+                ref={canvasRef}
+                className={`group relative max-h-full max-w-full w-auto flex items-center justify-center bg-checkered touch-none pointer-events-auto
+                        ${scale > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : ''}
+                    `}
                 onMouseEnter={() => setIsHoveringCanvas(true)}
-                onMouseLeave={() => setIsHoveringCanvas(false)}
+                onMouseLeave={() => {
+                    setIsHoveringCanvas(false);
+                    setIsDragging(false);
+                }}
+                onMouseDown={(e) => {
+                    if (isCropping || scale <= 1) return;
+                    e.preventDefault();
+                    setIsDragging(true);
+                    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+                }}
+                onMouseMove={(e) => {
+                    if (isDragging && scale > 1) {
+                        e.preventDefault();
+                        setPosition({
+                            x: e.clientX - dragStart.x,
+                            y: e.clientY - dragStart.y
+                        });
+                    }
+                }}
+                onMouseUp={() => setIsDragging(false)}
             >
 
-                {/* Remove Button - Top Right */}
-                {onRemove && (editedImage || originalImage) && !isProcessing && !isCropping && (
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onRemove();
-                        }}
-                        className="absolute top-4 right-4 z-20 p-2 bg-white/80 dark:bg-black/60 backdrop-blur-sm rounded-full shadow-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white dark:hover:bg-red-500"
-                        title="移除圖片"
-                    >
-                        <X size={20} />
-                    </button>
-                )}
 
                 {/* Peek Original Button - Bottom Left (Only if edited image exists) */}
                 {editedImage && !isProcessing && !isCropping && (
@@ -190,7 +336,10 @@ export default function ImageCanvas({
                 {/* 圖片顯示區域 */}
                 {/* 圖片顯示區域 - Flex centered */}
                 <div className="relative flex items-center justify-center w-full h-full pointer-events-none">
-                    <div className="pointer-events-auto"> {/* Wrapper for pointer events */}
+                    <div className="pointer-events-auto max-w-full max-h-full flex items-center justify-center" style={{
+                        transform: `translate(${isCropping ? 0 : position.x}px, ${isCropping ? 0 : position.y}px) scale(${isCropping ? 1 : scale})`,
+                        transition: isCropping ? 'transform 0.3s' : 'none'
+                    }}> {/* Wrapper for pointer events */}
                         {isCropping ? (
                             <>
                                 <ReactCrop
@@ -205,7 +354,7 @@ export default function ImageCanvas({
                                     <img
                                         ref={imgRef}
                                         src={editedImage || originalImage || ''}
-                                        className="max-h-[85vh] max-w-[85vh] w-auto h-auto"
+                                        className="max-h-full max-w-full w-auto h-auto"
                                         style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} // Ensure it fits in parent
                                         alt="Crop target"
                                         onLoad={(e) => {
@@ -259,21 +408,25 @@ export default function ImageCanvas({
                             </AnimatePresence>
                         )}
                     </div>
+                    {/* Frame Overlay - Only show if frame is selected and not showing original AND NOT CROPPING */}
+                    {selectedFrame && !showOriginal && !isCropping && selectedFrame.id !== 'none' && (
+                        <div className="absolute inset-0 w-full h-full pointer-events-none" style={{
+                            transform: `translate(${isCropping ? 0 : position.x}px, ${isCropping ? 0 : position.y}px) scale(${isCropping ? 1 : scale})`,
+                            transition: isCropping ? 'transform 0.3s' : 'none'
+                        }}>
+                            <motion.img
+                                key={`frame-${selectedFrame.id}`}
+                                src={selectedFrame.url}
+                                alt="Frame"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="w-full h-full object-cover"
+                                style={{ zIndex: 10 }}
+                            />
+                        </div>
+                    )}
                 </div>
-
-                {/* Frame Overlay - Only show if frame is selected and not showing original AND NOT CROPPING */}
-                {selectedFrame && !showOriginal && !isCropping && selectedFrame.id !== 'none' && (
-                    <motion.img
-                        key={`frame-${selectedFrame.id}`}
-                        src={selectedFrame.url}
-                        alt="Frame"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                        style={{ zIndex: 10 }}
-                    />
-                )}
 
 
 
@@ -295,6 +448,7 @@ export default function ImageCanvas({
                         onMouseLeave={() => setIsHoveringToolbar(false)}
                         onAddText={() => console.log('Add Text')}
                         onAddWatermark={() => console.log('Add Watermark')}
+                        onRemove={onRemove}
 
                         onCrop={() => {
                             // Reset crop state
@@ -303,6 +457,7 @@ export default function ImageCanvas({
                         }}
                         onRegenerate={onRegenerate}
                         onSelectFrame={onSelectFrame}
+                        isRegenerateDisabled={isRegenerateDisabled}
                     />
                 )}
             </div>
