@@ -297,10 +297,12 @@ export default function ImageCanvas({
     }
 
     return (
-        // Outer container: Manages padding and boundaries
+        // 外層容器：負責 Padding 與邊界
         <div className="w-full h-full relative flex items-center justify-center p-4 md:p-8">
 
-            {/* Crop mode (isolated for stability, no animation interference) */}
+            {/* ------------------------------------------------------------------ */}
+            {/* 模式 A: 裁切模式 (完全獨立，沒有 transform 動畫，確保計算準確) */}
+            {/* ------------------------------------------------------------------ */}
             {isCropping ? (
                 <div className="relative w-full h-full flex items-center justify-center pointer-events-auto">
                     <ReactCrop
@@ -310,18 +312,18 @@ export default function ImageCanvas({
                         aspect={1}
                         minWidth={100}
                         keepSelection={true}
-                        // Ensure ReactCrop doesn't expand parent
-                        style={{ maxWidth: '100%', maxHeight: '100%' }}
+                        // 確保 ReactCrop 不會撐開父層
+                        className="max-w-full max-h-full flex items-center justify-center"
                     >
                         <img
                             ref={imgRef}
                             src={editedImage || originalImage || ''}
-                            // Critical: image must be contain and constrained during crop
+                            // 關鍵：裁切時圖片必須是 contain 且限制最大寬高
                             style={{ display: 'block', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                             alt="Crop target"
                             onLoad={(e) => {
                                 const { width, height } = e.currentTarget;
-                                // Defensive check: ensure image has rendered correctly
+                                // 防禦性檢查：確保圖片已正確渲染
                                 if (width === 0 || height === 0) return;
 
                                 const size = Math.min(width, height) * 0.9;
@@ -335,7 +337,9 @@ export default function ImageCanvas({
                     </ReactCrop>
                 </div>
             ) : (
-                // View and interaction mode (Zoom/Pan)
+                /* ------------------------------------------------------------------ */
+                /* 模式 B: 檢視與操作模式 (Zoom/Pan) - 這裡才有 transform */
+                /* ------------------------------------------------------------------ */
                 <div
                     ref={canvasRef}
                     className="group relative w-full h-full flex items-center justify-center"
@@ -347,9 +351,9 @@ export default function ImageCanvas({
                         style={{
                             maxWidth: '100%',
                             maxHeight: '100%',
-                            // Only handles view mode transformations
+                            // 這裡只負責檢視時的變形
                             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                            // Optimization: disable animation during drag for performance, enable for zoom
+                            // 優化：拖曳時關閉動畫以提升效能，縮放時開啟動畫
                             transition: isDragging ? 'none' : 'transform 0.1s ease-out',
                             touchAction: 'none'
                         }}
@@ -414,6 +418,10 @@ export default function ImageCanvas({
                     </div>
                 </div>
             )}
+
+            {/* ------------------------------------------------------------------ */}
+            {/* UI 控制元件 (浮動按鈕、工具列等) - 保持在最上層 */}
+            {/* ------------------------------------------------------------------ */}
 
             {/* Peek Original Button */}
             {editedImage && !isProcessing && !isCropping && (
