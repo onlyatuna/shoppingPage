@@ -742,8 +742,8 @@ export default function EditorPage() {
             {/* Center Stage - Canvas */}
             {/* Show on Mobile only if step is 'edit'. Show on Desktop always. */}
             <div className={`
-                flex-1 min-h-0 flex flex-col items-center justify-center p-4 pb-32 md:p-0 md:pb-0 overflow-hidden relative
-                ${mobileStep !== 'edit' ? 'hidden md:flex' : 'flex'}
+                flex-1 min-h-0 w-full relative overflow-hidden p-4 pb-32 md:p-0 md:pb-0
+                ${mobileStep !== 'edit' ? 'hidden md:block' : 'block'}
             `}>
                 {/* Mobile Style Change Button (Top Right on Mobile) */}
                 <button
