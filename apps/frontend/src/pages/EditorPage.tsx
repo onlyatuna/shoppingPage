@@ -721,7 +721,7 @@ export default function EditorPage() {
             />
 
             {/* Left Panel - Control Panel (Desktop Only) */}
-            <div className={`hidden md:block bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-96'
+            <div className={`hidden md:block flex-shrink-0 bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-96'
                 }`}>
                 {isLeftPanelCollapsed ? (
                     // Collapsed state - show only toggle button
@@ -864,7 +864,7 @@ export default function EditorPage() {
             </div>
 
             {/* Right Panel (Desktop Only) - Action Panel */}
-            <div className={`hidden md:flex md:flex-col w-96 h-full border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] overflow-hidden transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-96'
+            <div className={`hidden md:flex md:flex-col flex-shrink-0 h-full border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] overflow-hidden transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-96'
                 }`}>
                 {isRightPanelCollapsed ? (
                     // Collapsed state - show only toggle button

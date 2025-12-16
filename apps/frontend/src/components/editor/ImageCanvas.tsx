@@ -56,22 +56,15 @@ export default function ImageCanvas({
     const [startDist, setStartDist] = useState(0);
     const [startScale, setStartScale] = useState(1);
 
-    // Pan State
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
-    // Reset zoom/pan when image changes or cropping starts
-    if (isCropping && (scale !== 1 || position.x !== 0 || position.y !== 0)) {
+    // Reset zoom when image changes or cropping starts
+    if (isCropping && scale !== 1) {
         setScale(1);
-        setPosition({ x: 0, y: 0 });
     }
 
-    // Reset zoom/pan when original image changes (new upload)
+    // Reset zoom when original image changes (new upload)
     useEffect(() => {
         if (originalImage) {
             setScale(1);
-            setPosition({ x: 0, y: 0 });
         }
     }, [originalImage]);
 
@@ -80,9 +73,6 @@ export default function ImageCanvas({
     const canvasRef = useRef<HTMLDivElement>(null);
     const stateRef = useRef({
         scale,
-        position,
-        isDragging,
-        dragStart,
         startDist,
         startScale,
         isCropping
@@ -92,14 +82,11 @@ export default function ImageCanvas({
     useEffect(() => {
         stateRef.current = {
             scale,
-            position,
-            isDragging,
-            dragStart,
             startDist,
             startScale,
             isCropping
         };
-    }, [scale, position, isDragging, dragStart, startDist, startScale, isCropping]);
+    }, [scale, startDist, startScale, isCropping]);
 
     // Attach native event listeners
     useEffect(() => {
@@ -112,35 +99,26 @@ export default function ImageCanvas({
             e.preventDefault();
             e.stopPropagation();
             const delta = -e.deltaY;
-            const newScale = Math.min(Math.max(1, scale + delta * 0.001), 3);
+            const newScale = Math.min(Math.max(0.5, scale + delta * 0.001), 3);
             setScale(newScale);
-            if (newScale === 1) {
-                setPosition({ x: 0, y: 0 });
-            }
         };
 
         const onTouchStart = (e: TouchEvent) => {
-            const { isCropping, scale, position } = stateRef.current;
+            const { isCropping, scale } = stateRef.current;
             if (isCropping) return;
 
             if (e.touches.length === 2) {
                 // Pinch Zoom
-                setIsDragging(false);
                 const touch1 = e.touches[0];
                 const touch2 = e.touches[1];
                 const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
                 setStartDist(dist);
                 setStartScale(scale);
-            } else if (e.touches.length === 1 && scale > 1) {
-                // Pan
-                const touch = e.touches[0];
-                setIsDragging(true);
-                setDragStart({ x: touch.clientX - position.x, y: touch.clientY - position.y });
             }
         };
 
         const onTouchMove = (e: TouchEvent) => {
-            const { isCropping, startDist, startScale, isDragging, scale, dragStart } = stateRef.current;
+            const { isCropping, startDist, startScale } = stateRef.current;
             if (isCropping) return;
 
             if (e.touches.length === 2 && startDist > 0) {
@@ -150,25 +128,13 @@ export default function ImageCanvas({
                 const touch2 = e.touches[1];
                 const dist = Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
                 const ratio = dist / startDist;
-                const newScale = Math.min(Math.max(1, startScale * ratio), 3);
+                const newScale = Math.min(Math.max(0.5, startScale * ratio), 3);
                 setScale(newScale);
-                if (newScale === 1) {
-                    setPosition({ x: 0, y: 0 });
-                }
-            } else if (e.touches.length === 1 && isDragging && scale > 1) {
-                // Pan
-                e.preventDefault(); // Critical: prevent browser scroll
-                const touch = e.touches[0];
-                setPosition({
-                    x: touch.clientX - dragStart.x,
-                    y: touch.clientY - dragStart.y
-                });
             }
         };
 
         const onTouchEnd = () => {
             setStartDist(0);
-            setIsDragging(false);
         };
 
         // Passive: false is crucial for preventing default behavior
@@ -381,38 +347,18 @@ export default function ImageCanvas({
                 <div
                     ref={canvasRef}
                     className="group relative w-full h-full flex items-center justify-center"
+                    onMouseEnter={() => setIsHoveringCanvas(true)}
+                    onMouseLeave={() => setIsHoveringCanvas(false)}
                 >
                     <div
-                        className={`relative flex items-center justify-center origin-center
-                            ${scale > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : ''}
-                        `}
+                        className="relative flex items-center justify-center origin-center"
                         style={{
                             maxWidth: '100%',
                             maxHeight: '100%',
-                            // 只有這個模式會有位移和縮放
-                            transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                            // 優化：拖曳時關閉過渡效果以求流暢，放開後開啟過渡效果以求平滑
-                            transition: isDragging ? 'none' : 'transform 0.1s ease-out',
-                            touchAction: 'none'
+                            // 只有縮放transform
+                            transform: `scale(${scale})`,
+                            transition: 'transform 0.1s ease-out'
                         }}
-                        onMouseEnter={() => setIsHoveringCanvas(true)}
-                        onMouseLeave={() => {
-                            setIsHoveringCanvas(false);
-                            setIsDragging(false);
-                        }}
-                        onMouseDown={(e) => {
-                            if (scale <= 1) return;
-                            e.preventDefault();
-                            setIsDragging(true);
-                            setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
-                        }}
-                        onMouseMove={(e) => {
-                            if (isDragging && scale > 1) {
-                                e.preventDefault();
-                                setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
-                            }
-                        }}
-                        onMouseUp={() => setIsDragging(false)}
                     >
                         <AnimatePresence mode="wait">
                             {editedImage && !showOriginal ? (
