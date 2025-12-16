@@ -342,6 +342,9 @@ export default function ImageCanvas({
                             aspect={1}
                             minWidth={100}
                             keepSelection={true}
+                            ruleOfThirds={true}
+                            circularCrop={false}
+                            locked={false}
                             // 確保裁切工具不會撐開容器
                             style={{ maxWidth: '100%', maxHeight: '100%' }}
                         >
