@@ -42,6 +42,7 @@ export default function ImageCanvas({
     const [crop, setCrop] = useState<Crop>();
     const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
     const imgRef = useRef<HTMLImageElement>(null);
+    const [cropScale, setCropScale] = useState(1); // Zoom level for crop mode
 
     // Peek Original State
     const [showOriginal, setShowOriginal] = useState(false);
@@ -320,7 +321,20 @@ export default function ImageCanvas({
             {isCropping ? (
                 <div className="relative w-full h-full flex items-center justify-center pointer-events-auto">
                     {/* Constrained wrapper for ReactCrop to prevent overflow */}
-                    <div className="max-w-full max-h-full flex items-center justify-center">
+                    <div
+                        className="max-w-full max-h-full flex items-center justify-center"
+                        style={{
+                            transform: `scale(${cropScale})`,
+                            transformOrigin: 'center',
+                            transition: 'transform 0.1s ease-out'
+                        }}
+                        onWheel={(e) => {
+                            e.preventDefault();
+                            const delta = -e.deltaY;
+                            const newScale = Math.min(Math.max(1, cropScale + delta * 0.001), 3);
+                            setCropScale(newScale);
+                        }}
+                    >
                         <ReactCrop
                             crop={crop}
                             onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -347,7 +361,6 @@ export default function ImageCanvas({
                                 onLoad={(e) => {
                                     const { width, height } = e.currentTarget;
                                     if (width === 0 || height === 0) return;
-
                                     const size = Math.min(width, height) * 0.9;
                                     const x = (width - size) / 2;
                                     const y = (height - size) / 2;
