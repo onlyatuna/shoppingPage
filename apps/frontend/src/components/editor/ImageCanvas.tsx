@@ -319,35 +319,45 @@ export default function ImageCanvas({
             {/* ================================================================================== */}
             {isCropping ? (
                 <div className="relative w-full h-full flex items-center justify-center pointer-events-auto">
-                    <ReactCrop
-                        crop={crop}
-                        onChange={(_, percentCrop) => setCrop(percentCrop)}
-                        onComplete={(c) => setCompletedCrop(c)}
-                        aspect={1}
-                        minWidth={100}
-                        keepSelection={true}
-                        // 確保裁切工具不會撐開容器
-                        className="max-w-full max-h-full flex items-center justify-center"
-                    >
-                        <img
-                            ref={imgRef}
-                            src={editedImage || originalImage || ''}
-                            // 關鍵：強制圖片適應容器，絕不溢出
-                            style={{ display: 'block', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                            alt="Crop target"
-                            onLoad={(e) => {
-                                const { width, height } = e.currentTarget;
-                                if (width === 0 || height === 0) return;
+                    {/* Constrained wrapper for ReactCrop to prevent overflow */}
+                    <div className="max-w-full max-h-full flex items-center justify-center">
+                        <ReactCrop
+                            crop={crop}
+                            onChange={(_, percentCrop) => setCrop(percentCrop)}
+                            onComplete={(c) => setCompletedCrop(c)}
+                            aspect={1}
+                            minWidth={100}
+                            keepSelection={true}
+                            // 確保裁切工具不會撐開容器
+                            style={{ maxWidth: '100%', maxHeight: '100%' }}
+                        >
+                            <img
+                                ref={imgRef}
+                                src={editedImage || originalImage || ''}
+                                // 關鍵：強制圖片適應容器，絕不溢出
+                                style={{
+                                    display: 'block',
+                                    maxWidth: '100%',
+                                    maxHeight: '100%',
+                                    width: 'auto',
+                                    height: 'auto',
+                                    objectFit: 'contain'
+                                }}
+                                alt="Crop target"
+                                onLoad={(e) => {
+                                    const { width, height } = e.currentTarget;
+                                    if (width === 0 || height === 0) return;
 
-                                const size = Math.min(width, height) * 0.9;
-                                const x = (width - size) / 2;
-                                const y = (height - size) / 2;
-                                const newCrop: Crop = { unit: 'px', x, y, width: size, height: size };
-                                setCrop(newCrop);
-                                setCompletedCrop({ ...newCrop, width: size, height: size } as PixelCrop);
-                            }}
-                        />
-                    </ReactCrop>
+                                    const size = Math.min(width, height) * 0.9;
+                                    const x = (width - size) / 2;
+                                    const y = (height - size) / 2;
+                                    const newCrop: Crop = { unit: 'px', x, y, width: size, height: size };
+                                    setCrop(newCrop);
+                                    setCompletedCrop({ ...newCrop, width: size, height: size } as PixelCrop);
+                                }}
+                            />
+                        </ReactCrop>
+                    </div>
                 </div>
             ) : (
                 // ================================================================================== */}
