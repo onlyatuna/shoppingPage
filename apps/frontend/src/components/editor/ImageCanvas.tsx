@@ -207,16 +207,29 @@ export default function ImageCanvas({
             const scaleX = image.naturalWidth / image.width;
             const scaleY = image.naturalHeight / image.height;
 
+            // Use the smaller scale to ensure we stay within image bounds
+            const scale = Math.min(scaleX, scaleY);
+
+            // Calculate pixel coordinates for crop
             const pixelCrop = {
-                x: completedCrop.x * scaleX,
-                y: completedCrop.y * scaleY,
-                width: completedCrop.width * scaleX,
-                height: completedCrop.height * scaleY,
+                x: completedCrop.x * scale,
+                y: completedCrop.y * scale,
+                width: completedCrop.width * scale,
+                height: completedCrop.height * scale,
+            };
+
+            // Enforce 1:1 aspect ratio - use the smaller dimension
+            const size = Math.min(pixelCrop.width, pixelCrop.height);
+            const squareCrop = {
+                x: pixelCrop.x,
+                y: pixelCrop.y,
+                width: size,
+                height: size,
             };
 
             const croppedImage = await getCroppedImg(
                 sourceImage,
-                pixelCrop,
+                squareCrop,
                 0 // rotation always 0
             );
 
