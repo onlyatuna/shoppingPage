@@ -297,12 +297,13 @@ export default function ImageCanvas({
     }
 
     return (
-        // 外層容器：負責 Padding 與邊界
+        // 1. 最外層容器：負責 Padding 與邊界 (不參與動畫)
         <div className="w-full h-full relative flex items-center justify-center p-4 md:p-8">
 
-            {/* ------------------------------------------------------------------ */}
-            {/* 模式 A: 裁切模式 (完全獨立，沒有 transform 動畫，確保計算準確) */}
-            {/* ------------------------------------------------------------------ */}
+            {/* ================================================================================== */}
+            {/* 模式 A: 裁切模式 (Cropping Mode) */}
+            {/* 這裡是一個【完全獨立】的靜止容器，沒有任何 transform 或 transition */}
+            {/* ================================================================================== */}
             {isCropping ? (
                 <div className="relative w-full h-full flex items-center justify-center pointer-events-auto">
                     <ReactCrop
@@ -312,18 +313,17 @@ export default function ImageCanvas({
                         aspect={1}
                         minWidth={100}
                         keepSelection={true}
-                        // 確保 ReactCrop 不會撐開父層
+                        // 確保裁切工具不會撐開容器
                         className="max-w-full max-h-full flex items-center justify-center"
                     >
                         <img
                             ref={imgRef}
                             src={editedImage || originalImage || ''}
-                            // 關鍵：裁切時圖片必須是 contain 且限制最大寬高
+                            // 關鍵：強制圖片適應容器，絕不溢出
                             style={{ display: 'block', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                             alt="Crop target"
                             onLoad={(e) => {
                                 const { width, height } = e.currentTarget;
-                                // 防禦性檢查：確保圖片已正確渲染
                                 if (width === 0 || height === 0) return;
 
                                 const size = Math.min(width, height) * 0.9;
@@ -337,9 +337,10 @@ export default function ImageCanvas({
                     </ReactCrop>
                 </div>
             ) : (
-                /* ------------------------------------------------------------------ */
-                /* 模式 B: 檢視與操作模式 (Zoom/Pan) - 這裡才有 transform */
-                /* ------------------------------------------------------------------ */
+                // ================================================================================== */}
+                // 模式 B: 檢視模式 (View / Zoom / Pan Mode)
+                // 這裡才有 transform 縮放功能，跟上面的裁切模式完全分開
+                // ================================================================================== */}
                 <div
                     ref={canvasRef}
                     className="group relative w-full h-full flex items-center justify-center"
@@ -351,9 +352,9 @@ export default function ImageCanvas({
                         style={{
                             maxWidth: '100%',
                             maxHeight: '100%',
-                            // 這裡只負責檢視時的變形
+                            // 只有這個模式會有位移和縮放
                             transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-                            // 優化：拖曳時關閉動畫以提升效能，縮放時開啟動畫
+                            // 優化：拖曳時關閉過渡效果以求流暢，放開後開啟過渡效果以求平滑
                             transition: isDragging ? 'none' : 'transform 0.1s ease-out',
                             touchAction: 'none'
                         }}
@@ -419,9 +420,9 @@ export default function ImageCanvas({
                 </div>
             )}
 
-            {/* ------------------------------------------------------------------ */}
-            {/* UI 控制元件 (浮動按鈕、工具列等) - 保持在最上層 */}
-            {/* ------------------------------------------------------------------ */}
+            {/* ================================================================================== */}
+            {/* 懸浮 UI (Toolbar, Buttons) - 保持在最上層 */}
+            {/* ================================================================================== */}
 
             {/* Peek Original Button */}
             {editedImage && !isProcessing && !isCropping && (

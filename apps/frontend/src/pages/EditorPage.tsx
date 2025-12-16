@@ -26,6 +26,10 @@ export default function EditorPage() {
     const location = useLocation();
     const navigate = useNavigate();
 
+    // Canvas container ref and dynamic height
+    const canvasContainerRef = useRef<HTMLDivElement>(null);
+    const [canvasHeight, setCanvasHeight] = useState('100%');
+
     // Editor State
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [editedImage, setEditedImage] = useState<string | null>(null);
@@ -70,6 +74,27 @@ export default function EditorPage() {
         },
         onError: (err: any) => toast.error(err.response?.data?.message || '上架失敗')
     });
+
+    // Reset zoom and pan on new upload
+    useEffect(() => {
+        // This effect is handled by ImageCanvas internally
+    }, [uploadedImage]);
+
+    // Dynamic canvas height calculation
+    useEffect(() => {
+        const calculateHeight = () => {
+            if (canvasContainerRef.current) {
+                const topOffset = canvasContainerRef.current.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                const availableHeight = windowHeight - topOffset;
+                setCanvasHeight(`${availableHeight}px`);
+            }
+        };
+
+        calculateHeight();
+        window.addEventListener('resize', calculateHeight);
+        return () => window.removeEventListener('resize', calculateHeight);
+    }, []);
 
     // Initial load from navigation state (Library)
     useEffect(() => {
@@ -739,24 +764,17 @@ export default function EditorPage() {
                 )}
             </div>
 
-            {/* Center Stage - Canvas */}
-            {/* Show on Mobile only if step is 'edit'. Show on Desktop always. */}
-            <div className={`
-                flex-1 min-h-0 w-full relative overflow-hidden p-4 pb-32 md:p-0 md:pb-0
-                ${mobileStep !== 'edit' ? 'hidden md:block' : 'block'}
-            `}>
-                {/* Mobile Style Change Button (Top Right on Mobile) */}
-                <button
-                    type="button"
-                    onClick={() => setIsMobileSheetOpen(true)}
-                    disabled={!uploadedImage}
-                    className={`md:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm transition-all
-                            ${!uploadedImage ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95'}
-                        `}
-                >
-                    <Sparkles size={16} className="text-blue-500" />
-                    <span>風格</span>
-                </button>
+            {/* ========================================================= */}
+            {/* 🔥 Center Stage - Canvas (JS 動態計算高度版) 🔥 */}
+            {/* ========================================================= */}
+            <div
+                ref={canvasContainerRef}
+                style={{ height: canvasHeight }}
+                className={`
+                    w-full relative bg-gray-50 dark:bg-[#121212] overflow-hidden
+                    ${mobileStep !== 'edit' ? 'hidden md:block' : 'block'}
+                `}
+            >
 
                 <ImageCanvas
                     originalImage={uploadedImage}
@@ -772,7 +790,21 @@ export default function EditorPage() {
                     setIsCropping={setIsCropping}
                     isRegenerateDisabled={!selectedStyle}
                 />
+
+                {/* Mobile Style Change Button (保持絕對定位在右上角) */}
+                <button
+                    type="button"
+                    onClick={() => setIsMobileSheetOpen(true)}
+                    disabled={!uploadedImage}
+                    className={`md:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm transition-all
+                            ${!uploadedImage ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95'}
+                        `}
+                >
+                    <Sparkles size={16} className="text-blue-500" />
+                    <span>風格</span>
+                </button>
             </div>
+            {/* ========================================================= */}
 
 
             {/* Mobile View: Caption Step */}
