@@ -88,4 +88,49 @@ router.post('/caption', authenticateToken, async (req: Request, res: Response) =
     }
 });
 
+/**
+ * POST /api/v1/gemini/generate-custom-style-prompt
+ * 生成自定義風格提示詞 - 使用 Gemini 2.5 Flash Lite
+ * 需要登入
+ */
+router.post('/generate-custom-style-prompt', authenticateToken, async (req: Request, res: Response) => {
+    try {
+        const { styleName, styleDescription } = req.body;
+
+        // 驗證輸入
+        if (!styleName || typeof styleName !== 'string') {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: '請提供風格名稱'
+            });
+        }
+
+        if (!styleDescription || typeof styleDescription !== 'string') {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: '請提供風格描述'
+            });
+        }
+
+        // 呼叫 Gemini Service 生成提示詞
+        const prompt = await GeminiService.generateCustomStylePrompt(styleName, styleDescription);
+
+        res.json({
+            status: 'success',
+            prompt
+        });
+
+    } catch (error: any) {
+        console.error('Generate Custom Style Prompt API Error:', error);
+
+        if (error.message?.includes('GEMINI_API_KEY')) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                message: 'Gemini API 設定錯誤'
+            });
+        }
+
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: error.message || 'AI 提示詞生成失敗'
+        });
+    }
+});
+
 export default router;

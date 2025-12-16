@@ -176,6 +176,7 @@ Shot with 100mm macro lens, f/2.8 aperture for shallow depth of field, ISO 100. 
         }
     }
 
+
     static async generateCaption(
         imageUrl: string,
         additionalInfo?: string
@@ -228,6 +229,76 @@ Shot with 100mm macro lens, f/2.8 aperture for shallow depth of field, ISO 100. 
         } catch (error) {
             console.error('Error generating caption:', error);
             throw new Error('Failed to generate caption');
+        }
+    }
+
+    /**
+     * 生成自定義風格的提示詞
+     * @param styleName - 風格名稱 (例如：「復古風」)
+     * @param styleDescription - 風格簡短描述 (例如：「懷舊、溫暖」)
+     * @returns 詳細的圖片編輯提示詞
+     */
+    static async generateCustomStylePrompt(styleName: string, styleDescription: string): Promise<string> {
+        if (!process.env.GEMINI_API_KEY) {
+            throw new Error('GEMINI_API_KEY is not configured');
+        }
+
+        try {
+            const model = genAI.getGenerativeModel({
+                model: 'gemini-2.5-flash-lite-preview-09-2025'
+            });
+
+            const prompt = `你是一位專業的商業攝影師和 AI 圖片編輯專家。
+            
+用戶想要創建一個名為「${styleName}」的自定義風格，描述是：「${styleDescription}」。
+
+請生成一個詳細的英文提示詞，用於 AI 圖片編輯工具（如 Gemini 2.5 Flash Image）來為商品照片創建這種風格的背景和場景。
+
+**要求：**
+1. **語言**：完全使用英文撰寫
+2. **結構**：包含以下部分
+   - 場景描述 (Scene Description)：詳細描述場景、氛圍
+   - 背景元素 (Background Elements)：具體的背景元素、材質、顏色
+   - 光線效果 (Lighting)：光線類型、方向、強度、色溫
+   - 構圖 (Composition)：如何擺放商品、視角
+   - 技術細節 (Technical)：相機設定、鏡頭、光圈等專業參數
+3. **長度**：至少 150 字，但不超過 300 字
+4. **專業性**：使用攝影專業術語，具體且詳細
+5. **格式**：純文字，不要有 Markdown 格式或標題符號
+
+**例子風格**：
+如果風格是「極簡白色」，描述是「純淨、高級」，提示詞可能是：
+"Place the product on a pristine white marble surface with subtle veining. Create a minimalist, clean environment with soft diffused lighting from above and slightly to the side. Use a pure white or very light gray gradient background that fades smoothly. Add subtle contact shadows beneath the product to ground it realistically. Maintain a bright, airy atmosphere with high key lighting. Shot with 85mm lens, f/2.8 aperture for slight background blur, ISO 100 for minimal noise. 8k resolution, ultra-sharp focus on product details, perfectly centered composition with ample negative space."
+
+現在請為「${styleName}」風格生成提示詞：`;
+
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            let text = response.text();
+
+            // 清理可能的 Markdown 格式
+            text = text.replace(/```/g, '').trim();
+
+            // 移除可能的引號包裹
+            if (text.startsWith('"') && text.endsWith('"')) {
+                text = text.slice(1, -1);
+            }
+
+            console.log('✅ Successfully generated custom style prompt');
+            return text;
+
+        } catch (error: any) {
+            console.error('Generate Custom Style Prompt Error:', error);
+
+            if (error.message?.includes('API key')) {
+                throw new Error('Gemini API Key 設定錯誤');
+            }
+
+            if (error.message?.includes('quota')) {
+                throw new Error('Gemini API 配額已用盡，請稍後再試');
+            }
+
+            throw new Error('AI 提示詞生成失敗');
         }
     }
 }
