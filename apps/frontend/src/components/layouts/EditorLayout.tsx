@@ -23,7 +23,7 @@ export default function EditorLayout({ children, hasUnsavedChanges = false }: Ed
     };
 
     return (
-        <div className="h-screen w-full flex flex-col overflow-hidden bg-gray-50 dark:bg-[#1e1e1e] transition-colors">
+        <div className="h-[100dvh] w-full flex flex-col overflow-hidden bg-gray-50 dark:bg-[#1e1e1e] transition-colors">
             {/* Header */}
             <header className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] z-50 shrink-0">
                 <div className="flex items-center gap-4">
@@ -50,7 +50,7 @@ export default function EditorLayout({ children, hasUnsavedChanges = false }: Ed
             </header>
 
             {/* Content Area - fills remaining space */}
-            <div className="flex-1 min-h-0 flex overflow-hidden">
+            <div className="flex-1 min-h-0 flex overflow-hidden relative">
                 {children}
             </div>
         </div>
