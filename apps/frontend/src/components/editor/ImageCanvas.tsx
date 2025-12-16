@@ -244,7 +244,7 @@ export default function ImageCanvas({
                             max-w-md w-full
                         `}
                     >
-                        <input {...getInputProps()} capture="environment" />
+                        <input {...getInputProps()} />
                         <Upload size={48} className={isDragActive ? 'text-blue-500' : 'text-gray-400'} />
                         <div className="text-center">
                             <p className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-1">
