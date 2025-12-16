@@ -11,7 +11,6 @@ interface CopywritingAssistantProps {
     onGenerate: () => void;
     disabled?: boolean;
     instanceId?: string; // Unique identifier for this instance (e.g., 'desktop' or 'mobile')
-    imageUrl?: string | null; // Current generated/uploaded image URL for thumbnail
 }
 
 export default function CopywritingAssistant({
@@ -22,8 +21,7 @@ export default function CopywritingAssistant({
     isGenerating,
     instanceId = 'default',
     onGenerate,
-    disabled,
-    imageUrl
+    disabled
 }: CopywritingAssistantProps) {
     const [copied, setCopied] = useState(false);
     const [isPromptExpanded, setIsPromptExpanded] = useState(false);
@@ -39,34 +37,9 @@ export default function CopywritingAssistant({
 
     return (
         <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    AI 文案助理
-                </h3>
-                <button
-                    type="button"
-                    onClick={onGenerate}
-                    disabled={disabled || isGenerating}
-                    className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors shadow-sm"
-                >
-                    <Sparkles size={12} />
-                    {generatedCaption ? '重新生成' : '自動生成'}
-                </button>
-            </div>
 
-            {/* Image Thumbnail Preview */}
-            {imageUrl && (
-                <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">📷 當前圖片預覽</p>
-                    <div className="relative w-full aspect-square max-w-[120px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 shadow-sm">
-                        <img
-                            src={imageUrl}
-                            alt="當前生成圖片"
-                            className="w-full h-full object-cover"
-                        />
-                    </div>
-                </div>
-            )}
+
+
 
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 relative transition-colors flex flex-col gap-4">
                 {/* 結果/編輯區 - 放在最上面 */}
@@ -104,6 +77,8 @@ export default function CopywritingAssistant({
                     )}
                 </div>
 
+
+
                 {/* Collapsible Prompt Input Section - 可折叠的文案提示输入框 */}
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                     <button
@@ -138,6 +113,19 @@ export default function CopywritingAssistant({
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* Auto Generate Button - Moved outside content box */}
+            <div className="flex justify-end mt-2">
+                <button
+                    type="button"
+                    onClick={onGenerate}
+                    disabled={disabled || isGenerating}
+                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
+                >
+                    <Sparkles size={18} />
+                    {generatedCaption ? '重新生成文案' : '自動生成文案'}
+                </button>
             </div>
         </div>
     );

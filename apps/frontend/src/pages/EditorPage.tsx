@@ -358,13 +358,17 @@ export default function EditorPage() {
     };
 
     // Helper: Upload Base64 to Cloudinary
-    const uploadBase64Image = async (base64Str: string): Promise<string | null> => {
+    const uploadBase64Image = async (base64Str: string, type: string = 'product', subfolder: string = ''): Promise<string | null> => {
         try {
             const res = await fetch(base64Str);
             const blob = await res.blob();
             const file = new File([blob], "image.png", { type: "image/png" });
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('type', type);
+            if (subfolder) {
+                formData.append('subfolder', subfolder);
+            }
 
             const uploadRes = await apiClient.post('/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
@@ -781,10 +785,19 @@ export default function EditorPage() {
 
                 {/* Mobile View: Caption Step */}
                 <div className={`flex-1 p-6 pb-32 overflow-y-auto ${mobileStep === 'caption' ? 'block md:hidden' : 'hidden'}`}>
-                    <h2 className="text-xl font-bold mb-4">AI 文案助手</h2>
+                    <div className="flex items-center justify-center mb-6">
+                        {(editedImage || uploadedImage) && (
+                            <div className="w-[90%] aspect-square rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-md shrink-0 bg-gray-100">
+                                <img
+                                    src={editedImage || uploadedImage || ''}
+                                    alt="Preview"
+                                    className="w-full h-full object-contain"
+                                />
+                            </div>
+                        )}
+                    </div>
                     <CopywritingAssistant
                         instanceId="mobile-caption"
-                        imageUrl={editedImage || uploadedImage}
                         generatedCaption={generatedCaption}
                         onCaptionChange={setGeneratedCaption}
                         captionPrompt={captionPrompt}
@@ -857,7 +870,6 @@ export default function EditorPage() {
 
                             <CopywritingAssistant
                                 instanceId="desktop-caption"
-                                imageUrl={editedImage || uploadedImage}
                                 generatedCaption={generatedCaption}
                                 onCaptionChange={setGeneratedCaption}
                                 captionPrompt={captionPrompt}
@@ -944,9 +956,32 @@ export default function EditorPage() {
             <FrameUploadModal
                 isOpen={isFrameUploadOpen}
                 onClose={() => setIsFrameUploadOpen(false)}
-                onSave={(frame) => {
-                    setCustomFrames(prev => [...prev, frame]);
-                    localStorage.setItem('customFrames', JSON.stringify([...customFrames, frame]));
+                onSave={async (frame) => {
+                    const toastId = toast.loading('正在上傳圖框...');
+                    try {
+                        // Upload frame to Cloudinary (folder: ecommerce-canvas/frames)
+                        const cloudUrl = await uploadBase64Image(frame.url, 'canvas', 'frames');
+
+                        if (cloudUrl) {
+                            const updatedFrame = {
+                                ...frame,
+                                url: cloudUrl,
+                                preview: cloudUrl
+                            };
+
+                            setCustomFrames(prev => [...prev, updatedFrame]);
+                            localStorage.setItem('customFrames', JSON.stringify([...customFrames, updatedFrame]));
+                            toast.success('圖框已上傳並儲存', { id: toastId });
+                        } else {
+                            // Fallback to local if upload fails (though rare)
+                            setCustomFrames(prev => [...prev, frame]);
+                            localStorage.setItem('customFrames', JSON.stringify([...customFrames, frame]));
+                            toast.warning('圖框上傳失敗，已儲存為本機暫存', { id: toastId });
+                        }
+                    } catch (error) {
+                        console.error('Frame upload error:', error);
+                        toast.error('儲存圖框時發生錯誤', { id: toastId });
+                    }
                 }}
             />
         </div>
