@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LoadingState from './LoadingState';
 import FloatingToolbar from './FloatingToolbar';
 import { useDropzone } from 'react-dropzone';
-import { Upload, Image as ImageIcon, Check, X as CancelIcon, Eye } from 'lucide-react';
+import { Upload, Cloud, Check, X as CancelIcon, Eye } from 'lucide-react';
 import ReactCrop, { Crop, PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import getCroppedImg from '../../utils/canvasUtils';
