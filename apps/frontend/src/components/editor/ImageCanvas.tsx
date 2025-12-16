@@ -287,8 +287,8 @@ export default function ImageCanvas({
     }
 
     return (
-        <div className="relative w-full h-full flex items-center justify-center p-8 md:p-12">
-            {/* Canvas Container - Dynamically adapts to image aspect ratio */}
+        <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
+            {/* Canvas Container - Uses flex to fill available space */}
             <div
                 ref={canvasRef}
                 className={`group relative max-h-full max-w-full w-auto flex items-center justify-center bg-checkered touch-none pointer-events-auto
@@ -354,7 +354,7 @@ export default function ImageCanvas({
                                     <img
                                         ref={imgRef}
                                         src={editedImage || originalImage || ''}
-                                        className="max-h-full max-w-full w-auto h-auto"
+                                        className="max-h-full max-w-full w-auto h-auto object-contain"
                                         style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} // Ensure it fits in parent
                                         alt="Crop target"
                                         onLoad={(e) => {
@@ -390,7 +390,7 @@ export default function ImageCanvas({
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                         transition={{ duration: 0.5 }}
-                                        className="max-h-full max-w-full w-auto h-auto"
+                                        className="max-h-full max-w-full w-auto h-auto object-contain"
                                         style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
                                     />
                                 ) : (
@@ -401,7 +401,7 @@ export default function ImageCanvas({
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
-                                        className="max-h-full max-w-full w-auto h-auto filter grayscale-[20%]"
+                                        className="max-h-full max-w-full w-auto h-auto object-contain filter grayscale-[20%]"
                                         style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
                                     />
                                 )}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Sun, Moon, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTheme } from '../contexts/ThemeContext';
+import EditorLayout from '../components/layouts/EditorLayout';
 import { StylePresetKey, presets } from '../components/editor/StylePresetGrid';
 import ImageCanvas from '../components/editor/ImageCanvas';
 import CopywritingAssistant from '../components/editor/CopywritingAssistant';
@@ -23,7 +23,6 @@ import FrameUploadModal from '../components/editor/FrameUploadModal';
 import { Frame } from '../types/frame';
 
 export default function EditorPage() {
-    const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -667,314 +666,275 @@ export default function EditorPage() {
 
 
     return (
-        <div
-            className="h-screen w-full flex flex-col overflow-hidden bg-gray-50 dark:bg-[#1e1e1e] transition-colors"
-        >
-            {/* Header */}
-            <header className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] z-50 shrink-0">
-                <div className="flex items-center gap-4">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            if (hasUnsavedChanges()) {
-                                if (window.confirm('您有未儲存的內容，確定要離開嗎？')) {
-                                    navigate(-1);
-                                }
-                            } else {
-                                navigate(-1);
-                            }
-                        }}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
-                        aria-label="Go back"
-                    >
-                        <ArrowLeft size={20} />
-                    </button>
-                    {/* Optional: Add Title or Logo here if needed */}
-                </div>
+        <EditorLayout hasUnsavedChanges={hasUnsavedChanges()}>
 
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={toggleTheme}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
-                        aria-label="Toggle theme"
-                    >
-                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                    </button>
-                </div>
-            </header>
+            {/* Library Modal */}
+            <LibraryModal
+                isOpen={isLibraryOpen}
+                onClose={() => setIsLibraryOpen(false)}
+                onSelect={handleLibrarySelect}
+            />
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex overflow-hidden">
+            {/* Custom Style Modal */}
+            <CustomStyleModal
+                isOpen={isCustomStyleModalOpen}
+                onClose={() => {
+                    setIsCustomStyleModalOpen(false);
+                    setEditingStyle(null); // Reset editing style on close
+                }}
+                onSave={handleSaveCustomStyle}
+                initialStyle={editingStyle}
+            />
 
-                {/* Library Modal */}
-                <LibraryModal
-                    isOpen={isLibraryOpen}
-                    onClose={() => setIsLibraryOpen(false)}
-                    onSelect={handleLibrarySelect}
-                />
+            {/* Product Modal */}
+            <ProductFormModal
+                isOpen={isProductModalOpen}
+                onClose={() => setIsProductModalOpen(false)}
+                onSubmit={handleProductSubmit}
+                initialData={productInitialData}
+                isPending={createProductMutation.isPending}
+            />
 
-                {/* Custom Style Modal */}
-                <CustomStyleModal
-                    isOpen={isCustomStyleModalOpen}
-                    onClose={() => {
-                        setIsCustomStyleModalOpen(false);
-                        setEditingStyle(null); // Reset editing style on close
-                    }}
-                    onSave={handleSaveCustomStyle}
-                    initialStyle={editingStyle}
-                />
+            {/* Left Panel - Control Panel (Desktop Only) */}
+            <div className={`hidden md:block bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-[280px]'
+                }`}>
+                {isLeftPanelCollapsed ? (
+                    // Collapsed state - show only toggle button
+                    <div className="h-full flex items-start justify-center pt-6">
+                        <button
+                            type="button"
+                            onClick={() => setIsLeftPanelCollapsed(false)}
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
+                            aria-label="展開選擇風格面板"
+                            title="展開"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                ) : (
+                    // Expanded state - show full content with collapse button
+                    <div className="p-6 h-full overflow-y-auto custom-scrollbar relative">
+                        <button
+                            type="button"
+                            onClick={() => setIsLeftPanelCollapsed(true)}
+                            className="absolute top-6 right-6 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors z-10"
+                            aria-label="收折選擇風格面板"
+                            title="收折"
+                        >
+                            <ChevronLeft size={16} />
+                        </button>
+                        <StylePresetGrid
+                            selectedStyle={selectedStyle}
+                            onSelectStyle={handleStyleSelect}
+                            customStyles={customStyles}
+                            onAddCustomStyle={() => setIsCustomStyleModalOpen(true)}
+                            onEditCustomStyle={(style) => {
+                                setEditingStyle(style);
+                                setIsCustomStyleModalOpen(true);
+                            }}
+                            onDeleteCustomStyle={handleDeleteCustomStyle}
+                            disabled={isProcessing || !uploadedImage}
+                        />
+                    </div>
+                )}
+            </div>
 
-                {/* Product Modal */}
-                <ProductFormModal
-                    isOpen={isProductModalOpen}
-                    onClose={() => setIsProductModalOpen(false)}
-                    onSubmit={handleProductSubmit}
-                    initialData={productInitialData}
-                    isPending={createProductMutation.isPending}
-                />
-
-                {/* Left Panel - Control Panel (Desktop Only) */}
-                <div className={`hidden md:block bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-[280px]'
-                    }`}>
-                    {isLeftPanelCollapsed ? (
-                        // Collapsed state - show only toggle button
-                        <div className="h-full flex items-start justify-center pt-6">
-                            <button
-                                type="button"
-                                onClick={() => setIsLeftPanelCollapsed(false)}
-                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
-                                aria-label="展開選擇風格面板"
-                                title="展開"
-                            >
-                                <ChevronRight size={20} />
-                            </button>
-                        </div>
-                    ) : (
-                        // Expanded state - show full content with collapse button
-                        <div className="p-6 h-full overflow-y-auto custom-scrollbar relative">
-                            <button
-                                type="button"
-                                onClick={() => setIsLeftPanelCollapsed(true)}
-                                className="absolute top-6 right-6 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors z-10"
-                                aria-label="收折選擇風格面板"
-                                title="收折"
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-                            <StylePresetGrid
-                                selectedStyle={selectedStyle}
-                                onSelectStyle={handleStyleSelect}
-                                customStyles={customStyles}
-                                onAddCustomStyle={() => setIsCustomStyleModalOpen(true)}
-                                onEditCustomStyle={(style) => {
-                                    setEditingStyle(style);
-                                    setIsCustomStyleModalOpen(true);
-                                }}
-                                onDeleteCustomStyle={handleDeleteCustomStyle}
-                                disabled={isProcessing || !uploadedImage}
-                            />
-                        </div>
-                    )}
-                </div>
-
-                {/* Center Stage - Canvas */}
-                {/* Show on Mobile only if step is 'edit'. Show on Desktop always. */}
-                <div className={`
+            {/* Center Stage - Canvas */}
+            {/* Show on Mobile only if step is 'edit'. Show on Desktop always. */}
+            <div className={`
                 flex-1 flex flex-col items-center justify-center p-4 pb-32 md:p-8 overflow-hidden relative
                 ${mobileStep !== 'edit' ? 'hidden md:flex' : 'flex'}
             `}>
-                    {/* Mobile Style Change Button (Top Right on Mobile) */}
-                    <button
-                        type="button"
-                        onClick={() => setIsMobileSheetOpen(true)}
-                        disabled={!uploadedImage}
-                        className={`md:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm transition-all
+                {/* Mobile Style Change Button (Top Right on Mobile) */}
+                <button
+                    type="button"
+                    onClick={() => setIsMobileSheetOpen(true)}
+                    disabled={!uploadedImage}
+                    className={`md:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm transition-all
                             ${!uploadedImage ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95'}
                         `}
-                    >
-                        <Sparkles size={16} className="text-blue-500" />
-                        <span>風格</span>
-                    </button>
+                >
+                    <Sparkles size={16} className="text-blue-500" />
+                    <span>風格</span>
+                </button>
 
-                    <ImageCanvas
-                        originalImage={uploadedImage}
-                        editedImage={editedImage}
-                        isProcessing={isProcessing}
-                        onRegenerate={handleGenerate}
-                        onImageUpload={handleImageUpload}
-                        onOpenLibrary={() => setIsLibraryOpen(true)}
-                        onRemove={handleRemoveImage}
-                        onSelectFrame={() => setIsFrameSelectorOpen(true)}
-                        selectedFrame={selectedFrame}
-                        isCropping={isCropping}
-                        setIsCropping={setIsCropping}
-                        isRegenerateDisabled={!selectedStyle}
-                    />
-                </div>
+                <ImageCanvas
+                    originalImage={uploadedImage}
+                    editedImage={editedImage}
+                    isProcessing={isProcessing}
+                    onRegenerate={handleGenerate}
+                    onImageUpload={handleImageUpload}
+                    onOpenLibrary={() => setIsLibraryOpen(true)}
+                    onRemove={handleRemoveImage}
+                    onSelectFrame={() => setIsFrameSelectorOpen(true)}
+                    selectedFrame={selectedFrame}
+                    isCropping={isCropping}
+                    setIsCropping={setIsCropping}
+                    isRegenerateDisabled={!selectedStyle}
+                />
+            </div>
 
 
-                {/* Mobile View: Caption Step */}
-                <div className={`flex-1 flex flex-col h-full overflow-hidden pb-24 ${mobileStep === 'caption' ? 'block md:hidden' : 'hidden'}`}>
+            {/* Mobile View: Caption Step */}
+            <div className={`flex-1 flex flex-col h-full overflow-hidden pb-24 ${mobileStep === 'caption' ? 'block md:hidden' : 'hidden'}`}>
 
-                    {!isMobileCaptionExpanded && (
-                        <div className="flex items-center justify-center p-6 pb-2 transition-all duration-300">
-                            {(editedImage || uploadedImage) && (
-                                <div className="w-[90%] aspect-square rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-md shrink-0 bg-gray-100">
-                                    <img
-                                        src={editedImage || uploadedImage || ''}
-                                        alt="Preview"
-                                        className="w-full h-full object-contain"
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    <CopywritingAssistant
-                        instanceId="mobile-caption"
-                        generatedCaption={generatedCaption}
-                        onCaptionChange={setGeneratedCaption}
-                        captionPrompt={captionPrompt}
-                        onCaptionPromptChange={setCaptionPrompt}
-                        isGenerating={isGeneratingCaption}
-                        onGenerate={handleGenerateCaption}
-                        disabled={(!uploadedImage && !editedImage) || isProcessing}
-                        onToggleExpand={() => setIsMobileCaptionExpanded(!isMobileCaptionExpanded)}
-                        isExpanded={isMobileCaptionExpanded}
-                    />
-                </div>
-
-                {/* Mobile View: Publish Step */}
-                <div className={`flex-1 p-6 pb-32 overflow-y-auto ${mobileStep === 'publish' ? 'block md:hidden' : 'hidden'}`}>
-                    <h2 className="text-xl font-bold mb-4">發佈與匯出</h2>
-                    {/* Preview Image with Frame */}
-                    {(editedImage || uploadedImage) && (
-                        <div className="mb-6 w-full aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
-                            <img src={editedImage || uploadedImage || ''} className="w-full h-full object-contain" />
-                            {/* Frame Overlay */}
-                            {selectedFrame && selectedFrame.id !== 'none' && (
+                {!isMobileCaptionExpanded && (
+                    <div className="flex items-center justify-center p-6 pb-2 transition-all duration-300">
+                        {(editedImage || uploadedImage) && (
+                            <div className="w-[90%] aspect-square rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-md shrink-0 bg-gray-100">
                                 <img
-                                    src={selectedFrame.url}
-                                    alt="Frame"
-                                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                                    src={editedImage || uploadedImage || ''}
+                                    alt="Preview"
+                                    className="w-full h-full object-contain"
                                 />
-                            )}
-                        </div>
-                    )}
-                    <ExportControls
-                        onDownload={handleDownload}
-                        onPublishInstagram={handlePublish}
-                        onPublishProduct={handlePublishProduct}
-                        disabled={(!editedImage && !uploadedImage) || isProcessing}
-                    />
-                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                {/* Right Panel - Action Panel (Desktop Only) */}
-                <div className={`hidden md:flex bg-white dark:bg-[#2d2d2d] border-l border-gray-200 dark:border-gray-700 flex-col h-full z-10 transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-[280px]'
-                    }`}>
-                    {isRightPanelCollapsed ? (
-                        // Collapsed state - show only toggle button
-                        <div className="h-full flex items-start justify-center pt-6">
+                <CopywritingAssistant
+                    instanceId="mobile-caption"
+                    generatedCaption={generatedCaption}
+                    onCaptionChange={setGeneratedCaption}
+                    captionPrompt={captionPrompt}
+                    onCaptionPromptChange={setCaptionPrompt}
+                    isGenerating={isGeneratingCaption}
+                    onGenerate={handleGenerateCaption}
+                    disabled={(!uploadedImage && !editedImage) || isProcessing}
+                    onToggleExpand={() => setIsMobileCaptionExpanded(!isMobileCaptionExpanded)}
+                    isExpanded={isMobileCaptionExpanded}
+                />
+            </div>
+
+            {/* Mobile View: Publish Step */}
+            <div className={`flex-1 p-6 pb-32 overflow-y-auto ${mobileStep === 'publish' ? 'block md:hidden' : 'hidden'}`}>
+                <h2 className="text-xl font-bold mb-4">發佈與匯出</h2>
+                {/* Preview Image with Frame */}
+                {(editedImage || uploadedImage) && (
+                    <div className="mb-6 w-full aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
+                        <img src={editedImage || uploadedImage || ''} className="w-full h-full object-contain" />
+                        {/* Frame Overlay */}
+                        {selectedFrame && selectedFrame.id !== 'none' && (
+                            <img
+                                src={selectedFrame.url}
+                                alt="Frame"
+                                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                            />
+                        )}
+                    </div>
+                )}
+                <ExportControls
+                    onDownload={handleDownload}
+                    onPublishInstagram={handlePublish}
+                    onPublishProduct={handlePublishProduct}
+                    disabled={(!editedImage && !uploadedImage) || isProcessing}
+                />
+            </div>
+
+            {/* Right Panel - Action Panel (Desktop Only) */}
+            <div className={`hidden md:flex bg-white dark:bg-[#2d2d2d] border-l border-gray-200 dark:border-gray-700 flex-col h-full z-10 transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-[280px]'
+                }`}>
+                {isRightPanelCollapsed ? (
+                    // Collapsed state - show only toggle button
+                    <div className="h-full flex items-start justify-center pt-6">
+                        <button
+                            type="button"
+                            onClick={() => setIsRightPanelCollapsed(false)}
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
+                            aria-label="展開操作面板"
+                            title="展開"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                    </div>
+                ) : (
+                    // Expanded state - show full content with collapse button
+                    <div className="p-6 flex-1 overflow-y-auto flex flex-col custom-scrollbar relative">
+                        <div className="flex items-center justify-between mb-6">
                             <button
                                 type="button"
-                                onClick={() => setIsRightPanelCollapsed(false)}
-                                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors"
-                                aria-label="展開操作面板"
-                                title="展開"
+                                onClick={() => setIsRightPanelCollapsed(true)}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+                                aria-label="收折操作面板"
+                                title="收折"
                             >
-                                <ChevronLeft size={20} />
+                                <ChevronRight size={16} />
                             </button>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex-1 text-center">
+                                操作面板
+                            </h2>
+                            <div className="w-8"></div> {/* Spacer for balance */}
                         </div>
-                    ) : (
-                        // Expanded state - show full content with collapse button
-                        <div className="p-6 flex-1 overflow-y-auto flex flex-col custom-scrollbar relative">
-                            <div className="flex items-center justify-between mb-6">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsRightPanelCollapsed(true)}
-                                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
-                                    aria-label="收折操作面板"
-                                    title="收折"
-                                >
-                                    <ChevronRight size={16} />
-                                </button>
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex-1 text-center">
-                                    操作面板
-                                </h2>
-                                <div className="w-8"></div> {/* Spacer for balance */}
-                            </div>
 
-                            <CopywritingAssistant
-                                instanceId="desktop-caption"
-                                generatedCaption={generatedCaption}
-                                onCaptionChange={setGeneratedCaption}
-                                captionPrompt={captionPrompt}
-                                onCaptionPromptChange={setCaptionPrompt}
-                                isGenerating={isGeneratingCaption}
-                                onGenerate={handleGenerateCaption}
-                                // Allow generating caption even if only uploaded image exists
-                                disabled={(!uploadedImage && !editedImage) || isProcessing}
+                        <CopywritingAssistant
+                            instanceId="desktop-caption"
+                            generatedCaption={generatedCaption}
+                            onCaptionChange={setGeneratedCaption}
+                            captionPrompt={captionPrompt}
+                            onCaptionPromptChange={setCaptionPrompt}
+                            isGenerating={isGeneratingCaption}
+                            onGenerate={handleGenerateCaption}
+                            // Allow generating caption even if only uploaded image exists
+                            disabled={(!uploadedImage && !editedImage) || isProcessing}
+                        />
+
+                        <div className="mt-auto pt-6">
+                            <ExportControls
+                                onDownload={handleDownload}
+                                onPublishInstagram={handlePublish}
+                                onPublishProduct={handlePublishProduct}
+                                // Allow publish if ANY image exists
+                                disabled={(!editedImage && !uploadedImage) || isProcessing}
                             />
-
-                            <div className="mt-auto pt-6">
-                                <ExportControls
-                                    onDownload={handleDownload}
-                                    onPublishInstagram={handlePublish}
-                                    onPublishProduct={handlePublishProduct}
-                                    // Allow publish if ANY image exists
-                                    disabled={(!editedImage && !uploadedImage) || isProcessing}
-                                />
-                            </div>
                         </div>
-                    )}
-                </div>
-
-                {/* Mobile Components */}
-                <MobileBottomSheet
-                    isOpen={isMobileSheetOpen}
-                    onClose={() => setIsMobileSheetOpen(false)}
-                    title="編輯設定"
-                >
-                    <StylePresetGrid
-                        selectedStyle={selectedStyle}
-                        onSelectStyle={(s) => {
-                            handleStyleSelect(s);
-                            setIsMobileSheetOpen(false); // Close sheet after selection for auto-generation
-                        }}
-                        customStyles={customStyles}
-                        onAddCustomStyle={() => {
-                            setIsCustomStyleModalOpen(true);
-                            setIsMobileSheetOpen(false); // Close bottom sheet
-                        }}
-                        onEditCustomStyle={(style) => {
-                            setEditingStyle(style);
-                            setIsCustomStyleModalOpen(true);
-                            setIsMobileSheetOpen(false); // Close bottom sheet
-                        }}
-                        onDeleteCustomStyle={handleDeleteCustomStyle}
-                        disabled={isProcessing}
-                    />
-                </MobileBottomSheet>
-
-                <MobileWizardNav
-                    step={mobileStep}
-
-                    onBack={mobileStep !== 'edit' ? handleMobileBack : undefined}
-                    canGoNext={canGoNext()}
-                    nextLabel={mobileStep === 'publish' ? '完成' : undefined}
-                    isProcessing={isProcessing}
-                    // Disable next button if cropping
-                    onNext={() => {
-                        if (isCropping) {
-                            toast.warning('請先完成或取消裁切');
-                            return;
-                        }
-                        handleMobileNext();
-                    }}
-                />
-                {/* Close Main Content Area */}
+                    </div>
+                )}
             </div>
+
+            {/* Mobile Components */}
+            <MobileBottomSheet
+                isOpen={isMobileSheetOpen}
+                onClose={() => setIsMobileSheetOpen(false)}
+                title="編輯設定"
+            >
+                <StylePresetGrid
+                    selectedStyle={selectedStyle}
+                    onSelectStyle={(s) => {
+                        handleStyleSelect(s);
+                        setIsMobileSheetOpen(false); // Close sheet after selection for auto-generation
+                    }}
+                    customStyles={customStyles}
+                    onAddCustomStyle={() => {
+                        setIsCustomStyleModalOpen(true);
+                        setIsMobileSheetOpen(false); // Close bottom sheet
+                    }}
+                    onEditCustomStyle={(style) => {
+                        setEditingStyle(style);
+                        setIsCustomStyleModalOpen(true);
+                        setIsMobileSheetOpen(false); // Close bottom sheet
+                    }}
+                    onDeleteCustomStyle={handleDeleteCustomStyle}
+                    disabled={isProcessing}
+                />
+            </MobileBottomSheet>
+
+            <MobileWizardNav
+                step={mobileStep}
+
+                onBack={mobileStep !== 'edit' ? handleMobileBack : undefined}
+                canGoNext={canGoNext()}
+                nextLabel={mobileStep === 'publish' ? '完成' : undefined}
+                isProcessing={isProcessing}
+                // Disable next button if cropping
+                onNext={() => {
+                    if (isCropping) {
+                        toast.warning('請先完成或取消裁切');
+                        return;
+                    }
+                    handleMobileNext();
+                }}
+            />
+            {/* Close Main Content Area */}
 
             {/* Frame Selection Modal */}
             <FrameSelector
@@ -1021,6 +981,6 @@ export default function EditorPage() {
                     }
                 }}
             />
-        </div>
+        </EditorLayout >
     );
 }
