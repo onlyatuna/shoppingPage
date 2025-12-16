@@ -331,7 +331,7 @@ export default function ImageCanvas({
                         onWheel={(e) => {
                             e.preventDefault();
                             const delta = -e.deltaY;
-                            const newScale = Math.min(Math.max(1, cropScale + delta * 0.001), 3);
+                            const newScale = Math.min(Math.max(0.5, cropScale + delta * 0.001), 3);
                             setCropScale(newScale);
                         }}
                     >
