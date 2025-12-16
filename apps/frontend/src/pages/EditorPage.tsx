@@ -721,7 +721,7 @@ export default function EditorPage() {
             />
 
             {/* Left Panel - Control Panel (Desktop Only) */}
-            <div className={`hidden md:block bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-[280px]'
+            <div className={`hidden md:block bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-80'
                 }`}>
                 {isLeftPanelCollapsed ? (
                     // Collapsed state - show only toggle button
