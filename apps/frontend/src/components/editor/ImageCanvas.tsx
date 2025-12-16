@@ -323,11 +323,6 @@ export default function ImageCanvas({
                     {/* Constrained wrapper for ReactCrop to prevent overflow */}
                     <div
                         className="max-w-full max-h-full flex items-center justify-center"
-                        style={{
-                            transform: `scale(${cropScale})`,
-                            transformOrigin: 'center',
-                            transition: 'transform 0.1s ease-out'
-                        }}
                         onWheel={(e) => {
                             e.preventDefault();
                             const delta = -e.deltaY;
@@ -351,14 +346,17 @@ export default function ImageCanvas({
                             <img
                                 ref={imgRef}
                                 src={editedImage || originalImage || ''}
-                                // 關鍵：強制圖片適應容器，絕不溢出
+                                // 關鍵：將縮放應用在圖片本身，而非外層容器
                                 style={{
                                     display: 'block',
                                     maxWidth: '100%',
                                     maxHeight: '100%',
                                     width: 'auto',
                                     height: 'auto',
-                                    objectFit: 'contain'
+                                    objectFit: 'contain',
+                                    transform: `scale(${cropScale})`,
+                                    transformOrigin: 'center',
+                                    transition: 'transform 0.1s ease-out'
                                 }}
                                 alt="Crop target"
                                 onLoad={(e) => {
