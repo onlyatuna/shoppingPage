@@ -252,25 +252,25 @@ Shot with 100mm macro lens, f/2.8 aperture for shallow depth of field, ISO 100. 
             
 用戶想要創建一個名為「${styleName}」的自定義風格，描述是：「${styleDescription}」。
 
-請生成一個詳細的英文提示詞，用於 AI 圖片編輯工具（如 Gemini 2.5 Flash Image）來為商品照片創建這種風格的背景和場景。
+請生成一個詳細的**繁體中文**提示詞，用於 AI 圖片編輯工具（如 Gemini 2.5 Flash Image）來為商品照片創建這種風格的背景和場景。
 
 **要求：**
-1. **語言**：完全使用英文撰寫
+1. **語言**：完全使用繁體中文（台灣用語）撰寫
 2. **結構**：包含以下部分
-   - 場景描述 (Scene Description)：詳細描述場景、氛圍
-   - 背景元素 (Background Elements)：具體的背景元素、材質、顏色
-   - 光線效果 (Lighting)：光線類型、方向、強度、色溫
-   - 構圖 (Composition)：如何擺放商品、視角
-   - 技術細節 (Technical)：相機設定、鏡頭、光圈等專業參數
+   - 場景描述：詳細描述場景環境、氛圍、情境
+   - 背景元素：具體的背景物件、材質、色彩搭配
+   - 光線效果：光線類型（自然光/人工光）、方向、強度、色溫
+   - 構圖方式：商品擺放位置、拍攝角度、視角
+   - 技術細節：相機參數、鏡頭規格、光圈設定、ISO等攝影術語
 3. **長度**：至少 150 字，但不超過 300 字
-4. **專業性**：使用攝影專業術語，具體且詳細
-5. **格式**：純文字，不要有 Markdown 格式或標題符號
+4. **專業性**：使用攝影專業術語（繁體中文），具體且詳細
+5. **格式**：純文字段落，不要有標題或項目符號
 
 **例子風格**：
 如果風格是「極簡白色」，描述是「純淨、高級」，提示詞可能是：
-"Place the product on a pristine white marble surface with subtle veining. Create a minimalist, clean environment with soft diffused lighting from above and slightly to the side. Use a pure white or very light gray gradient background that fades smoothly. Add subtle contact shadows beneath the product to ground it realistically. Maintain a bright, airy atmosphere with high key lighting. Shot with 85mm lens, f/2.8 aperture for slight background blur, ISO 100 for minimal noise. 8k resolution, ultra-sharp focus on product details, perfectly centered composition with ample negative space."
+"將商品放置在純白大理石檯面上，表面有細緻的天然紋理。營造極簡、乾淨的拍攝環境，使用柔和的擴散光線從上方及側面打光。背景採用純白色或極淺灰色漸層，平滑過渡。在商品底部添加細緻的接觸陰影，使其自然接地。保持明亮、通透的氛圍，使用高調光線。拍攝參數：85mm 鏡頭，f/2.8 光圈營造輕微背景模糊，ISO 100 確保最低雜訊。8k 解析度，商品細節超清晰對焦，構圖置中並保留充足留白空間。"
 
-現在請為「${styleName}」風格生成提示詞：`;
+現在請為「${styleName}」風格生成繁體中文提示詞：`;
 
             const result = await model.generateContent(prompt);
             const response = await result.response;
