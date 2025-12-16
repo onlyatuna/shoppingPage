@@ -287,7 +287,7 @@ export default function ImageCanvas({
     }
 
     return (
-        <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
+        <div className="relative w-full h-full flex items-center justify-center p-4 md:p-6">
             {/* Canvas Container - Uses flex to fill available space */}
             <div
                 ref={canvasRef}
