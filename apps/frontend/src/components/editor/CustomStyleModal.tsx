@@ -112,7 +112,7 @@ export default function CustomStyleModal({ isOpen, onClose, onSave, initialStyle
 
         setIsGeneratingPrompt(true);
         try {
-            const response = await fetch('/api/v1/ai/generate-custom-style-prompt', {
+            const response = await fetch('/api/v1/gemini/generate-custom-style-prompt', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
