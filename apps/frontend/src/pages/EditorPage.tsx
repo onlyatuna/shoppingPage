@@ -863,8 +863,8 @@ export default function EditorPage() {
                 />
             </div>
 
-            {/* Right Panel - Action Panel (Desktop Only) */}
-            <div className={`hidden md:flex bg-white dark:bg-[#2d2d2d] border-l border-gray-200 dark:border-gray-700 flex-col h-full z-10 transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-[280px]'
+            {/* Right Panel (Desktop Only) - Action Panel */}
+            <div className={`hidden md:flex md:flex-col w-96 h-full border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] overflow-hidden transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-96'
                 }`}>
                 {isRightPanelCollapsed ? (
                     // Collapsed state - show only toggle button
