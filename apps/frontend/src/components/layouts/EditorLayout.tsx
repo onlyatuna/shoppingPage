@@ -29,15 +29,15 @@ export default function EditorLayout({ children, hasUnsavedChanges = false }: Ed
         <div className="h-[100dvh] w-full grid grid-rows-[auto_1fr] bg-gray-50 dark:bg-[#1e1e1e] transition-colors overflow-hidden">
 
             {/* Header: 位於 Grid 第一列 */}
-            <header className="h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] z-50 relative">
+            <header className="h-14 tablet-portrait:h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] z-50 relative">
                 <div className="flex items-center gap-4">
                     <button
                         type="button"
                         onClick={handleBack}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
+                        className="p-2 tablet-portrait:p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
                         aria-label="Go back"
                     >
-                        <ArrowLeft size={20} />
+                        <ArrowLeft size={20} className="tablet-portrait:w-6 tablet-portrait:h-6" />
                     </button>
                 </div>
 
@@ -45,10 +45,10 @@ export default function EditorLayout({ children, hasUnsavedChanges = false }: Ed
                     <button
                         type="button"
                         onClick={toggleTheme}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
+                        className="p-2 tablet-portrait:p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
                         aria-label="Toggle theme"
                     >
-                        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                        {theme === 'light' ? <Moon size={20} className="tablet-portrait:w-6 tablet-portrait:h-6" /> : <Sun size={20} className="tablet-portrait:w-6 tablet-portrait:h-6" />}
                     </button>
                 </div>
             </header>

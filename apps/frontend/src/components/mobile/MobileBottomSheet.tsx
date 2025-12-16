@@ -63,7 +63,7 @@ export default function MobileBottomSheet({ isOpen, onClose, title, children }: 
 
     return (
         <div
-            className={`fixed inset-0 z-50 flex items-end justify-center sm:hidden ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'
+            className={`fixed inset-0 z-50 flex items-end justify-center landscape:hidden ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'
                 }`}
         >
             {/* Backdrop */}

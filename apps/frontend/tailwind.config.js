@@ -6,6 +6,10 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      screens: {
+        'landscape': { 'raw': '(orientation: landscape)' },
+        'tablet-portrait': { 'raw': '(min-width: 640px) and (orientation: portrait)' },
+      },
       colors: {
         'vintage-navy': '#1A2B42', // Mt. Fuji Navy
         'brand-dark': '#1A2B42',   // Mt. Fuji Navy

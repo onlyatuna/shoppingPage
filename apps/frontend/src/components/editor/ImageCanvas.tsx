@@ -228,13 +228,13 @@ export default function ImageCanvas({
     // Upload UI (when no image uploaded yet)
     if (!originalImage) {
         return (
-            <div className="w-full h-full relative flex items-center justify-center p-4 md:p-8">
+            <div className="w-full h-full relative flex items-center justify-center p-4 landscape:p-8">
                 {/* Centered upload container */}
                 <div className="flex items-center justify-center w-full h-full">
                     <div
                         {...getRootProps()}
                         className={`
-                            flex flex-col items-center justify-center gap-4 p-8 md:p-12
+                            flex flex-col items-center justify-center gap-4 p-8 landscape:p-12
                             border-2 border-dashed rounded-2xl cursor-pointer
                             transition-all duration-200
                             ${isDragActive
@@ -244,7 +244,7 @@ export default function ImageCanvas({
                             max-w-md w-full
                         `}
                     >
-                        <input {...getInputProps()} />
+                        <input {...getInputProps()} capture="environment" />
                         <Upload size={48} className={isDragActive ? 'text-blue-500' : 'text-gray-400'} />
                         <div className="text-center">
                             <p className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -278,7 +278,7 @@ export default function ImageCanvas({
 
     return (
         // 1. 最外層容器：負責 Padding 與邊界 (不參與動畫)
-        <div className="w-full h-full relative flex items-center justify-center p-4 md:p-8">
+        <div className="w-full h-full relative flex items-center justify-center p-4 landscape:p-8">
 
             {/* ================================================================================== */}
             {/* 模式 A: 裁切模式 (Cropping Mode) */}
@@ -430,8 +430,8 @@ export default function ImageCanvas({
                 <FloatingToolbar
                     className={`
                         transition-opacity duration-300 ease-in-out
-                        ${!isHoveringCanvas && !isHoveringToolbar ? 'md:opacity-0 md:pointer-events-none' :
-                            isHoveringToolbar ? 'md:opacity-100' : 'md:opacity-40'
+                        ${!isHoveringCanvas && !isHoveringToolbar ? 'landscape:opacity-0 landscape:pointer-events-none' :
+                            isHoveringToolbar ? 'landscape:opacity-100' : 'landscape:opacity-40'
                         }
                     `}
                     onMouseEnter={() => setIsHoveringToolbar(true)}
@@ -460,8 +460,8 @@ export default function ImageCanvas({
                         取消
                     </button>
                     <div className="w-px h-4 bg-white/20"></div>
-                    <span className="text-white/50 text-xs font-medium whitespace-nowrap hidden md:block">拖曳以裁切</span>
-                    <div className="w-px h-4 bg-white/20 hidden md:block"></div>
+                    <span className="text-white/50 text-xs font-medium whitespace-nowrap hidden landscape:block">拖曳以裁切</span>
+                    <div className="w-px h-4 bg-white/20 hidden landscape:block"></div>
                     <button
                         onClick={handleSaveCrop}
                         className="text-white hover:text-blue-400 flex items-center gap-2 text-sm font-bold transition-colors"

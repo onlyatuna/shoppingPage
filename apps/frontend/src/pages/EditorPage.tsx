@@ -721,7 +721,7 @@ export default function EditorPage() {
             />
 
             {/* Left Panel - Control Panel (Desktop Only) */}
-            <div className={`hidden md:block flex-shrink-0 bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-96'
+            <div className={`hidden landscape:block flex-shrink-0 bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-96'
                 }`}>
                 {isLeftPanelCollapsed ? (
                     // Collapsed state - show only toggle button
@@ -772,7 +772,7 @@ export default function EditorPage() {
                 style={{ height: canvasHeight }}
                 className={`
                     w-full relative bg-gray-50 dark:bg-[#121212] overflow-hidden
-                    ${mobileStep !== 'edit' ? 'hidden md:block' : 'block'}
+                    ${mobileStep !== 'edit' ? 'hidden landscape:block' : 'block'}
                 `}
             >
 
@@ -796,11 +796,11 @@ export default function EditorPage() {
                     type="button"
                     onClick={() => setIsMobileSheetOpen(true)}
                     disabled={!uploadedImage}
-                    className={`md:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm transition-all
+                    className={`landscape:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 tablet-portrait:px-6 tablet-portrait:py-3 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm tablet-portrait:text-base transition-all
                             ${!uploadedImage ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95'}
                         `}
                 >
-                    <Sparkles size={16} className="text-blue-500" />
+                    <Sparkles size={16} className="text-blue-500 tablet-portrait:w-5 tablet-portrait:h-5" />
                     <span>風格</span>
                 </button>
             </div>
@@ -808,7 +808,7 @@ export default function EditorPage() {
 
 
             {/* Mobile View: Caption Step */}
-            <div className={`flex-1 flex flex-col h-full overflow-hidden pb-24 ${mobileStep === 'caption' ? 'block md:hidden' : 'hidden'}`}>
+            <div className={`flex-1 flex flex-col h-full overflow-hidden pb-24 ${mobileStep === 'caption' ? 'block landscape:hidden' : 'hidden'}`}>
 
                 {!isMobileCaptionExpanded && (
                     <div className="flex items-center justify-center p-6 pb-2 transition-all duration-300">
@@ -839,7 +839,7 @@ export default function EditorPage() {
             </div>
 
             {/* Mobile View: Publish Step */}
-            <div className={`flex-1 p-6 pb-32 overflow-y-auto ${mobileStep === 'publish' ? 'block md:hidden' : 'hidden'}`}>
+            <div className={`flex-1 p-6 pb-32 overflow-y-auto ${mobileStep === 'publish' ? 'block landscape:hidden' : 'hidden'}`}>
                 <h2 className="text-xl font-bold mb-4">發佈與匯出</h2>
                 {/* Preview Image with Frame */}
                 {(editedImage || uploadedImage) && (
@@ -864,7 +864,7 @@ export default function EditorPage() {
             </div>
 
             {/* Right Panel (Desktop Only) - Action Panel */}
-            <div className={`hidden md:flex md:flex-col flex-shrink-0 h-full border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] overflow-hidden transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-96'
+            <div className={`hidden landscape:flex landscape:flex-col flex-shrink-0 h-full border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] overflow-hidden transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-96'
                 }`}>
                 {isRightPanelCollapsed ? (
                     // Collapsed state - show only toggle button

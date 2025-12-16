@@ -30,13 +30,13 @@ export default function FloatingToolbar({
     return (
         <div
             className={`
-                fixed md:absolute 
-                bottom-32 md:bottom-8 
+                fixed landscape:absolute 
+                bottom-32 landscape:bottom-8 tablet-portrait:bottom-36 
                 left-1/2 -translate-x-1/2 
-                flex items-center gap-2 
+                flex items-center gap-2 tablet-portrait:gap-3 
                 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md 
-                p-2 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 
-                transition-all md:hover:scale-105 z-20
+                p-2 tablet-portrait:p-3 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 
+                transition-all landscape:hover:scale-105 z-20
                 ${className || ''}
             `}
             onMouseEnter={onMouseEnter}
