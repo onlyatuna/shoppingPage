@@ -147,7 +147,6 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                                     <span className="text-sm font-bold">{customStyle.name}</span>
                                     <IconComponent size={16} />
                                 </div>
-                                <p className="text-xs font-medium opacity-80">{customStyle.engName}</p>
                                 <p className="text-[10px] mt-1 opacity-70 leading-tight">
                                     {customStyle.desc}
                                 </p>
