@@ -53,7 +53,7 @@ export const presets = [
         icon: PartyPopper,
         color: 'bg-red-50 text-red-800',
         borderColor: 'border-red-200 hover:border-red-400',
-        prompt: 'Place the product in a festive setting. Background features soft, out-of-focus warm fairy lights and colorful holiday decorations (but not overwhelming). Warm color palette (red, gold, orange). Joyful, inviting, celebration atmosphere. Perfect for a holiday sale poster.'
+        prompt: 'Place the product in a festive setting. Background features soft, out-of-focus warm fairy lights and colorful holiday decorations (but not overwhelming). Warm color palette (red, gold, orange). Joyful, inviting, celebration atmosphere.'
     }
 ];
 
@@ -113,7 +113,7 @@ export default function StylePresetGrid({ selectedStyle, onSelectStyle, customSt
                             <span className="text-sm font-bold">{preset.name}</span>
                             <preset.icon size={16} />
                         </div>
-                        <p className="text-xs font-medium opacity-80">{preset.engName}</p>
+
                         <p className="text-[10px] mt-1 opacity-70 leading-tight">
                             {preset.desc}
                         </p>
