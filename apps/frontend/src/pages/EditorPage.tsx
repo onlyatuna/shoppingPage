@@ -55,6 +55,12 @@ export default function EditorPage() {
     const [isMobileCaptionExpanded, setIsMobileCaptionExpanded] = useState(false);
     const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
+    // Draggable style button state
+    const [styleButtonPosition, setStyleButtonPosition] = useState({ x: window.innerWidth - 120, y: 72 }); // y: 72 避免被 header 遮住
+    const [isDraggingStyleButton, setIsDraggingStyleButton] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const dragMoveDistance = useRef(0);
+
     // Panel collapse state
     const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
     const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
@@ -74,6 +80,92 @@ export default function EditorPage() {
         },
         onError: (err: any) => toast.error(err.response?.data?.message || '上架失敗')
     });
+
+    // Draggable style button logic
+    const handleStyleButtonDragStart = (e: React.TouchEvent | React.MouseEvent) => {
+        e.stopPropagation();
+        setIsDraggingStyleButton(true);
+        dragMoveDistance.current = 0;
+        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+        setDragStart({
+            x: clientX - styleButtonPosition.x,
+            y: clientY - styleButtonPosition.y
+        });
+    };
+
+    useEffect(() => {
+        if (!isDraggingStyleButton) return;
+
+        const handleMove = (e: TouchEvent | MouseEvent) => {
+            e.preventDefault();
+            const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+            const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+
+            const newX = clientX - dragStart.x;
+            const newY = clientY - dragStart.y;
+
+            // Calculate move distance for click detection
+            const moveDistance = Math.sqrt(
+                Math.pow(newX - styleButtonPosition.x, 2) +
+                Math.pow(newY - styleButtonPosition.y, 2)
+            );
+            dragMoveDistance.current = Math.max(dragMoveDistance.current, moveDistance);
+
+            // Boundary limits
+            const buttonWidth = 100;
+            const buttonHeight = 40;
+            const headerHeight = 64; // header 高度（平板 64px，手机 56px）
+            const maxX = window.innerWidth - buttonWidth;
+            const maxY = window.innerHeight - buttonHeight - 80; // Leave space for bottom nav
+
+            setStyleButtonPosition({
+                x: Math.max(0, Math.min(newX, maxX)),
+                y: Math.max(headerHeight, Math.min(newY, maxY)) // 最小 y 为 header 高度
+            });
+        };
+
+        const handleEnd = () => {
+            setIsDraggingStyleButton(false);
+            // Save position to localStorage
+            localStorage.setItem('styleButtonPosition', JSON.stringify(styleButtonPosition));
+        };
+
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchend', handleEnd);
+        window.addEventListener('mouseup', handleEnd);
+
+        return () => {
+            window.removeEventListener('touchmove', handleMove);
+            window.removeEventListener('mousemove', handleMove);
+            window.removeEventListener('touchend', handleEnd);
+            window.removeEventListener('mouseup', handleEnd);
+        };
+    }, [isDraggingStyleButton, dragStart, styleButtonPosition]);
+
+    // Load saved position on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('styleButtonPosition');
+        if (saved) {
+            try {
+                const position = JSON.parse(saved);
+                // Validate position is within current screen bounds
+                const buttonWidth = 100;
+                const buttonHeight = 40;
+                const headerHeight = 64;
+                const maxX = window.innerWidth - buttonWidth;
+                const maxY = window.innerHeight - buttonHeight - 80;
+
+                setStyleButtonPosition({
+                    x: Math.max(0, Math.min(position.x, maxX)),
+                    y: Math.max(headerHeight, Math.min(position.y, maxY)) // 确保不被 header 遮住
+                });
+            } catch (e) {
+                console.error('Failed to parse saved position');
+            }
+        }
+    }, []);
 
     // Reset zoom and pan on new upload
     useEffect(() => {
@@ -791,17 +883,27 @@ export default function EditorPage() {
                     isRegenerateDisabled={!selectedStyle}
                 />
 
-                {/* Mobile Style Change Button (保持絕對定位在右上角) */}
+                {/* Mobile Style Change Button (可拖動浮動按鈕) */}
                 <button
                     type="button"
-                    onClick={() => setIsMobileSheetOpen(true)}
-                    disabled={!uploadedImage}
-                    className={`landscape:hidden absolute top-4 right-4 flex items-center gap-2 px-4 py-2 tablet-portrait:px-6 tablet-portrait:py-3 bg-white dark:bg-[#2d2d2d] rounded-full shadow-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white font-medium z-30 text-sm tablet-portrait:text-base transition-all
-                            ${!uploadedImage ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95'}
-                        `}
+                    onTouchStart={handleStyleButtonDragStart}
+                    onMouseDown={handleStyleButtonDragStart}
+                    onClick={() => {
+                        // Only trigger click if not dragging (moved less than 5px)
+                        if (dragMoveDistance.current < 5) {
+                            setIsMobileSheetOpen(true);
+                        }
+                    }}
+                    style={{
+                        transform: `translate(${styleButtonPosition.x}px, ${styleButtonPosition.y}px) ${isDraggingStyleButton ? 'scale(1.1)' : 'scale(1)'}`,
+                        cursor: isDraggingStyleButton ? 'grabbing' : 'grab',
+                        opacity: isDraggingStyleButton ? 0.7 : 0.4,
+                        touchAction: 'none'
+                    }}
+                    className="landscape:hidden fixed top-0 left-0 flex items-center gap-2 px-4 py-4 tablet-portrait:px-6 tablet-portrait:py-3 bg-gradient-to-r from-blue-400 to-cyan-400 dark:from-blue-500 dark:to-cyan-500 rounded-full shadow-lg border border-blue-300 dark:border-blue-600 text-white font-medium z-30 text-sm tablet-portrait:text-base transition-opacity"
                 >
-                    <Sparkles size={16} className="text-blue-500 tablet-portrait:w-5 tablet-portrait:h-5" />
-                    <span>風格</span>
+                    <Sparkles size={16} className="tablet-portrait:w-5 tablet-portrait:h-5" />
+
                 </button>
             </div>
             {/* ========================================================= */}
