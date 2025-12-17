@@ -228,35 +228,35 @@ export default function ImageCanvas({
     // Upload UI (when no image uploaded yet)
     if (!originalImage) {
         return (
-            <div className="w-full h-full relative flex items-center justify-center p-4 landscape:p-8">
+            <div className="w-full h-full relative flex items-center justify-center p-4 tablet-portrait:p-8 landscape:p-8">
                 {/* Centered upload container */}
                 <div className="flex items-center justify-center w-full h-full">
                     <div
                         {...getRootProps()}
                         className={`
-                            flex flex-col items-center justify-center gap-4 p-8 landscape:p-12
-                            border-2 border-dashed rounded-2xl cursor-pointer
+                            flex flex-col items-center justify-center gap-4 tablet-portrait:gap-6 p-8 tablet-portrait:p-16 landscape:p-12
+                            border-2 tablet-portrait:border-4 border-dashed rounded-2xl tablet-portrait:rounded-3xl cursor-pointer
                             transition-all duration-200
                             ${isDragActive
                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/20 scale-105'
                                 : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                             }
-                            max-w-md w-full
+                            max-w-md tablet-portrait:max-w-xl w-full
                         `}
                     >
                         <input {...getInputProps()} />
-                        <Upload size={48} className={isDragActive ? 'text-blue-500' : 'text-gray-400'} />
+                        <Upload size={48} className={`tablet-portrait:w-20 tablet-portrait:h-20 ${isDragActive ? 'text-blue-500' : 'text-gray-400'}`} />
                         <div className="text-center">
-                            <p className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-1">
+                            <p className="text-lg tablet-portrait:text-2xl font-medium text-gray-700 dark:text-gray-200 mb-1 tablet-portrait:mb-2">
                                 {isDragActive ? '放開以已上傳' : '拖曳圖片至此'}
                             </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm tablet-portrait:text-lg text-gray-500 dark:text-gray-400">
                                 或點擊選擇檔案
                             </p>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-400">
+                        <div className="flex items-center gap-2 tablet-portrait:gap-3 text-gray-400 w-full">
                             <div className="h-px flex-1 bg-gray-300 dark:bg-gray-600"></div>
-                            <span className="text-xs">或</span>
+                            <span className="text-xs tablet-portrait:text-sm">或</span>
                             <div className="h-px flex-1 bg-gray-300 dark:bg-gray-600"></div>
                         </div>
                         <button
@@ -265,9 +265,9 @@ export default function ImageCanvas({
                                 e.stopPropagation();
                                 onOpenLibrary();
                             }}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 tablet-portrait:px-6 py-2 tablet-portrait:py-3 text-sm tablet-portrait:text-base font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded-lg tablet-portrait:rounded-xl transition-colors"
                         >
-                            <Cloud size={18} />
+                            <Cloud size={18} className="tablet-portrait:w-6 tablet-portrait:h-6" />
                             從雲端圖庫選擇
                         </button>
                     </div>
