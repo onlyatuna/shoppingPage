@@ -112,10 +112,11 @@ export default function EditorPage() {
             );
             dragMoveDistance.current = Math.max(dragMoveDistance.current, moveDistance);
 
-            // Boundary limits
-            const buttonWidth = 100;
-            const buttonHeight = 40;
-            const headerHeight = 64; // header 高度（平板 64px，手机 56px）
+            // Boundary limits (根据屏幕尺寸动态调整)
+            const isTabletPortrait = window.innerWidth >= 640;
+            const buttonWidth = isTabletPortrait ? 80 : 50;  // 平板更大
+            const buttonHeight = isTabletPortrait ? 80 : 50; // 平板更大
+            const headerHeight = isTabletPortrait ? 80 : 56; // 平板 header 80px (h-20), 手机 56px (h-14)
             const maxX = window.innerWidth - buttonWidth;
             const maxY = window.innerHeight - buttonHeight - 80; // Leave space for bottom nav
 
@@ -150,10 +151,11 @@ export default function EditorPage() {
         if (saved) {
             try {
                 const position = JSON.parse(saved);
-                // Validate position is within current screen bounds
-                const buttonWidth = 100;
-                const buttonHeight = 40;
-                const headerHeight = 64;
+                // Validate position is within current screen bounds (根据屏幕尺寸动态调整)
+                const isTabletPortrait = window.innerWidth >= 640;
+                const buttonWidth = isTabletPortrait ? 80 : 50;  // 平板更大
+                const buttonHeight = isTabletPortrait ? 80 : 50; // 平板更大
+                const headerHeight = isTabletPortrait ? 80 : 56; // 平板 header 80px (h-20), 手机 56px (h-14)
                 const maxX = window.innerWidth - buttonWidth;
                 const maxY = window.innerHeight - buttonHeight - 80;
 
@@ -900,9 +902,9 @@ export default function EditorPage() {
                         opacity: isDraggingStyleButton ? 0.7 : 0.4,
                         touchAction: 'none'
                     }}
-                    className="landscape:hidden fixed top-0 left-0 flex items-center gap-2 px-4 py-4 tablet-portrait:px-6 tablet-portrait:py-3 bg-gradient-to-r from-blue-400 to-cyan-400 dark:from-blue-500 dark:to-cyan-500 rounded-full shadow-lg border border-blue-300 dark:border-blue-600 text-white font-medium z-30 text-sm tablet-portrait:text-base transition-opacity"
+                    className="landscape:hidden fixed top-0 left-0 flex items-center gap-2 px-2 py-2 tablet-portrait:!px-8 tablet-portrait:!py-8 bg-gradient-to-r from-blue-400 to-cyan-400 dark:from-blue-500 dark:to-cyan-500 rounded-full shadow-lg border border-blue-300 dark:border-blue-600 text-white font-medium z-30 text-sm tablet-portrait:text-base transition-opacity"
                 >
-                    <Sparkles size={16} className="tablet-portrait:w-5 tablet-portrait:h-5" />
+                    <Sparkles className="w-4 h-4 tablet-portrait:!w-10 tablet-portrait:!h-10" />
 
                 </button>
             </div>
