@@ -451,7 +451,7 @@ export default function ImageCanvas({
 
             {/* Crop Controls */}
             {isCropping && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-4 bg-black/80 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl border border-white/10 pointer-events-auto w-max max-w-[90vw]">
+                <div className="absolute bottom-20 tablet-portrait:bottom-24 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-4 bg-black/80 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl border border-white/10 pointer-events-auto w-max max-w-[90vw]">
                     <button
                         onClick={() => setIsCropping(false)}
                         className="text-white/90 hover:text-white flex items-center gap-2 text-sm font-medium transition-colors"

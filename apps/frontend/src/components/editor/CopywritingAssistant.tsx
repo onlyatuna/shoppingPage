@@ -94,40 +94,44 @@ export default function CopywritingAssistant({
                         )}
                     </div>
 
-                    {/* Propmpt Section (Collapsible) - pushed to bottom of gray box */}
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shrink-0">
-                        <button
-                            type="button"
-                            onClick={() => setIsPromptExpanded(!isPromptExpanded)}
-                            className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
-                        >
-                            <div className="flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-300">
-                                <Lightbulb size={14} className="text-yellow-600" />
-                                💡 文案提示
-                            </div>
-                            {isPromptExpanded ? (
-                                <ChevronUp size={16} className="text-gray-500" />
-                            ) : (
-                                <ChevronDown size={16} className="text-gray-500" />
-                            )}
-                        </button>
 
-                        {isPromptExpanded && (
-                            <div className="px-3 py-3 bg-white dark:bg-[#1e1e1e] border-t border-gray-200 dark:border-gray-700">
-                                <input
-                                    type="text"
-                                    value={captionPrompt}
-                                    onChange={(e) => onCaptionPromptChange(e.target.value)}
-                                    placeholder="輸入文案提示"
-                                    className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-200"
-                                    disabled={isGenerating}
-                                />
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                    輸入具體要求，例：「適合 IG 貼文」、「輕鬆活潑的語氣」、「針對年輕族群」
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                    {/* Propmpt Section (Collapsible) - pushed to bottom of gray box */}
+                    {/* 只有在展开状态下才显示文案提示 */}
+                    {isExpanded && (
+                        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setIsPromptExpanded(!isPromptExpanded)}
+                                className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+                            >
+                                <div className="flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+                                    <Lightbulb size={14} className="text-yellow-600" />
+                                    💡 文案提示
+                                </div>
+                                {isPromptExpanded ? (
+                                    <ChevronUp size={16} className="text-gray-500" />
+                                ) : (
+                                    <ChevronDown size={16} className="text-gray-500" />
+                                )}
+                            </button>
+
+                            {isPromptExpanded && (
+                                <div className="px-3 py-3 bg-white dark:bg-[#1e1e1e] border-t border-gray-200 dark:border-gray-700">
+                                    <input
+                                        type="text"
+                                        value={captionPrompt}
+                                        onChange={(e) => onCaptionPromptChange(e.target.value)}
+                                        placeholder="輸入文案提示"
+                                        className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 dark:text-gray-200"
+                                        disabled={isGenerating}
+                                    />
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                        輸入具體要求，例：「適合 IG 貼文」、「輕鬆活潑的語氣」、「針對年輕族群」
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
