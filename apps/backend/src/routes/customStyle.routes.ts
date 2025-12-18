@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../utils/prisma'; // [FIXED] Use singleton
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { StatusCodes } from 'http-status-codes';
 
 const router = Router();
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient(); // [REMOVED]
 
 // Get user's custom styles
 router.get('/', authenticateToken, async (req: any, res) => {

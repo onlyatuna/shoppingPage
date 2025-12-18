@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion, PanInfo } from 'framer-motion';
+import { motion, PanInfo, useDragControls } from 'framer-motion';
 
 interface MobileBottomSheetProps {
     isOpen: boolean;
@@ -11,6 +11,7 @@ interface MobileBottomSheetProps {
 export default function MobileBottomSheet({ isOpen, onClose, title, children }: MobileBottomSheetProps) {
     const [render, setRender] = useState(isOpen);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const dragControls = useDragControls(); // [NEW] Drag Controls
 
     useEffect(() => {
         if (isOpen) {
@@ -85,13 +86,18 @@ export default function MobileBottomSheet({ isOpen, onClose, title, children }: 
                 }}
                 transition={{ type: "spring", damping: 30, stiffness: 300 }} // Snappy spring
                 drag="y"
+                dragControls={dragControls} // [NEW] Bind controls
+                dragListener={false} // [NEW] Disable default drag anywhere
                 dragConstraints={{ top: 0 }} // Hard stop at top, free drag down
                 dragElastic={0.05} // Minimal elasticity at top edge
                 dragMomentum={false} // Stop immediately on release for precise snap
                 onDragEnd={onDragEnd}
             >
                 {/* Handle Bar Area - Draggable */}
-                <div className="w-full flex justify-center pt-4 pb-2 cursor-grab active:cursor-grabbing touch-none">
+                <div
+                    className="w-full flex justify-center pt-4 pb-2 cursor-grab active:cursor-grabbing touch-none"
+                    onPointerDown={(e) => dragControls.start(e)} // [NEW] Start drag only here
+                >
                     <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
                 </div>
 
@@ -103,8 +109,7 @@ export default function MobileBottomSheet({ isOpen, onClose, title, children }: 
                 {/* Content */}
                 <div
                     className="flex-1 overflow-y-auto p-6 pb-safe"
-                    // Stop drag propagation on content to allow scrolling
-                    onPointerDown={(e) => e.stopPropagation()}
+                // Removed stopPropagation as dragListener is false, allowing standard scrolling
                 >
                     {children}
                 </div>

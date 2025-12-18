@@ -7,17 +7,26 @@ const router = Router();
 
 /**
  * POST /api/v1/gemini/edit-image
- * 編輯圖片 - 使用 Gemini 2.5 Flash Lite
- * 需要登入
+ * 編輯圖片 - 支援 AI Smart Blend (Inpainting)
+ * 接收: { imageBase64, maskBase64, prompt, systemInstruction }
  */
 router.post('/edit-image', authenticateToken, async (req: Request, res: Response) => {
+    let userId: number | undefined;
     try {
-        const { imageUrl, prompt, systemInstruction } = req.body;
+        // [MODIFIED] 支援 imageBase64 與 maskBase64
+        const { imageUrl, imageBase64, maskBase64, prompt, systemInstruction } = req.body;
+        userId = (req as any).user?.userId;
 
-        // 驗證輸入
-        if (!imageUrl || typeof imageUrl !== 'string') {
+        if (!userId) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({
+                message: '無法取得用戶資訊，請重新登入'
+            });
+        }
+
+        // 驗證: 至少要有一種圖片來源
+        if (!imageUrl && !imageBase64) {
             return res.status(StatusCodes.BAD_REQUEST).json({
-                message: '請提供有效的圖片 URL'
+                message: '請提供圖片 (URL 或 Base64)'
             });
         }
 
@@ -27,37 +36,59 @@ router.post('/edit-image', authenticateToken, async (req: Request, res: Response
             });
         }
 
-        if (prompt.length > 500) {
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                message: '編輯指令過長（最多 500 字元）'
+        // [NEW] 檢查 AI Blend 配額
+        const quota = await GeminiService.checkAndIncrementQuota(userId);
+
+        if (!quota.allowed) {
+            return res.status(StatusCodes.TOO_MANY_REQUESTS).json({
+                error: 'Daily AI Blend quota exceeded',
+                message: '您今日的 AI 融合次數已用完，明天再來吧！',
+                limit: quota.limit,
+                remaining: 0
             });
         }
 
         // 呼叫 Gemini Service 編輯圖片
+        // 優先使用 Base64 (前端 Canvas 合成結果)，其次使用 URL
+        const targetImage = imageBase64 || imageUrl;
+
         const editedImageBase64 = await GeminiService.editImage(
-            imageUrl,
+            targetImage,
+            maskBase64, // [NEW] 傳遞遮罩
             prompt,
-            systemInstruction
+            systemInstruction,
+            userId
         );
 
         res.json({
             status: 'success',
             data: {
                 imageBase64: editedImageBase64
+            },
+            quota: {
+                remaining: quota.remaining,
+                limit: quota.limit
             }
         });
 
     } catch (error: any) {
         console.error('Image Edit API Error:', error);
 
-        if (error.message?.includes('GEMINI_API_KEY')) {
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-                message: 'Gemini API 設定錯誤'
+        if (error.response?.promptFeedback?.blockReason) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: `安全過濾攔截: ${error.response.promptFeedback.blockReason}`,
+                error: 'SAFETY_FILTER',
+                quota: userId ? await GeminiService.getQuota(userId) : undefined
             });
         }
 
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: error.message || '圖片編輯失敗'
+        // 處理常見錯誤
+        const errorMessage = error.message || '圖片編輯失敗';
+        const statusCode = errorMessage.includes('API Key') ? StatusCodes.INTERNAL_SERVER_ERROR : StatusCodes.BAD_REQUEST;
+
+        res.status(statusCode).json({
+            message: errorMessage,
+            quota: userId ? await GeminiService.getQuota(userId) : undefined
         });
     }
 });
@@ -77,7 +108,8 @@ router.post('/caption', authenticateToken, async (req: Request, res: Response) =
             });
         }
 
-        const result = await GeminiService.generateCaption(imageUrl, additionalInfo);
+        const userId = (req as any).user?.userId;
+        const result = await GeminiService.generateCaption(imageUrl, additionalInfo, userId);
         res.json(result);
 
     } catch (error) {
@@ -111,7 +143,8 @@ router.post('/generate-custom-style-prompt', authenticateToken, async (req: Requ
         }
 
         // 呼叫 Gemini Service 生成提示詞
-        const prompt = await GeminiService.generateCustomStylePrompt(styleName, styleDescription);
+        const userId = (req as any).user?.userId;
+        const prompt = await GeminiService.generateCustomStylePrompt(styleName, styleDescription, userId);
 
         res.json({
             status: 'success',

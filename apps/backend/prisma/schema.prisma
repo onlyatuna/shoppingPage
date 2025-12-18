@@ -57,11 +57,18 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // AI Blend 配额管理
+  aiBlendUsageCount    Int      @default(0)
+  aiBlendLastResetDate DateTime @default(now())
+  isPremium            Boolean  @default(false) // VIP 用户标识
+
   cart         Cart?
   orders       Order[]
   addresses    Address[]
   customStyles CustomStyle[]
+  aiUsageLogs  AiUsageLog[]
 
+  @@index([aiBlendLastResetDate]) // 优化统计查询
   @@map("users")
 }
 
@@ -117,7 +124,7 @@ model Product {
   deletedAt DateTime?
 
   categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id], map: "products_categoryId_custom_fk")
+  category   Category @relation(fields: [categoryId], references: [id])
 
   cartItems  CartItem[]
   orderItems OrderItem[]
@@ -208,4 +215,23 @@ model CustomStyle {
 
   @@unique([userId, key]) // Ensure unique style key per user
   @@map("custom_styles")
+}
+
+model AiUsageLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  
+  action    String   // e.g., "BLEND", "EDIT", "CAPTION"
+  model     String   // e.g., "gemini-2.5-flash-lite"
+  
+  inputTokens  Int?
+  outputTokens Int?
+  cost         Decimal  @db.Decimal(10, 6) // Estimated cost in USD
+  
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("ai_usage_logs")
 }

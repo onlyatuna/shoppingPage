@@ -12,6 +12,8 @@ interface FloatingToolbarProps {
     className?: string;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    scale?: number;
+    onScaleChange?: (scale: number) => void;
 }
 
 export default function FloatingToolbar({
@@ -25,7 +27,9 @@ export default function FloatingToolbar({
     isRegenerateDisabled,
     className,
     onMouseEnter,
-    onMouseLeave
+    onMouseLeave,
+    scale,
+    onScaleChange
 }: FloatingToolbarProps) {
     return (
         <div
@@ -36,7 +40,7 @@ export default function FloatingToolbar({
                 flex items-center gap-2 tablet-portrait:gap-3 
                 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md 
                 p-2 tablet-portrait:p-3 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 
-                transition-all landscape:hover:scale-105 z-20
+                transition-all landscape:hover:scale-105 z-[50]
                 ${className || ''}
             `}
             onMouseEnter={onMouseEnter}
@@ -64,6 +68,37 @@ export default function FloatingToolbar({
             >
                 <Type size={20} />
             </button>
+
+            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
+
+            {/* Scale Control - Only show if onScaleChange is provided (Mockup Mode) */}
+            {onScaleChange && typeof scale === 'number' && (
+                <>
+                    <div className="group relative flex items-center justify-center">
+                        <button
+                            className="p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+                            title="調整大小"
+                        >
+                            <span className="text-xs font-bold">Size</span>
+                        </button>
+
+                        {/* Popup Slider */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 hidden group-hover:block transition-all opactiy-0 group-hover:opacity-100">
+                            <input
+                                type="range"
+                                min="0.1"
+                                max="2.0"
+                                step="0.05"
+                                value={scale}
+                                onChange={(e) => onScaleChange(parseFloat(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                            />
+                            <div className="text-center text-xs text-gray-500 mt-1">{Math.round(scale * 100)}%</div>
+                        </div>
+                    </div>
+                    <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
+                </>
+            )}
 
             <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
 

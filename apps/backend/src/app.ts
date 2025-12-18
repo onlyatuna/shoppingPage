@@ -19,6 +19,7 @@ import geminiRoutes from './routes/gemini.routes';
 import instagramRoutes from './routes/instagram.routes';
 import customStyleRoutes from './routes/customStyle.routes';
 import translateRoutes from './routes/translate.routes';
+import adminRoutes from './routes/admin.routes';
 import path from 'path';
 
 const app = express();
@@ -100,6 +101,7 @@ app.use(`${apiV1Prefix}/gemini`, geminiRoutes);
 app.use(`${apiV1Prefix}/instagram`, instagramRoutes);
 app.use(`${apiV1Prefix}/translate`, translateRoutes);
 app.use(`${apiV1Prefix}/custom-styles`, customStyleRoutes);
+app.use(`${apiV1Prefix}/admin`, adminRoutes);
 
 // 全域錯誤處理器
 app.use(errorHandler);

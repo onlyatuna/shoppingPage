@@ -102,22 +102,46 @@ export default function AuthPage() {
                             <div className="relative">
                                 <User className="absolute left-3 top-3 text-gray-400" size={18} />
                                 <input {...registerReg('name')} type="text" placeholder="姓名" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
-                                {regErrors.name && <p className="text-red-500 text-xs mt-1">{(regErrors.name as any).message}</p>}
+                                {regErrors.name && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {typeof regErrors.name?.message === 'string'
+                                            ? regErrors.name.message
+                                            : '姓名格式錯誤'}
+                                    </p>
+                                )}
                             </div>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
                                 <input {...registerReg('email')} type="email" placeholder="Email" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
-                                {regErrors.email && <p className="text-red-500 text-xs mt-1">{(regErrors.email as any).message}</p>}
+                                {regErrors.email && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {typeof regErrors.email?.message === 'string'
+                                            ? regErrors.email.message
+                                            : 'Email 格式錯誤'}
+                                    </p>
+                                )}
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                                 <input {...registerReg('password')} type="password" placeholder="密碼" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
-                                {regErrors.password && <p className="text-red-500 text-xs mt-1">{(regErrors.password as any).message}</p>}
+                                {regErrors.password && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {typeof regErrors.password?.message === 'string'
+                                            ? regErrors.password.message
+                                            : '密碼格式錯誤'}
+                                    </p>
+                                )}
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                                 <input {...registerReg('confirmPassword')} type="password" placeholder="確認密碼" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
-                                {regErrors.confirmPassword && <p className="text-red-500 text-xs mt-1">{(regErrors.confirmPassword as any).message}</p>}
+                                {regErrors.confirmPassword && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {typeof regErrors.confirmPassword?.message === 'string'
+                                            ? regErrors.confirmPassword.message
+                                            : '密碼不一致'}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -153,12 +177,24 @@ export default function AuthPage() {
                             <div className="relative">
                                 <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
                                 <input {...registerLogin('email')} type="email" placeholder="Email" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
-                                {loginErrors.email && <p className="text-red-500 text-xs mt-1">{(loginErrors.email as any).message}</p>}
+                                {loginErrors.email && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {typeof loginErrors.email?.message === 'string'
+                                            ? loginErrors.email.message
+                                            : 'Email 格式錯誤'}
+                                    </p>
+                                )}
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
                                 <input {...registerLogin('password')} type="password" placeholder="密碼" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
-                                {loginErrors.password && <p className="text-red-500 text-xs mt-1">{(loginErrors.password as any).message}</p>}
+                                {loginErrors.password && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {typeof loginErrors.password?.message === 'string'
+                                            ? loginErrors.password.message
+                                            : '密碼格式錯誤'}
+                                    </p>
+                                )}
                             </div>
                             <div className="text-right">
                                 <button

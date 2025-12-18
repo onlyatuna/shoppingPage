@@ -37,11 +37,18 @@ export default async function getCroppedImg(
 ): Promise<string | null> {
     const image = await createImage(imageSrc);
     const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', {
+        alpha: true,
+        willReadFrequently: false
+    });
 
     if (!ctx) {
         return null;
     }
+
+    // Enable high-quality image smoothing for anti-aliasing
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     const rotRad = getRadianAngle(rotation);
 
