@@ -1140,6 +1140,7 @@ export default function EditorPage() {
             setSelectedMockup(mockup);
             setSelectedFrame(null);
             setBeforeBlendImage(null); // [Reset]
+            setEditedImage(null); // [FIX] Clear previous AI result to prevent "Stuck State"
             setIsMobileSheetOpen(false);
         } finally {
             setIsMockupLoading(false);
@@ -1188,23 +1189,23 @@ export default function EditorPage() {
             if (isPrintable) {
                 const m = selectedMockup as PrintableMockup;
                 systemInstruction = `
-You are an expert product renderer.
-                    IMAGE 1 is a composite: A flat Logo placed on top of an Object.
-                    IMAGE 2 is a Mask: The WHITE area defines the strict "Pixel-Perfect" shape of the logo.
-
-YOUR TASK:
-                1. **TASK SCOPE**: You are a **Geometry & Lighting Engine**.
-                2. **POSITION (SACRED)**: The logo is currently at the **PERFECT X/Y Coordinates**.
-                   - **STRICTLY MAINTAIN POSITION.** 
-                   - **Do NOT move, recenter, or shift the logo.**
-                   - Use the mask ONLY for local warping.
-                3. **GEOMETRY**: Warp pixels LOCALLY to match the curvature.
-                4. **CONTENT**: Do not draw flags. Do not redraw text.
-                5. **LIGHTING**: Multiply mug shadows onto the logo.
+1. **TASK SCOPE**: You are a **Geometry & Lighting Engine**.
+2. **POSITION & MASK (ABSOLUTE)**:
+   - The **WHITE AREA** of the mask is the **ONLY** place you can draw.
+   - The **BLACK AREA** is **PROTECTED**. DO NOT TOUCH IT.
+   - **STRICTLY MAINTAIN POSITION.** Do not move the logo to the center.
+3. **CROPPING IS ALLOWED**: 
+   - If the logo is cut off by the edge of the white mask, **LEAVE IT CUT OFF**.
+   - **DO NOT** attempt to "fix" or "complete" the logo by moving it.
+   - **DO NOT** reconstruct missing parts.
+4. **CONTENT (SACRED)**: **DO NOT HALLUCINATE.**
+   - Do not turn the logo into something else (e.g. no owls).
+   - Treat the logo as a fixed TEXTURE.
+5. **LIGHTING**: Multiply mug shadows onto the logo.
 `.trim();
                 finalPrompt = `
 Context: ${m.aiPrintPrompt}.
-                    Action: **WARP LOCALLY**. Do not move the logo. **KEEP POSITION**.
+Action: **WARP LOCALLY**. **ALLOW CROPPING**. **DO NOT RECENTER**.
 `.trim();
             } else {
                 systemInstruction = `
