@@ -216,13 +216,14 @@ export default function ImageCanvas({
                 return;
             }
 
+            // Scale from DOM element size to natural (original) image size
             const scaleX = image.naturalWidth / image.width;
             const scaleY = image.naturalHeight / image.height;
 
             // Use the smaller scale to ensure we stay within image bounds
             const scale = Math.min(scaleX, scaleY);
 
-            // Calculate pixel coordinates for crop
+            // Calculate pixel coordinates for crop (completedCrop is already in visual coordinates)
             const pixelCrop = {
                 x: completedCrop.x * scale,
                 y: completedCrop.y * scale,
@@ -370,10 +371,15 @@ export default function ImageCanvas({
             {/* 這裡是一個【完全獨立】的靜止容器，沒有任何 transform 或 transition */}
             {/* ================================================================================== */}
             {isCropping ? (
-                <div className="relative w-full h-full flex items-center justify-center pointer-events-auto">
-                    {/* Constrained wrapper for ReactCrop to prevent overflow */}
+                <div className="relative w-full h-full flex items-center justify-center pointer-events-auto overflow-auto">
+                    {/* Constrained wrapper for ReactCrop - Apply zoom here so both image AND crop UI scale together */}
                     <div
-                        className="max-w-full max-h-full flex items-center justify-center"
+                        className="flex items-center justify-center"
+                        style={{
+                            transform: `scale(${cropScale})`,
+                            transformOrigin: 'center',
+                            transition: 'transform 0.1s ease-out'
+                        }}
                         onWheel={(e) => {
                             e.preventDefault();
                             const delta = -e.deltaY;
@@ -391,23 +397,18 @@ export default function ImageCanvas({
                             ruleOfThirds={true}
                             circularCrop={false}
                             locked={false}
-                            // 確保裁切工具不會撐開容器
                             style={{ maxWidth: '100%', maxHeight: '100%' }}
                         >
                             <img
                                 ref={imgRef}
                                 src={editedImage || originalImage || ''}
-                                // 關鍵：將縮放應用在圖片本身，而非外層容器
                                 style={{
                                     display: 'block',
-                                    maxWidth: '100%',
-                                    maxHeight: '100%',
+                                    maxWidth: '90vw',
+                                    maxHeight: '70vh',
                                     width: 'auto',
                                     height: 'auto',
                                     objectFit: 'contain',
-                                    transform: `scale(${cropScale})`,
-                                    transformOrigin: 'center',
-                                    transition: 'transform 0.1s ease-out'
                                 }}
                                 alt="Crop target"
                                 onLoad={(e) => {
