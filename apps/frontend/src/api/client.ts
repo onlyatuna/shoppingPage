@@ -5,8 +5,6 @@ const apiClient = axios.create({
     baseURL: '/api/v1',
     headers: { 'Content-Type': 'application/json' },
     withCredentials: true, // [關鍵] 必須開啟，才會自動帶 Cookie
-    xsrfCookieName: 'XSRF-TOKEN', // Cookie name set by lusca
-    xsrfHeaderName: 'X-XSRF-TOKEN', // Header name expected by lusca
 });
 
 // 回應攔截器 (處理 401 登出)
