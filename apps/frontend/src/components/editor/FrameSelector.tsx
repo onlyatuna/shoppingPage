@@ -3,17 +3,34 @@ import { Frame, BUILT_IN_FRAMES } from '../../types/frame';
 
 /**
  * Sanitize URL to prevent XSS via javascript: protocol
+ * Uses strict allowlist approach for safe protocols
  */
 function sanitizeImageUrl(url: string): string {
-    if (!url) return '';
-    const trimmed = url.trim().toLowerCase();
-    // Block javascript:, data:text/html, vbscript: protocols
-    if (trimmed.startsWith('javascript:') ||
-        trimmed.startsWith('vbscript:') ||
-        (trimmed.startsWith('data:') && !trimmed.startsWith('data:image/'))) {
-        return '';
+    if (!url || typeof url !== 'string') return '';
+
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+
+    // Allow data:image/ URLs (base64 images)
+    if (trimmed.toLowerCase().startsWith('data:image/')) {
+        return trimmed;
     }
-    return url;
+
+    // Validate URL structure and protocol
+    try {
+        const parsed = new URL(trimmed, window.location.origin);
+        // Only allow http and https protocols
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            return parsed.href;
+        }
+    } catch {
+        // If it's a relative path, allow it (will be resolved against origin)
+        if (trimmed.startsWith('/') || trimmed.startsWith('./')) {
+            return trimmed;
+        }
+    }
+
+    return '';
 }
 
 interface FrameSelectorProps {
