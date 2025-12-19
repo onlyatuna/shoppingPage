@@ -40,7 +40,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://static.cloudflareinsights.com"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.cdninstagram.com"],
+            imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.cdninstagram.com", "https://images.unsplash.com"],
             fontSrc: ["'self'", "data:"],
             connectSrc: ["'self'", "https://res.cloudinary.com", "https://api.cloudinary.com", "wss:", "ws:"],
             frameAncestors: ["'self'"],
