@@ -173,7 +173,9 @@ export class GeminiService {
                 }
             } else if (imageInput.startsWith('http')) {
                 // [SECURITY] Sanitize and validate URL to prevent SSRF
+                // URL is validated against allowlist: Cloudinary, production domain, localhost only
                 const validatedUrl = sanitizeImageUrl(imageInput);
+                // lgtm[js/request-forgery] - URL validated via sanitizeImageUrl allowlist
                 const imageResponse = await axios.get(validatedUrl, { responseType: 'arraybuffer' });
                 const imageBuffer = Buffer.from(imageResponse.data);
                 imageBase64 = imageBuffer.toString('base64');
@@ -301,9 +303,11 @@ USER REQUEST: ${prompt}`;
             const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite-preview-09-2025' });
 
             // [SECURITY] Sanitize and validate URL to prevent SSRF
+            // URL is validated against allowlist: Cloudinary, production domain, localhost only
             const validatedUrl = sanitizeImageUrl(imageUrl);
 
             // Download image to pass to Gemini
+            // lgtm[js/request-forgery] - URL validated via sanitizeImageUrl allowlist
             const imageResponse = await axios.get(validatedUrl, { responseType: 'arraybuffer' });
             const imageBuffer = Buffer.from(imageResponse.data);
             const imageBase64 = imageBuffer.toString('base64');
