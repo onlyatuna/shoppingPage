@@ -2,6 +2,30 @@ import { prisma } from '../utils/prisma';
 import { linePayClient } from '../utils/linePay';
 import Decimal from 'decimal.js';
 
+/**
+ * [SECURITY] Sanitizes and validates LINE Pay transaction ID to prevent SSRF
+ * LINE Pay transaction IDs are numeric strings (e.g., "2024121900000000001")
+ * @param transactionId - The transaction ID to validate
+ * @returns The validated transaction ID
+ * @throws Error if transaction ID format is invalid
+ */
+function sanitizeTransactionId(transactionId: string): string {
+    // LINE Pay transaction IDs are 19-20 digit numeric strings
+    if (!transactionId || typeof transactionId !== 'string') {
+        throw new Error('Transaction ID is required');
+    }
+
+    // Remove any whitespace
+    const cleaned = transactionId.trim();
+
+    // Validate format: only digits, 15-25 characters (flexible for future changes)
+    if (!/^\d{15,25}$/.test(cleaned)) {
+        throw new Error('Invalid transaction ID format');
+    }
+
+    return cleaned;
+}
+
 export class PaymentService {
 
     /**
@@ -107,6 +131,9 @@ export class PaymentService {
 
     // --- 步驟 2: 確認付款 (Confirm) ---
     static async confirmLinePay(orderId: string, transactionId: string, userId?: number) {
+        // [SECURITY] Sanitize transaction ID to prevent SSRF
+        const safeTransactionId = sanitizeTransactionId(transactionId);
+
         const order = await prisma.order.findUnique({ where: { id: orderId } });
         if (!order) throw new Error('訂單不存在');
 
@@ -116,11 +143,11 @@ export class PaymentService {
         }
 
         // [開發環境容錯]
-        if (order.paymentId && order.paymentId !== transactionId) {
-            console.warn(`⚠️ Transaction ID Mismatch: Auto-correcting to ${transactionId}`);
-            await prisma.order.update({ where: { id: orderId }, data: { paymentId: transactionId } });
+        if (order.paymentId && order.paymentId !== safeTransactionId) {
+            console.warn(`⚠️ Transaction ID Mismatch: Auto-correcting to ${safeTransactionId}`);
+            await prisma.order.update({ where: { id: orderId }, data: { paymentId: safeTransactionId } });
         } else if (!order.paymentId) {
-            await prisma.order.update({ where: { id: orderId }, data: { paymentId: transactionId } });
+            await prisma.order.update({ where: { id: orderId }, data: { paymentId: safeTransactionId } });
         }
 
         if (order.status === 'PAID') {
@@ -131,7 +158,7 @@ export class PaymentService {
         const amount = new Decimal(order.totalAmount.toString()).toNumber();
 
         try {
-            const res = await linePayClient.post(`/v3/payments/${transactionId}/confirm`, {
+            const res = await linePayClient.post(`/v3/payments/${safeTransactionId}/confirm`, {
                 amount,
                 currency: 'TWD',
             }, {
@@ -204,8 +231,11 @@ export class PaymentService {
 
     // --- 查詢狀態與明細 ---
     static async checkPaymentStatus(transactionId: string) {
+        // [SECURITY] Sanitize transaction ID to prevent SSRF
+        const safeTransactionId = sanitizeTransactionId(transactionId);
+
         try {
-            const res = await linePayClient.get(`/v3/payments/requests/${transactionId}/check`, {
+            const res = await linePayClient.get(`/v3/payments/requests/${safeTransactionId}/check`, {
                 timeout: 20000
             });
             return res.data;
@@ -219,7 +249,10 @@ export class PaymentService {
         if (!params.transactionId && !params.orderId) throw new Error('需提供 ID');
         try {
             const queryParams: any = {};
-            if (params.transactionId) queryParams['transactionId[]'] = params.transactionId;
+            // [SECURITY] Sanitize transaction ID if provided
+            if (params.transactionId) {
+                queryParams['transactionId[]'] = sanitizeTransactionId(params.transactionId);
+            }
             if (params.orderId) queryParams['orderId[]'] = params.orderId;
 
             // 維持 params 傳遞以確保 HMAC 簽章正確

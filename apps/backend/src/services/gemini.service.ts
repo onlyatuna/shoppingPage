@@ -17,22 +17,58 @@ const ALLOWED_IMAGE_DOMAINS = [
 ];
 
 /**
- * Validates that a URL is from an allowed domain to prevent SSRF attacks
+ * Sanitizes and validates an image URL against the allowlist.
+ * Returns a sanitized URL string if valid, throws Error if invalid.
+ * This pattern helps CodeQL recognize the URL is validated before use.
  * @param urlString - The URL to validate
- * @returns true if URL is from an allowed domain
+ * @returns The validated and sanitized URL string
+ * @throws Error if URL is not from an allowed domain
  */
-function isAllowedImageUrl(urlString: string): boolean {
+function sanitizeImageUrl(urlString: string): string {
+    // Parse URL to validate format
+    let url: URL;
     try {
-        const url = new URL(urlString);
-        const hostname = url.hostname.toLowerCase();
-
-        // Check if hostname matches any allowed domain
-        return ALLOWED_IMAGE_DOMAINS.some(domain =>
-            hostname === domain || hostname.endsWith('.' + domain)
-        );
+        url = new URL(urlString);
     } catch {
-        return false; // Invalid URL
+        throw new Error('Invalid URL format');
     }
+
+    // Only allow HTTPS in production (allow HTTP for localhost in development)
+    const hostname = url.hostname.toLowerCase();
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+
+    if (!isLocalhost && url.protocol !== 'https:') {
+        throw new Error('Only HTTPS URLs are allowed');
+    }
+
+    // Check if hostname matches any allowed domain
+    const isAllowed = ALLOWED_IMAGE_DOMAINS.some(domain =>
+        hostname === domain || hostname.endsWith('.' + domain)
+    );
+
+    if (!isAllowed) {
+        throw new Error(`Image URL domain not allowed: ${hostname}`);
+    }
+
+    // Block private IP ranges to prevent SSRF to internal services
+    const privatePatterns = [
+        /^10\./,
+        /^172\.(1[6-9]|2[0-9]|3[01])\./,
+        /^192\.168\./,
+        /^169\.254\./,
+        /^127\./,
+    ];
+
+    // Only check IP patterns if it looks like an IP address
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+        const isPrivate = privatePatterns.some(pattern => pattern.test(hostname));
+        if (isPrivate && !isLocalhost) {
+            throw new Error('Private IP addresses are not allowed');
+        }
+    }
+
+    // Return the original URL string (now validated)
+    return urlString;
 }
 
 export class GeminiService {
@@ -46,7 +82,6 @@ export class GeminiService {
         try {
             const model = genAI.getGenerativeModel({
                 model: 'gemini-2.5-flash-lite-preview-09-2025',
-                // [新功能] 強制輸出 JSON，讓 Gemini 3.0 更聽話
                 generationConfig: {
                     responseMimeType: "application/json",
                     responseSchema: {
@@ -137,11 +172,9 @@ export class GeminiService {
                     imageBase64 = matches[2];
                 }
             } else if (imageInput.startsWith('http')) {
-                // [SECURITY] Validate URL against allowlist to prevent SSRF
-                if (!isAllowedImageUrl(imageInput)) {
-                    throw new Error('Image URL domain not allowed');
-                }
-                const imageResponse = await axios.get(imageInput, { responseType: 'arraybuffer' });
+                // [SECURITY] Sanitize and validate URL to prevent SSRF
+                const validatedUrl = sanitizeImageUrl(imageInput);
+                const imageResponse = await axios.get(validatedUrl, { responseType: 'arraybuffer' });
                 const imageBuffer = Buffer.from(imageResponse.data);
                 imageBase64 = imageBuffer.toString('base64');
                 mimeType = imageResponse.headers['content-type'] || 'image/jpeg';
@@ -267,13 +300,11 @@ USER REQUEST: ${prompt}`;
         try {
             const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite-preview-09-2025' });
 
-            // [SECURITY] Validate URL against allowlist to prevent SSRF
-            if (!isAllowedImageUrl(imageUrl)) {
-                throw new Error('Image URL domain not allowed');
-            }
+            // [SECURITY] Sanitize and validate URL to prevent SSRF
+            const validatedUrl = sanitizeImageUrl(imageUrl);
 
             // Download image to pass to Gemini
-            const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+            const imageResponse = await axios.get(validatedUrl, { responseType: 'arraybuffer' });
             const imageBuffer = Buffer.from(imageResponse.data);
             const imageBase64 = imageBuffer.toString('base64');
             const mimeType = imageResponse.headers['content-type'] || 'image/jpeg';

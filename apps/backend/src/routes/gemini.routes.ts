@@ -2,15 +2,28 @@ import { Router, Request, Response } from 'express';
 import { GeminiService } from '../services/gemini.service';
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { StatusCodes } from 'http-status-codes';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+// Rate limiter for AI endpoints - stricter limit due to expensive operations
+const aiRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 30, // max 30 requests per 15 minutes per IP
+    message: {
+        status: 'error',
+        message: '請求次數過多，請稍後再試'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 /**
  * POST /api/v1/gemini/edit-image
  * 編輯圖片 - 支援 AI Smart Blend (Inpainting)
  * 接收: { imageBase64, maskBase64, prompt, systemInstruction }
  */
-router.post('/edit-image', authenticateToken, async (req: Request, res: Response) => {
+router.post('/edit-image', aiRateLimiter, authenticateToken, async (req: Request, res: Response) => {
     let userId: number | undefined;
     try {
         // [MODIFIED] 支援 imageBase64 與 maskBase64
@@ -98,7 +111,7 @@ router.post('/edit-image', authenticateToken, async (req: Request, res: Response
  * 生成圖片文案 - 使用 Gemini 2.5 Flash Lite
  * 需要登入
  */
-router.post('/caption', authenticateToken, async (req: Request, res: Response) => {
+router.post('/caption', aiRateLimiter, authenticateToken, async (req: Request, res: Response) => {
     try {
         const { imageUrl, additionalInfo } = req.body;
 
@@ -125,7 +138,7 @@ router.post('/caption', authenticateToken, async (req: Request, res: Response) =
  * 生成自定義風格提示詞 - 使用 Gemini 2.5 Flash Lite
  * 需要登入
  */
-router.post('/generate-custom-style-prompt', authenticateToken, async (req: Request, res: Response) => {
+router.post('/generate-custom-style-prompt', aiRateLimiter, authenticateToken, async (req: Request, res: Response) => {
     try {
         const { styleName, styleDescription } = req.body;
 
