@@ -6,6 +6,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import lusca from 'lusca';
+import rateLimit from 'express-rate-limit';
 import { prisma } from './utils/prisma';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/auth.routes';
@@ -165,6 +166,15 @@ app.use(errorHandler);
 if (process.env.NODE_ENV === 'production') {
     const frontendDist = path.join(__dirname, '../public');
 
+    // Rate limiter for SPA fallback (file system access)
+    const spaFallbackLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 200, // Limit each IP to 200 SPA fallback requests per windowMs
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { message: 'Too many requests, please try again later.' },
+    });
+
     // Serve static files with custom headers
     app.use(express.static(frontendDist, {
         setHeaders: (res, path) => {
@@ -187,7 +197,8 @@ if (process.env.NODE_ENV === 'production') {
     }));
 
     // SPA Fallback: 所有非 API 請求都回傳 index.html
-    app.use((req, res) => {
+    // Rate limited to prevent DoS attacks on file system access
+    app.use(spaFallbackLimiter, (req, res) => {
         // 確保不是 API 請求才回傳 HTML (雖然放在最後面了，但多一層保險也好)
         if (req.path.startsWith('/api')) {
             res.status(404).json({ message: 'API Not Found' });

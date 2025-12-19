@@ -1,11 +1,22 @@
 //cart.routes.ts
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import * as CartController from '../controllers/cart.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-// 所有購物車操作都需要登入
+// Rate limiter for cart operations (database access)
+const cartLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Too many cart requests, please try again later.' },
+});
+
+// 所有購物車操作都需要登入和限流
+router.use(cartLimiter);
 router.use(authenticateToken);
 
 router.get('/', CartController.getMyCart);           // 查詢目前購物車
