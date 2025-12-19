@@ -67,13 +67,13 @@ router.post('/logout', AuthController.logout);
 router.post('/resend-verification', emailLimiter, AuthController.resendVerification);
 
 // GET /api/auth/verify-email
-router.get('/verify-email', AuthController.verifyEmail);
+router.get('/verify-email', emailLimiter, AuthController.verifyEmail);
 
 // POST /api/auth/request-password-reset
 router.post('/request-password-reset', passwordResetLimiter, AuthController.requestPasswordReset);
 
 // GET /api/auth/verify-reset-token
-router.get('/verify-reset-token', AuthController.verifyResetToken);
+router.get('/verify-reset-token', passwordResetLimiter, AuthController.verifyResetToken);
 
 // POST /api/auth/reset-password
 router.post('/reset-password', passwordResetLimiter, AuthController.resetPassword);
