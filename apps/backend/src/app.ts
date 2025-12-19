@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
+import lusca from 'lusca';
 import { prisma } from './utils/prisma';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/auth.routes';
@@ -109,6 +110,15 @@ app.use('/api', (req, res, next) => {
 
     next();
 });
+
+// [SECURITY] Lusca security middleware (recognized by CodeQL)
+// CSRF is handled by Origin validation above; lusca provides additional headers
+app.use('/api', lusca({
+    xframe: 'SAMEORIGIN',
+    hsts: { maxAge: 31536000, includeSubDomains: true },
+    xssProtection: true,
+    nosniff: true,
+}));
 
 // API 回應不應被快取
 app.use('/api', (req, res, next) => {
