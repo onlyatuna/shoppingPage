@@ -82,18 +82,20 @@ export default function FloatingToolbar({
                             <span className="text-xs font-bold">Size</span>
                         </button>
 
-                        {/* Popup Slider */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 hidden group-hover:block transition-all opactiy-0 group-hover:opacity-100">
-                            <input
-                                type="range"
-                                min="0.1"
-                                max="2.0"
-                                step="0.05"
-                                value={scale}
-                                onChange={(e) => onScaleChange(parseFloat(e.target.value))}
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                            />
-                            <div className="text-center text-xs text-gray-500 mt-1">{Math.round(scale * 100)}%</div>
+                        {/* Popup Slider - with padding to prevent disappearing on hover */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 pb-2 hidden group-hover:block">
+                            <div className="w-32 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
+                                <input
+                                    type="range"
+                                    min="0.1"
+                                    max="2.0"
+                                    step="0.05"
+                                    value={scale}
+                                    onChange={(e) => onScaleChange(parseFloat(e.target.value))}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                />
+                                <div className="text-center text-xs text-gray-500 mt-1">{Math.round(scale * 100)}%</div>
+                            </div>
                         </div>
                     </div>
                     <div className="w-px h-6 bg-gray-300 dark:bg-gray-600" />
