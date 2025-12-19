@@ -226,6 +226,8 @@ export default function Navbar() {
                         <div className="relative w-64 bg-white border-2 border-[#1A2B42] rounded-lg shadow-[4px_4px_0px_#1A2B42] transition-all focus-within:translate-x-[2px] focus-within:translate-y-[2px] focus-within:shadow-[2px_2px_0px_#1A2B42] group">
                             <input
                                 type="text"
+                                id="desktop-search"
+                                name="search"
                                 placeholder="搜尋商品..."
                                 className="w-full bg-transparent text-sm py-1.5 pl-4 pr-10 outline-none placeholder-gray-400 font-medium"
                                 value={searchInput}
@@ -250,6 +252,8 @@ export default function Navbar() {
                             <form onSubmit={handleSearch} className="mb-4 relative">
                                 <input
                                     type="text"
+                                    id="mobile-search"
+                                    name="search"
                                     placeholder="搜尋商品..."
                                     className="w-full bg-white border-2 border-[#1A2B42] rounded-lg py-2 pl-4 pr-10 shadow-[4px_4px_0px_#1A2B42] focus:ring-0 outline-none"
                                     value={searchInput}

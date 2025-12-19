@@ -26,13 +26,13 @@ export default function Footer() {
                             我們致力於提供最優質的商品與服務，為您的生活增添品味與質感。探索我們的精選系列，發現更多美好。
                         </p>
                         <div className="flex gap-4">
-                            <a href="#" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
+                            <a href="#" aria-label="Facebook" title="Facebook" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
                                 <Facebook size={20} />
                             </a>
-                            <a href="https://www.instagram.com/evandaiguo/" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
+                            <a href="https://www.instagram.com/evandaiguo/" aria-label="Instagram" title="Instagram" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
                                 <Instagram size={20} />
                             </a>
-                            <a href="#" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
+                            <a href="#" aria-label="Twitter" title="Twitter" className="text-white/80 hover:text-pale-cyan transition-colors transform hover:scale-110 duration-200">
                                 <Twitter size={20} />
                             </a>
                         </div>
@@ -67,6 +67,9 @@ export default function Footer() {
                         <form className="flex mb-6 gap-2" onSubmit={(e) => e.preventDefault()}>
                             <input
                                 type="email"
+                                id="newsletter-email"
+                                name="email"
+                                autoComplete="email"
                                 placeholder="您的 Email"
                                 className="flex-1 h-9 bg-white text-sm border-2 border-[#1A2B42] rounded-lg px-3 text-[#1A2B42] placeholder-gray-400 outline-none shadow-[4px_4px_0px_#1A2B42] focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_#1A2B42] transition-all"
                             />

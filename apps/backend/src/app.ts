@@ -32,30 +32,23 @@ app.set('trust proxy', 1);
 // Middlewares
 // Security headers - disabled CSP, XSS-Protection, and X-Frame-Options as unnecessary for API
 app.use(helmet({
-    contentSecurityPolicy: false, // Disabled - not needed for API responses
+    contentSecurityPolicy: {
+        useDefaults: false,
+        directives: {
+            // 只設定 frame-ancestors 以取代 X-Frame-Options
+            frameAncestors: ["'self'"],
+            // helmet v8 要求必須有 default-src，但我們只想用 frame-ancestors
+            // 所以用 dangerouslyDisableDefaultSrc 來跳過這個限制
+            "default-src": ["'self'"],
+        }
+    },
     xssFilter: false, // Disabled - x-xss-protection header is deprecated
     frameguard: false, // Disabled - X-Frame-Options is deprecated, use CSP frame-ancestors instead
     // 允許跨域資源載入 (避免 Cloudinary 圖片被擋)
     crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
-// Add Cache-Control headers - differentiate between API and static assets
-app.use((req, res, next) => {
-    // Static assets with content hash (e.g., index-abc123.js) - long-term cache
-    if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
-        // If filename contains hash (dash followed by alphanumeric), use long-term cache
-        if (req.path.match(/-[a-zA-Z0-9]{8,}\.(js|css)$/)) {
-            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-        } else {
-            // Other static files (like favicon) - moderate cache
-            res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
-        }
-    } else {
-        // API endpoints - no cache to ensure fresh data
-        res.setHeader('Cache-Control', 'no-cache');
-    }
-    next();
-});
+
 
 app.use(cors({
     origin: [
@@ -110,7 +103,26 @@ app.use(errorHandler);
 if (process.env.NODE_ENV === 'production') {
     const frontendDist = path.join(__dirname, '../public');
 
-    app.use(express.static(frontendDist));
+    // Serve static files with custom headers
+    app.use(express.static(frontendDist, {
+        setHeaders: (res, path) => {
+            // Check if file is in the assets directory (Vite puts hashed files there)
+            if (path.includes('/assets/')) {
+                // Immutable cache for 1 year
+                res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            } else {
+                // Determine cache behavior for other root files
+                if (path.endsWith('.html') || path.endsWith('sw.js') || path.endsWith('registerSW.js') || path.endsWith('manifest.webmanifest')) {
+                    // No cache for entry points and service workers
+                    res.setHeader('Cache-Control', 'no-cache');
+                } else {
+                    // Default short cache for other files (e.g. icon.png, favicon.ico)
+                    // Set to 1 day as a reasonable default, or no-cache if strict freshness is needed
+                    res.setHeader('Cache-Control', 'public, max-age=86400');
+                }
+            }
+        }
+    }));
 
     // SPA Fallback: 所有非 API 請求都回傳 index.html
     app.use((req, res) => {

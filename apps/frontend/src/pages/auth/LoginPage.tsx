@@ -101,7 +101,7 @@ export default function AuthPage() {
                         <div className="space-y-3">
                             <div className="relative">
                                 <User className="absolute left-3 top-3 text-gray-400" size={18} />
-                                <input {...registerReg('name')} type="text" placeholder="姓名" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
+                                <input {...registerReg('name')} type="text" placeholder="姓名" autoComplete="name" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
                                 {regErrors.name && (
                                     <p className="text-red-500 text-xs mt-1">
                                         {typeof regErrors.name?.message === 'string'
@@ -112,7 +112,7 @@ export default function AuthPage() {
                             </div>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
-                                <input {...registerReg('email')} type="email" placeholder="Email" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
+                                <input {...registerReg('email')} type="email" placeholder="Email" autoComplete="email" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
                                 {regErrors.email && (
                                     <p className="text-red-500 text-xs mt-1">
                                         {typeof regErrors.email?.message === 'string'
@@ -123,7 +123,7 @@ export default function AuthPage() {
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-                                <input {...registerReg('password')} type="password" placeholder="密碼" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
+                                <input {...registerReg('password')} type="password" placeholder="密碼" autoComplete="new-password" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
                                 {regErrors.password && (
                                     <p className="text-red-500 text-xs mt-1">
                                         {typeof regErrors.password?.message === 'string'
@@ -134,7 +134,7 @@ export default function AuthPage() {
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-                                <input {...registerReg('confirmPassword')} type="password" placeholder="確認密碼" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
+                                <input {...registerReg('confirmPassword')} type="password" placeholder="確認密碼" autoComplete="new-password" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
                                 {regErrors.confirmPassword && (
                                     <p className="text-red-500 text-xs mt-1">
                                         {typeof regErrors.confirmPassword?.message === 'string'
@@ -176,7 +176,7 @@ export default function AuthPage() {
                         <div className="space-y-4">
                             <div className="relative">
                                 <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
-                                <input {...registerLogin('email')} type="email" placeholder="Email" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
+                                <input {...registerLogin('email')} type="email" placeholder="Email" autoComplete="email" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
                                 {loginErrors.email && (
                                     <p className="text-red-500 text-xs mt-1">
                                         {typeof loginErrors.email?.message === 'string'
@@ -187,7 +187,7 @@ export default function AuthPage() {
                             </div>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
-                                <input {...registerLogin('password')} type="password" placeholder="密碼" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
+                                <input {...registerLogin('password')} type="password" placeholder="密碼" autoComplete="current-password" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-black outline-none transition" />
                                 {loginErrors.password && (
                                     <p className="text-red-500 text-xs mt-1">
                                         {typeof loginErrors.password?.message === 'string'
@@ -240,6 +240,7 @@ export default function AuthPage() {
                                 <h2 className="text-4xl font-bold mb-4">還沒有帳號？</h2>
                                 <p className="mb-8 text-lg text-gray-200">立即註冊，享受專屬會員優惠與快速結帳服務。</p>
                                 <button
+                                    type="button"
                                     onClick={() => setIsLoginMode(false)}
                                     className="px-8 py-3 border-2 border-white rounded-full font-bold hover:bg-white hover:text-black transition-all duration-300"
                                 >
@@ -252,6 +253,7 @@ export default function AuthPage() {
                                 <h2 className="text-4xl font-bold mb-4">已經有帳號？</h2>
                                 <p className="mb-8 text-lg text-gray-200">請使用您的帳號登入，繼續您的購物旅程。</p>
                                 <button
+                                    type="button"
                                     onClick={() => setIsLoginMode(true)}
                                     className="px-8 py-3 border-2 border-white rounded-full font-bold hover:bg-white hover:text-black transition-all duration-300 flex items-center gap-2"
                                 >

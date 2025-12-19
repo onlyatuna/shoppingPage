@@ -1671,6 +1671,8 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                         touchAction: 'none'
                     }}
                     className="landscape:hidden fixed top-0 left-0 flex items-center gap-2 px-5 py-5 tablet-portrait:!px-8 tablet-portrait:!py-8 bg-gradient-to-r from-blue-400 to-cyan-400 dark:from-blue-500 dark:to-cyan-500 rounded-full shadow-lg border border-blue-300 dark:border-blue-600 text-white font-medium z-30 text-sm tablet-portrait:text-base transition-opacity"
+                    aria-label="開啟編輯選項"
+                    title="開啟編輯選項"
                 >
                     <Sparkles className="w-4 h-4 tablet-portrait:!w-10 tablet-portrait:!h-10" />
 
@@ -1900,6 +1902,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                                 accept="image/*"
                                 capture="environment"
                                 className="hidden"
+                                aria-label="使用相機拍照"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
@@ -1919,6 +1922,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                             <input
                                 type="file"
                                 accept="image/*"
+                                aria-label="從相簿選擇圖片"
                                 className="hidden"
                                 onChange={(e) => {
                                     const file = e.target.files?.[0];

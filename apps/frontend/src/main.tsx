@@ -5,6 +5,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './contexts/ThemeContext'
 import App from './App.tsx'
 import './index.css'
+import '@fontsource/noto-sans-tc/400.css';
+import '@fontsource/noto-sans-tc/500.css';
+import '@fontsource/noto-sans-tc/700.css';
 
 const queryClient = new QueryClient({
     defaultOptions: {

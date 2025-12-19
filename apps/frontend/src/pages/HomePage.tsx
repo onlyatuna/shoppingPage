@@ -89,18 +89,18 @@ export default function HomePage() {
                         {searchTerm && (
                             <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
                                 搜尋: {searchTerm}
-                                <button onClick={() => setSearchParams({ categoryId: String(selectedCategoryId || '') })} className="hover:text-red-500"><X size={14} /></button>
+                                <button type="button" onClick={() => setSearchParams({ categoryId: String(selectedCategoryId || '') })} className="hover:text-red-500"><X size={14} /></button>
                             </span>
                         )}
 
                         {selectedCategoryId && categories && (
                             <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
                                 分類: {categories.find(c => c.id === selectedCategoryId)?.name || selectedCategoryId}
-                                <button onClick={() => setSearchParams({ search: searchTerm })} className="hover:text-red-500"><X size={14} /></button>
+                                <button type="button" onClick={() => setSearchParams({ search: searchTerm })} className="hover:text-red-500"><X size={14} /></button>
                             </span>
                         )}
 
-                        <button onClick={clearFilters} className="text-red-500 text-sm hover:underline ml-2">
+                        <button type="button" onClick={clearFilters} className="text-red-500 text-sm hover:underline ml-2">
                             清除全部
                         </button>
                     </div>
@@ -143,6 +143,7 @@ export default function HomePage() {
                             <Search size={48} className="mb-4 opacity-20" />
                             <p className="text-lg">找不到符合條件的商品</p>
                             <button
+                                type="button"
                                 onClick={clearFilters}
                                 className="mt-4 text-black underline hover:text-blue-600"
                             >
