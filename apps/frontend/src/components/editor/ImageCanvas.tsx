@@ -302,7 +302,10 @@ export default function ImageCanvas({
 
                         {/* [NEW] Mobile-Specific Quick Upload Actions */}
                         <div className="flex flex-col sm:flex-row items-center gap-3 w-full mt-2 landscape:hidden">
-                            <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl cursor-pointer w-full transition-colors active:scale-95 shadow-md">
+                            <label
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl cursor-pointer w-full transition-colors active:scale-95 shadow-md"
+                            >
                                 <Camera size={20} />
                                 <span className="text-sm font-bold">拍照上傳</span>
                                 <input
@@ -317,7 +320,10 @@ export default function ImageCanvas({
                                     }}
                                 />
                             </label>
-                            <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl cursor-pointer w-full transition-colors active:scale-95 border border-gray-200 dark:border-gray-700">
+                            <label
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl cursor-pointer w-full transition-colors active:scale-95 border border-gray-200 dark:border-gray-700"
+                            >
                                 <Upload size={20} />
                                 <span className="text-sm font-bold">傳送檔案</span>
                                 <input

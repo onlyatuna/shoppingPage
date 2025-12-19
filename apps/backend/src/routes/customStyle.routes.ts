@@ -2,12 +2,22 @@ import { Router } from 'express';
 import { prisma } from '../utils/prisma'; // [FIXED] Use singleton
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { StatusCodes } from 'http-status-codes';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 // const prisma = new PrismaClient(); // [REMOVED]
 
+// Rate limiter for custom style endpoints
+const customStyleRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // max 100 requests per 15 minutes per IP
+    message: { success: false, message: 'Too many requests, please try again later' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 // Get user's custom styles
-router.get('/', authenticateToken, async (req: any, res) => {
+router.get('/', customStyleRateLimiter, authenticateToken, async (req: any, res) => {
     try {
         const styles = await prisma.customStyle.findMany({
             where: { userId: req.user?.userId },
@@ -28,7 +38,7 @@ router.get('/', authenticateToken, async (req: any, res) => {
 });
 
 // Create a new custom style
-router.post('/', authenticateToken, async (req: any, res) => {
+router.post('/', customStyleRateLimiter, authenticateToken, async (req: any, res) => {
     try {
         const { key, name, engName, desc, icon, color, borderColor, prompt, preview } = req.body;
 
@@ -88,7 +98,7 @@ router.post('/', authenticateToken, async (req: any, res) => {
 });
 
 // Update a custom style
-router.put('/:id', authenticateToken, async (req: any, res) => {
+router.put('/:id', customStyleRateLimiter, authenticateToken, async (req: any, res) => {
     try {
         const styleId = parseInt(req.params.id);
         const { name, engName, desc, icon, color, borderColor, prompt, key } = req.body;
@@ -138,7 +148,7 @@ router.put('/:id', authenticateToken, async (req: any, res) => {
 });
 
 // Delete a custom style
-router.delete('/:id', authenticateToken, async (req: any, res) => {
+router.delete('/:id', customStyleRateLimiter, authenticateToken, async (req: any, res) => {
     try {
         const styleId = parseInt(req.params.id);
 
