@@ -5,8 +5,18 @@ import { v2 as cloudinary } from 'cloudinary';
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { requireAdmin } from '../middlewares/admin.middleware';
 import { StatusCodes } from 'http-status-codes';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+// Rate limiter for upload/delete operations
+const uploadRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // max 100 requests per 15 minutes per IP
+    message: { status: 'error', message: 'Too many requests' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // 1. 設定 Cloudinary
 cloudinary.config({
@@ -36,7 +46,7 @@ const upload = multer({
 
 // 3. 上傳 API
 // 3. 上傳 API
-router.post('/', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+router.post('/', uploadRateLimiter, authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
     // ... (existing upload logic) ...
     try {
         if (!req.file) {
@@ -83,7 +93,7 @@ router.post('/', authenticateToken, requireAdmin, upload.single('image'), async 
 });
 
 // 4. 取得 Cloudinary 圖片列表 (支援分頁)
-router.get('/resources', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/resources', uploadRateLimiter, authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { next_cursor, type } = req.query;
         const prefix = type === 'canvas' ? 'ecommerce-canvas' : 'ecommerce-product';
@@ -120,7 +130,7 @@ router.get('/resources', authenticateToken, requireAdmin, async (req, res) => {
 // 5. 刪除 Cloudinary 圖片
 import { prisma } from '../utils/prisma';
 
-router.delete('/:publicId', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/:publicId', uploadRateLimiter, authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { publicId } = req.params;
 
