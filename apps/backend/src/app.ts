@@ -36,6 +36,7 @@ app.use(helmet({
     // Modern frontend frameworks handle script safety through the build process
     contentSecurityPolicy: false,
     xssFilter: false, // Disabled - x-xss-protection header is deprecated
+    frameguard: false, // Disabled - X-Frame-Options is deprecated
     // 允許跨域資源載入 (避免 Cloudinary 圖片被擋)
     crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
@@ -55,6 +56,12 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser()); // 解析 Cookie
 app.use(morgan('dev'));
+
+// API 回應不應被快取
+app.use('/api', (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+});
 
 // 測試路由
 app.get('/api/health', (req: Request, res: Response) => {

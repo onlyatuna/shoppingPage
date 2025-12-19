@@ -289,7 +289,7 @@ export default function ImageCanvas({
                             max-w-md tablet-portrait:max-w-xl w-full
                         `}
                     >
-                        <input {...getInputProps()} />
+                        <input {...getInputProps()} aria-label="上傳圖片" />
                         <Upload size={48} className={`tablet-portrait:w-20 tablet-portrait:h-20 ${isDragActive ? 'text-blue-500' : 'text-gray-400'}`} />
                         <div className="text-center">
                             <p className="text-lg tablet-portrait:text-2xl font-medium text-gray-700 dark:text-gray-200 mb-1 tablet-portrait:mb-2">
@@ -310,6 +310,7 @@ export default function ImageCanvas({
                                     accept="image/*"
                                     capture="environment"
                                     className="hidden"
+                                    aria-label="拍照上傳"
                                     onChange={(e) => {
                                         const file = e.target.files?.[0];
                                         if (file) onImageUpload(file);
@@ -323,6 +324,7 @@ export default function ImageCanvas({
                                     type="file"
                                     accept="image/*"
                                     className="hidden"
+                                    aria-label="傳送檔案"
                                     onChange={(e) => {
                                         const file = e.target.files?.[0];
                                         if (file) onImageUpload(file);
@@ -512,7 +514,7 @@ export default function ImageCanvas({
                                                             {isPrintableMode ? '放置 Logo 處' : '商品放置處'}
                                                         </p>
                                                         <div {...getRootProps()} className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-[9px] text-white/80 cursor-pointer pointer-events-auto transition-colors">
-                                                            <input {...getInputProps()} />
+                                                            <input {...getInputProps()} aria-label="上傳圖片" />
                                                             上傳
                                                         </div>
                                                     </div>
@@ -564,6 +566,7 @@ export default function ImageCanvas({
             {
                 editedImage && !isProcessing && !isCropping && (
                     <button
+                        type="button"
                         onMouseDown={() => setShowOriginal(true)}
                         onMouseUp={() => setShowOriginal(false)}
                         onMouseLeave={() => setShowOriginal(false)}
@@ -571,6 +574,7 @@ export default function ImageCanvas({
                         onTouchEnd={() => setShowOriginal(false)}
                         className="absolute bottom-4 left-4 z-20 p-2 bg-white/80 dark:bg-black/60 backdrop-blur-sm rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
                         title="按住查看原圖"
+                        aria-label="按住查看原圖"
                     >
                         <Eye size={20} />
                     </button>
@@ -618,6 +622,7 @@ export default function ImageCanvas({
                 isCropping && (
                     <div className="absolute bottom-20 tablet-portrait:bottom-24 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-4 bg-black/80 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl border border-white/10 pointer-events-auto w-max max-w-[90vw]">
                         <button
+                            type="button"
                             onClick={() => setIsCropping(false)}
                             className="text-white/90 hover:text-white flex items-center gap-2 text-sm font-medium transition-colors"
                         >
@@ -628,6 +633,7 @@ export default function ImageCanvas({
                         <span className="text-white/50 text-xs font-medium whitespace-nowrap hidden landscape:block">拖曳以裁切</span>
                         <div className="w-px h-4 bg-white/20 hidden landscape:block"></div>
                         <button
+                            type="button"
                             onClick={handleSaveCrop}
                             className="text-white hover:text-blue-400 flex items-center gap-2 text-sm font-bold transition-colors"
                         >

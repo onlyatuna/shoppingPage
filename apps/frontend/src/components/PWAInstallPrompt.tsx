@@ -49,7 +49,9 @@ export default function PWAInstallPrompt() {
     return (
         <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[100] animate-in slide-in-from-bottom duration-300">
             <button
+                type="button"
                 onClick={() => setShowPrompt(false)}
+                aria-label="關閉"
                 className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             >
                 <X size={20} />
@@ -76,6 +78,7 @@ export default function PWAInstallPrompt() {
                                 安裝到您的裝置以獲得更好的體驗。
                             </p>
                             <button
+                                type="button"
                                 onClick={handleInstallClick}
                                 className="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold w-full hover:bg-gray-800 transition-colors"
                             >
