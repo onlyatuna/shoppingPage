@@ -32,18 +32,10 @@ app.set('trust proxy', 1);
 // Middlewares
 // Security headers - disabled CSP, XSS-Protection, and X-Frame-Options as unnecessary for API
 app.use(helmet({
-    contentSecurityPolicy: {
-        useDefaults: false,
-        directives: {
-            // 只設定 frame-ancestors 以取代 X-Frame-Options
-            frameAncestors: ["'self'"],
-            // helmet v8 要求必須有 default-src，但我們只想用 frame-ancestors
-            // 所以用 dangerouslyDisableDefaultSrc 來跳過這個限制
-            "default-src": ["'self'"],
-        }
-    },
+    // CSP disabled - causes compatibility issues with React SPA, Cloudflare, Instagram CDN, etc.
+    // Modern frontend frameworks handle script safety through the build process
+    contentSecurityPolicy: false,
     xssFilter: false, // Disabled - x-xss-protection header is deprecated
-    frameguard: false, // Disabled - X-Frame-Options is deprecated, use CSP frame-ancestors instead
     // 允許跨域資源載入 (避免 Cloudinary 圖片被擋)
     crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
