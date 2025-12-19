@@ -45,6 +45,15 @@ const emailLimiter = rateLimit({
     }
 });
 
+// 一般認證端點（如 /me）：較寬鬆的限制
+const generalAuthLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 分鐘
+    max: 100, // 較寬鬆，因為前端常呼叫
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: '請求過於頻繁，請稍後再試' }
+});
+
 // POST /api/auth/register
 router.post('/register', authLimiter, AuthController.register);
 
@@ -69,7 +78,8 @@ router.get('/verify-reset-token', AuthController.verifyResetToken);
 // POST /api/auth/reset-password
 router.post('/reset-password', passwordResetLimiter, AuthController.resetPassword);
 
-router.get('/me', authenticateToken, (req, res) => {
+// GET /api/auth/me - 取得當前用戶資訊
+router.get('/me', generalAuthLimiter, authenticateToken, (req, res) => {
     res.json({ message: '你已登入', user: req.user });
 });
 
