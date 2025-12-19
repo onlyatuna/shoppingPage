@@ -1,6 +1,20 @@
-import { useState } from 'react';
-import { X, Plus, Upload } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import { Frame, BUILT_IN_FRAMES } from '../../types/frame';
+
+/**
+ * Sanitize URL to prevent XSS via javascript: protocol
+ */
+function sanitizeImageUrl(url: string): string {
+    if (!url) return '';
+    const trimmed = url.trim().toLowerCase();
+    // Block javascript:, data:text/html, vbscript: protocols
+    if (trimmed.startsWith('javascript:') ||
+        trimmed.startsWith('vbscript:') ||
+        (trimmed.startsWith('data:') && !trimmed.startsWith('data:image/'))) {
+        return '';
+    }
+    return url;
+}
 
 interface FrameSelectorProps {
     isOpen: boolean;
@@ -67,7 +81,7 @@ export default function FrameSelector({
                                     </div>
                                 ) : (
                                     <img
-                                        src={frame.preview}
+                                        src={sanitizeImageUrl(frame.preview)}
                                         alt={frame.name}
                                         className="w-full h-full object-cover"
                                     />
