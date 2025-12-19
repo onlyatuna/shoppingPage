@@ -8,6 +8,33 @@ import { MonitorService } from './monitor.service';
 // 確保有安裝最新版 SDK: npm install @google/generative-ai@latest
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
+// [SECURITY] Allowed domains for image fetching to prevent SSRF attacks
+const ALLOWED_IMAGE_DOMAINS = [
+    'res.cloudinary.com',
+    'cloudinary.com',
+    'evanchen316.com', // Production domain
+    'localhost', // Development
+];
+
+/**
+ * Validates that a URL is from an allowed domain to prevent SSRF attacks
+ * @param urlString - The URL to validate
+ * @returns true if URL is from an allowed domain
+ */
+function isAllowedImageUrl(urlString: string): boolean {
+    try {
+        const url = new URL(urlString);
+        const hostname = url.hostname.toLowerCase();
+
+        // Check if hostname matches any allowed domain
+        return ALLOWED_IMAGE_DOMAINS.some(domain =>
+            hostname === domain || hostname.endsWith('.' + domain)
+        );
+    } catch {
+        return false; // Invalid URL
+    }
+}
+
 export class GeminiService {
 
     static async suggestBackground(imageBase64: string, mimeType: string = 'image/png', userId?: number) {
@@ -110,6 +137,10 @@ export class GeminiService {
                     imageBase64 = matches[2];
                 }
             } else if (imageInput.startsWith('http')) {
+                // [SECURITY] Validate URL against allowlist to prevent SSRF
+                if (!isAllowedImageUrl(imageInput)) {
+                    throw new Error('Image URL domain not allowed');
+                }
                 const imageResponse = await axios.get(imageInput, { responseType: 'arraybuffer' });
                 const imageBuffer = Buffer.from(imageResponse.data);
                 imageBase64 = imageBuffer.toString('base64');
@@ -235,6 +266,11 @@ USER REQUEST: ${prompt}`;
     ): Promise<{ caption: string; hashtags: string[] }> {
         try {
             const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite-preview-09-2025' });
+
+            // [SECURITY] Validate URL against allowlist to prevent SSRF
+            if (!isAllowedImageUrl(imageUrl)) {
+                throw new Error('Image URL domain not allowed');
+            }
 
             // Download image to pass to Gemini
             const imageResponse = await axios.get(imageUrl, { responseType: 'arraybuffer' });
