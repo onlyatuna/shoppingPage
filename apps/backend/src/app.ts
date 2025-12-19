@@ -112,9 +112,14 @@ app.use('/api', (req, res, next) => {
     next();
 });
 
-// [SECURITY] Lusca security middleware (recognized by CodeQL)
-// CSRF is handled by Origin validation above; lusca provides additional headers
+// [SECURITY] Lusca security middleware with CSRF protection
+// Uses Angular mode: sets XSRF-TOKEN cookie, expects X-XSRF-TOKEN header
+// Combined with Origin validation above for defense-in-depth
 app.use('/api', lusca({
+    csrf: {
+        angular: true, // SPA-compatible: uses XSRF-TOKEN cookie + X-XSRF-TOKEN header
+        blocklist: ['/api/health', '/api/test-db', '/api/v1/auth/login', '/api/v1/auth/register', '/api/v1/payment/linepay/confirm'], // Endpoints that don't need CSRF (public or webhook)
+    },
     xframe: 'SAMEORIGIN',
     hsts: { maxAge: 31536000, includeSubDomains: true },
     xssProtection: true,
