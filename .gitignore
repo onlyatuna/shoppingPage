@@ -24,7 +24,7 @@ test_output.txt
 test_result.json
 test-monitoring.ts
 
-# --- 編輯器設定 (選用) ---
+# --- 編輯器設定  ---
 .vscode
 .idea
 *.suo
@@ -32,3 +32,6 @@ test-monitoring.ts
 *.njsproj
 *.sln
 *.sw?
+
+# Windows 檔案串流垃圾檔
+*:Zone.Identifier
