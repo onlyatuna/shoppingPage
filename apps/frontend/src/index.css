@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        background-color: #F5F0E6;
+        color: #1A2B42;
+        font-family: 'Noto Sans TC', sans-serif;
+        font-weight: 500;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'GenSekiGothic TW', 'Noto Sans TC', sans-serif;
+        color: #1A2B42;
+    }
+}
+
+@layer utilities {
+
+    /* wrapper */
+    .marquee-wrapper {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        background-color: #e5e7eb;
+    }
+
+    /* track: 垂直排列、無縫滾動 */
+    .marquee-track {
+        animation: marquee-up-pause 15s ease-in-out infinite;
+    }
+
+    /* item 高度固定，確保兩個副本高度一致以達無縫 */
+    .marquee-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 2.5rem;
+        line-height: 1;
+        font-size: 0.95rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        white-space: nowrap;
+    }
+
+    /* 暫停動畫（hover 或用 JS 切換到 paused） */
+    .marquee-track--paused,
+    .marquee-wrapper:hover .marquee-track {
+        animation-play-state: paused;
+    }
+
+    /* keyframes（向上無縫） */
+    @keyframes marquee-up-pause {
+
+        0%,
+        10% {
+            transform: translateY(0);
+        }
+
+        20%,
+        30% {
+            transform: translateY(-2.5rem);
+        }
+
+        40%,
+        50% {
+            transform: translateY(-5rem);
+        }
+
+        60%,
+        70% {
+            transform: translateY(-7.5rem);
+        }
+
+        80%,
+        90% {
+            transform: translateY(-10rem);
+        }
+
+        100% {
+            transform: translateY(-12.5rem);
+        }
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0) rotate(0deg);
+        }
+
+        50% {
+            transform: translateY(-10px) rotate(5deg);
+        }
+    }
+
+    @keyframes sakura-fall {
+        0% {
+            transform: translateY(-20px) rotate(0deg) translateX(0);
+            opacity: 0;
+        }
+
+        20% {
+            opacity: 0.8;
+            transform: translateY(40px) rotate(45deg) translateX(10px);
+        }
+
+        100% {
+            transform: translateY(200px) rotate(360deg) translateX(-20px);
+            opacity: 0;
+        }
+    }
+}
