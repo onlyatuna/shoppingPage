@@ -1,288 +1,211 @@
-# 🎨 AI 商品圖片編輯器
+# 🎨 AI ShopMaster
 
-一個功能強大的 AI 驅動圖片編輯平台，專為社交媒體和電商設計，提供智能文案生成、風格化處理和一鍵發佈功能。
+### AI 驅動的電商視覺與文案流水線
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)
+![React](https://img.shields.io/badge/frontend-React_18-61DAFB.svg?style=flat-square&logo=react)
+![Node](https://img.shields.io/badge/backend-Node.js-339933.svg?style=flat-square&logo=node.js)
+![Docker](https://img.shields.io/badge/deploy-Docker-2496ED.svg?style=flat-square&logo=docker)
 
-## ✨ 核心功能
+> **AI ShopMaster** 是一個專為電商賣家與社群小編打造的生產力工具。它整合了 **AI 智能修圖**、**Gemini 文案生成** 與 **Instagram 一鍵發佈** 功能，將原本繁瑣的「修圖 -> 想文案 -> 發文」流程縮減為流暢的單一工作流。
 
-### 🖼️ 智能圖片編輯
-- **拖放上傳**：支持本地圖片拖放上傳
-- **圖片裁剪**：內建裁剪工具，支持自定義比例
-- **圖框疊加**：提供多種精美圖框選擇
-- **實時預覽**：即時查看編輯效果
+[線上演示](http://localhost:5173) · [回報問題](https://github.com/onlyatuna/shoppingPage/issues) · [功能請求](https://github.com/onlyatuna/shoppingPage/issues)
 
-### 🤖 AI 文案助手
-- **自動生成**：基於 Google Gemini 2.0 Flash 自動生成吸引人的社交媒體文案
-- **圖片分析**：AI 自動分析圖片內容，生成相關文案
-- **自定義提示**：可自定義文案風格和重點
-- **一鍵複製**：快速複製生成的文案
+## ✨ 核心價值 (Core Value Propositions)
 
-### 🎨 風格預設系統
-- **內建風格**：提供多種預設風格（經典灰、深夜黑、清新綠、熱情紅等）
-- **自定義風格**：創建、編輯和保存個人風格
-- **顏色主題**：豐富的顏色主題選擇
-- **圖示系統**：多種圖示可供選擇
+我們解決了電商經營中最耗時的三個痛點：**修圖**、**文案** 與 **上架**。
 
-### 📱 響應式設計
-- **桌面端**：完整功能的專業編輯介面
-- **移動端**：三步驟向導流程（編輯 → 文案 → 發布）
-- **自適應布局**：完美適配各種屏幕尺寸
-- **深色模式**：支持明暗主題切換
+### 🖼️ AI 圖片引擎
+不需要專業設計師，也能產出高品質的商品圖。
+- **智能去背與裁剪**：自動優化圖片主體，適配 Instagram (1:1) 與 Story (9:16) 尺寸。
+- **風格圖框系統**：內建「經典黑」、「優雅金」與「櫻花粉」等行銷專用圖框，一鍵提升質感。
+- **即時浮水印**：自動壓上品牌 LOGO，保護您的商品圖權。
 
-### 🚀 一鍵發佈
-- **Instagram 集成**：直接發佈到 Instagram
-- **圖片下載**：導出高質量 JPG 圖片
-- **商品上架**：將編輯好的圖片上架為商品
+### 🧠 Gemini 內容工廠
+讓 Google 最新的 Gemini 2.0 Flash 模型成為您的專屬文案小編。
+- **視覺分析生成**：AI 能夠「看懂」您的圖片，根據畫面內容生成精準的描述。
+- **多種語氣切換**：從「親切小編」到「高冷精品」，想怎麼賣就怎麼寫。
+- **自動標籤 (#Hashtags)**：根據商品屬性自動生成高觸及率的 Hashtags。
 
-## 🛠️ 技術棧
+### ⚡ 全通路一鍵發佈
+- **整合 Instagram Graph API**：編輯完成後，直接推送到您的 IG 商業帳號。
+- **各版型預覽**：在發佈前預覽貼文在手機上的真實呈現效果。
 
-### 前端
-- **React 18** - 現代化 UI 框架
-- **TypeScript** - 類型安全
-- **Vite** - 快速開發構建工具
-- **TailwindCSS** - 原子化 CSS 框架
-- **Framer Motion** - 流暢動畫效果
-- **React Query** - 數據狀態管理
-- **Zustand** - 輕量級狀態管理
-- **React Hook Form** - 表單處理
-- **Zod** - Schema 驗證
-- **Axios** - HTTP 客戶端
-- **React Easy Crop** - 圖片裁剪
-- **React Dropzone** - 文件上傳
-- **Lucide React** - 圖標庫
-- **Sonner** - Toast 通知
+### 📱 極速行動體驗
+專為手機操作優化的 **PWA (Progressive Web App)** 介面。
+- **三步驟工作流**：上傳 -> 編輯 -> 發佈，全程不超過 1 分鐘。
+- **離線支援**：即使網路不穩也能繼續編輯。
+## 🧩 系統架構 (Architecture Overview)
 
-### 後端
-- **Node.js** - 運行環境
-- **Express 5** - Web 框架
-- **TypeScript** - 類型安全
-- **Prisma** - ORM 數據庫工具
-- **MySQL** - 關係型數據庫
-- **Google Gemini AI** - AI 文案生成
-- **Cloudinary** - 圖片存儲和處理
-- **JWT** - 身份驗證
-- **bcryptjs** - 密碼加密
-- **Helmet** - 安全中間件
-- **CORS** - 跨域資源共享
-- **Multer** - 文件上傳處理
+本專案採用 **Monorepo** 架構，統一管理前端、後端與共享套件，確保型別安全與開發效率。
 
-### 開發工具
-- **Docker** - 容器化部署
-- **GitHub Actions** - CI/CD 自動化
-- **ESLint** - 代碼規範
-- **Prettier** - 代碼格式化
+### 📂 目錄結構
 
-## 📦 項目結構
+| 路徑 | 類型 | 說明 | 技術棧 |
+|------|------|------|--------|
+| `apps/frontend` | Client | 用戶操作介面 (SPA) | Vite, React, Tailwind, Zustand |
+| `apps/backend` | Server | RESTful API 服務 | Express, Prisma, Gemini API |
+| `packages/shared` | Package | 前後端共用的型別定義 | TypeScript Interfaces, Zod Schemas |
+| `docker-compose.yml` | Infra | 容器化部署配置 | MySQL, Node Services |
 
-```
-shopPage/
-├── apps/
-│   ├── backend/          # 後端 API 服務
-│   │   ├── prisma/       # 數據庫 Schema
-│   │   └── src/
-│   │       ├── controllers/  # 控制器
-│   │       ├── routes/       # 路由
-│   │       ├── services/     # 業務邏輯
-│   │       └── app.ts        # 入口文件
-│   └── frontend/         # 前端應用
-│       └── src/
-│           ├── components/   # 組件
-│           │   ├── editor/   # 編輯器組件
-│           │   └── mobile/   # 移動端組件
-│           ├── pages/        # 頁面
-│           ├── hooks/        # 自定義 Hooks
-│           ├── lib/          # 工具函數
-│           └── types/        # TypeScript 類型
-├── packages/
-│   └── shared/           # 共享代碼
-└── docker-compose.yml    # Docker 配置
-```
+### 🔄 數據流向 (Data Flow)
 
-## 🚀 快速開始
+1.  **使用者 (Client)**: 在 React 前端上傳圖片並調整參數。
+2.  **API 層 (Backend)**: Express 接收請求，驗證 JWT 並將圖片轉發至 **Cloudinary** 儲存。
+3.  **AI 處理 (Intelligence)**: 後端將圖片 URL 與提示詞發送給 **Google Gemini** 進行視覺分析與文案生成。
+4.  **持久化 (Database)**: 所有的訂單、風格設定與生成紀錄皆透過 **Prisma** 存入 **MySQL**。
+5.  **外部整合 (Integration)**: 最終結果透過 Graph API 發佈至 **Instagram**。
+
+## 🛠️ 技術棧 (Tech Stack)
+
+### 🎨 前端 (Frontend)
+- **核心框架**: React 18, TypeScript, Vite
+- **樣式與動畫**: TailwindCSS, Framer Motion, Lucide React
+- **狀態管理**: Zustand, React Query (TanStack Query)
+- **圖片處理**: React Easy Crop, React Dropzone
+- **表單與驗證**: React Hook Form, Zod
+
+### ⚙️ 後端 (Backend)
+- **核心框架**: Node.js, Express 5
+- **資料庫與 ORM**: MySQL 8.0, Prisma ORM
+- **AI 服務**: Google Gemini 2.0 Flash API
+- **圖片存儲**: Cloudinary SDK
+- **安全性**: JWT, Bcrypt, Helmet, CORS
+
+### 🏗️ 基礎設施 (Infrastructure)
+- **容器化**: Docker, Docker Compose
+- **反向代理**: Caddy (自動 HTTPS)
+- **CI/CD**: GitHub Actions (Linting & Build Checks)
+
+## 🚀 快速開始 (Quick Start)
 
 ### 環境要求
-- Node.js >= 18
-- MySQL >= 8.0
-- npm 或 yarn
+- **Node.js**: >= 18.0.0
+- **MySQL**: >= 8.0
+- **npm**: >= 9.0.0
 
-### 1. 克隆項目
+### 1. 安裝依賴
+由根目錄統一安裝所有 Workspaces 依賴：
 ```bash
-git clone https://github.com/onlyatuna/shoppingPage.git
-cd shoppingPage
-```
-
-### 2. 安裝依賴
-```bash
-# 安裝根目錄依賴
-npm install
-
-# 安裝前端依賴
-cd apps/frontend
-npm install
-
-# 安裝後端依賴
-cd ../backend
 npm install
 ```
 
-### 3. 環境配置
-
-在 `apps/backend` 創建 `.env` 文件：
+### 2. 環境變數設定
+請在 `apps/backend` 目錄下建立 `.env` 檔案：
 
 ```env
-# 數據庫配置
-DATABASE_URL="mysql://user:password@localhost:3306/shopdb"
+# 資料庫連線 (Prisma)
+DATABASE_URL="mysql://root:password@localhost:3306/shop_db"
 
-# JWT 密鑰
-JWT_SECRET="your-secret-key"
+# Google Gemini API (文案生成)
+GEMINI_API_KEY="your_gemini_api_key"
 
-# Google Gemini API
-GEMINI_API_KEY="your-gemini-api-key"
+# Cloudinary (圖片儲存)
+CLOUDINARY_CLOUD_NAME="your_cloud_name"
+CLOUDINARY_API_KEY="your_api_key"
+CLOUDINARY_API_SECRET="your_api_secret"
 
-# Cloudinary 配置
-CLOUDINARY_CLOUD_NAME="your-cloud-name"
-CLOUDINARY_API_KEY="your-api-key"
-CLOUDINARY_API_SECRET="your-api-secret"
-
-# 前端 URL
+# 安全性 (JWT)
+JWT_SECRET="super_secret_jwt_key_at_least_32_chars"
 FRONTEND_URL="http://localhost:5173"
-
-# Instagram API (可選)
-INSTAGRAM_APP_ID="your-app-id"
-INSTAGRAM_APP_SECRET="your-app-secret"
 ```
 
-### 4. 數據庫設置
+### 3. 資料庫初始化
 ```bash
-cd apps/backend
+# 產生 Prisma Client
+npm run db:generate
 
-# 生成 Prisma Client
-npm run prisma:generate
-
-# 推送數據庫 Schema
-npm run prisma:push
-
-# (可選) 運行種子數據
-npm run prisma:seed
+# 推送 Schema 至資料庫
+npm run db:push
 ```
 
-### 5. 啟動開發服務器
-
-**後端：**
+### 4. 啟動開發伺服器
 ```bash
-cd apps/backend
+# 同時啟動前端與後端
 npm run dev
-# 服務運行在 http://localhost:3000
 ```
+- 前端地址: http://localhost:5173
+- 後端 API: http://localhost:3000
 
-**前端：**
+## 🐳 Docker 部署 (Deployment)
+
+本專案提供準備就緒的 `docker-compose.yml`，支援一鍵即刻部署。
+
+### 1. 準備生產環境變數
+在根目錄建立 `.env.production`，內容參考 `.env.example` 但請填入真實的 API Key。
+
+### 2. 啟動服務
 ```bash
-cd apps/frontend
-npm run dev
-# 應用運行在 http://localhost:5173
+docker-compose up -d --build
 ```
 
-## 🐳 Docker 部署
+這將會啟動以下容器：
+- `frontend`: Nginx 服務靜態檔案
+- `backend`: Node.js API 服務
+- `db`: MySQL 資料庫
+- `caddy`: 自動 HTTPS 反向代理 (預設監聽 80/443)
 
-使用 Docker Compose 一鍵部署：
+### 3. 反向代理設定
+\Caddyfile\ 已經設定好自動路由：
+- `example.com` -> 前端容器
+- `example.com/api/*` -> 後端容器
 
+若需修改域名，請編輯 `Caddyfile`：
+```caddyfile
+your-domain.com {
+    reverse_proxy /api/* backend:3000
+    reverse_proxy /* frontend:80
+}
+```
+
+## 🔌 API 概覽 (API Insights)
+
+後端提供標準 RESTful API，所有路由皆以為 `/api/v1` 前綴。
+
+### 🔐 認證 (Auth)
+| Method | Endpoint | 描述 |
+|--------|----------|------|
+| POST   | `/auth/register` | 用戶註冊 |
+| POST   | `/auth/login` | 登入 (回傳 JWT) |
+| GET    | `/auth/me` | 驗證並獲取當前用戶資訊 |
+
+### 🖼️ 圖像與 AI (Image & AI)
+| Method | Endpoint | 描述 |
+|--------|----------|------|
+| POST   | `/upload` | 上傳圖片至 Cloudinary |
+| POST   | `/generate-caption` | **[核心]** 呼叫 Gemini 分析圖片並生成文案 |
+
+### 🎨 風格管理 (Styles)
+| Method | Endpoint | 描述 |
+|--------|----------|------|
+| GET    | `/custom-styles` | 獲取可用圖框與風格 |
+| POST   | `/custom-styles` | 建立新的自定義風格 |
+
+### 📸 Instagram 整合
+| Method | Endpoint | 描述 |
+|--------|----------|------|
+| POST   | `/instagram/publish` | **[核心]** 發布圖片與文案至 IG 商業帳號 |
+
+## 🛡️ 開發者規範 (Dev Guidelines)
+
+### 代碼風格
+本專案使用 **Prettier** 與 **ESLint** 強制統一風格。提交代碼前請執行：
 ```bash
-# 構建和啟動所有服務
-docker-compose up -d
-
-# 查看日誌
-docker-compose logs -f
-
-# 停止服務
-docker-compose down
+npm run lint
 ```
 
-服務訪問地址：
-- 前端：http://localhost
-- 後端 API：http://localhost/api
-- Prisma Studio：http://localhost:5555
-
-## 📝 API 文檔
-
-### 認證
-- `POST /api/v1/auth/register` - 用戶註冊
-- `POST /api/v1/auth/login` - 用戶登錄
-- `GET /api/v1/auth/me` - 獲取當前用戶
-- `POST /api/v1/auth/logout` - 登出
-
-### 圖片處理
-- `POST /api/v1/upload` - 上傳圖片
-- `POST /api/v1/generate-caption` - AI 生成文案
-
-### 自定義風格
-- `GET /api/v1/custom-styles` - 獲取所有風格
-- `POST /api/v1/custom-styles` - 創建風格
-- `PUT /api/v1/custom-styles/:id` - 更新風格
-- `DELETE /api/v1/custom-styles/:id` - 刪除風格
-
-### Instagram
-- `POST /api/v1/instagram/publish` - 發布到 Instagram
-
-## 🎯 主要特性
-
-### 移動端優化
-- 三步驟編輯流程
-- 底部浮動工具欄
-- 側滑導航
-- Touch 手勢支持
-
-### 性能優化
-- 圖片懶加載
-- 代碼分割
-- 響應式圖片
-- 瀏覽器緩存策略
-
-### 安全性
-- JWT 身份驗證
-- 密碼加密存儲
-- CORS 保護
-- 速率限制
-- XSS 防護
-
-### 無障礙性
-- ARIA 標籤
-- 鍵盤導航支持
-- 語義化 HTML
-- 對比度符合 WCAG 標準
-
-## 🤝 貢獻指南
-
-歡迎提交 Pull Request！在開始之前，請：
-
-1. Fork 本倉庫
-2. 創建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 開啟 Pull Request
-
-## 📄 許可證
-
-本項目採用 MIT 許可證 - 查看 [LICENSE](LICENSE) 文件了解詳情
-
-## 👥 作者
-
-**Evan Chen** - [@onlyatuna](https://github.com/onlyatuna)
-
-## 🙏 致謝
-
-- [Google Gemini](https://ai.google.dev/) - AI 文案生成
-- [Cloudinary](https://cloudinary.com/) - 圖片存儲
-- [Tailwind CSS](https://tailwindcss.com/) - UI 框架
-- [Lucide](https://lucide.dev/) - 圖標庫
-
-## 📮 聯繫方式
-
-- Website: [evanchen316.com](https://evanchen316.com)
-- Email: your.email@example.com
-- GitHub: [@onlyatuna](https://github.com/onlyatuna)
+### Git Commit 規範
+請遵循 [Conventional Commits](https://www.conventionalcommits.org/)：
+- `feat`: 新功能
+- `fix`: 修補 Bug
+- `docs`: 文件變更
+- `chore`: 建構過程或輔助工具的變動
 
 ---
 
-⭐ 如果這個項目對您有幫助，請給它一個星標！
+## 📄 授權 (License)
+本專案採用 **MIT License** 開源授權。
+
+## 👥 作者
+**Evan Chen** - [@onlyatuna](https://github.com/onlyatuna)

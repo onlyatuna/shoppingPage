@@ -1,25 +1,21 @@
-# .dockerignore
+# 環境變數與秘密 
+.env
+.env.*
 
-# 忽略依賴 (讓 Docker 在內部重新安裝，不要複製外部的)
-node_modules
-apps/backend/node_modules
-apps/frontend/node_modules
-packages/shared/node_modules
+# 編輯器與系統雜訊
+.vscode
+.idea
+*:Zone.Identifier
 
-# 忽略 Git 紀錄
-.git
-.github
+# 更多編譯產物與暫存檔
+*.tsbuildinfo
+packages/shared/dist
+packages/shared/node_modules 
 
-# 忽略 Log 和暫存檔
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.DS_Store
-
-# 忽略本地的 Build 產物 (Docker 會自己 Build)
-dist
-build
-apps/frontend/dist
-apps/backend/dist
+# 測試與除錯產出
+debug_log.json
+debug_output.txt
+test_output.txt
+test_result.json
+test-monitoring.ts
+*.sql
