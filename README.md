@@ -4,7 +4,7 @@
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)
-![React](https://img.shields.io/badge/frontend-React_18-61DAFB.svg?style=flat-square&logo=react)
+![React](https://img.shields.io/badge/frontend-React_19-61DAFB.svg?style=flat-square&logo=react)
 ![Node](https://img.shields.io/badge/backend-Node.js-339933.svg?style=flat-square&logo=node.js)
 ![Docker](https://img.shields.io/badge/deploy-Docker-2496ED.svg?style=flat-square&logo=docker)
 
@@ -23,7 +23,7 @@
 - **即時浮水印**：自動壓上品牌 LOGO，保護您的商品圖權。
 
 ### 🧠 Gemini 內容工廠
-讓 Google 最新的 Gemini 2.0 Flash 模型成為您的專屬文案小編。
+讓 Google 最新的 Gemini 2.5 Flash 模型成為您的專屬文案小編。
 - **視覺分析生成**：AI 能夠「看懂」您的圖片，根據畫面內容生成精準的描述。
 - **多種語氣切換**：從「親切小編」到「高冷精品」，想怎麼賣就怎麼寫。
 - **自動標籤 (#Hashtags)**：根據商品屬性自動生成高觸及率的 Hashtags。
@@ -60,7 +60,7 @@
 ## 🛠️ 技術棧 (Tech Stack)
 
 ### 🎨 前端 (Frontend)
-- **核心框架**: React 18, TypeScript, Vite
+- **核心框架**: React 19, TypeScript, Vite
 - **樣式與動畫**: TailwindCSS, Framer Motion, Lucide React
 - **狀態管理**: Zustand, React Query (TanStack Query)
 - **圖片處理**: React Easy Crop, React Dropzone
@@ -69,7 +69,7 @@
 ### ⚙️ 後端 (Backend)
 - **核心框架**: Node.js, Express 5
 - **資料庫與 ORM**: MySQL 8.0, Prisma ORM
-- **AI 服務**: Google Gemini 2.0 Flash API
+- **AI 服務**: Google Gemini 2.5 Flash-Lite & Flash-Image API
 - **圖片存儲**: Cloudinary SDK
 - **安全性**: JWT, Bcrypt, Helmet, CORS
 
@@ -147,7 +147,7 @@ docker-compose up -d --build
 - `caddy`: 自動 HTTPS 反向代理 (預設監聽 80/443)
 
 ### 3. 反向代理設定
-\Caddyfile\ 已經設定好自動路由：
+`Caddyfile` 已經設定好自動路由：
 - `example.com` -> 前端容器
 - `example.com/api/*` -> 後端容器
 
