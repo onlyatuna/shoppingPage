@@ -1,6 +1,34 @@
+# --- 基礎依賴與環境 (你原本有的) ---
 node_modules
-apps/*/node_modules
-packages/*/node_modules
-dist
 .env
-.git
+.env.*.local
+.DS_Store
+
+# --- 編譯產出 (Build Outputs) ---
+dist
+dist-ssr
+build
+*.tsbuildinfo
+
+# --- Log 與除錯檔案 (這是你目前最需要補上的) ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- 針對你專案中特定的雜訊檔案 ---
+debug_log.json
+debug_output.txt
+test_output.txt
+test_result.json
+test-monitoring.ts
+
+# --- 編輯器設定 (選用) ---
+.vscode
+.idea
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.sw?
