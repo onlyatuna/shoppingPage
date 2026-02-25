@@ -2,6 +2,7 @@
 import React, { useState, Suspense, useEffect, useRef, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { ContactShadows, Environment, OrbitControls, PerspectiveCamera, AdaptiveDpr } from '@react-three/drei';
+import * as THREE from 'three';
 import { FanModel } from '@/features/breeze3d/components/FanModel';
 import { Controls } from '@/features/breeze3d/components/Controls';
 import { FanAudio } from '@/features/breeze3d/components/FanAudio';
@@ -61,7 +62,12 @@ const App: React.FC = () => {
       <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900 via-transparent to-transparent pointer-events-none" />
 
       {/* 3D Scene */}
-      <Canvas shadows dpr={[1, 1.5]} className="z-10" performance={{ min: 0.5 }}>
+      <Canvas
+        shadows={{ type: THREE.PCFShadowMap }}
+        dpr={[1, 1.5]}
+        className="z-10"
+        performance={{ min: 0.5 }}
+      >
         <AdaptiveDpr pixelated />
         <PerspectiveCamera makeDefault position={[0, 1, 8]} fov={50} />
 
@@ -88,8 +94,16 @@ const App: React.FC = () => {
           />
         </Suspense>
 
-        {/* Floor Shadow */}
-        <ContactShadows position={[0, -2, 0]} opacity={0.4} scale={10} blur={2} far={4} color="#000000" resolution={256} />
+        {/* Floor Shadow (Reduced resolution for CPU saving) */}
+        <ContactShadows
+          position={[0, -2, 0]}
+          opacity={0.4}
+          scale={10}
+          blur={2.5}
+          far={4}
+          color="#000000"
+          resolution={128}
+        />
 
         {/* Camera Controls */}
         <OrbitControls

@@ -36,8 +36,6 @@ export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
     const H = isMobile ? 70 : 130;
     const PAD_L = isMobile ? 18 : 26;
 
-    const lastValues = useRef({ factor: 0, rpm: 0 });
-
     const draw = useCallback((timestamp: number) => {
         // 30fps Throttle: (1000ms / 30fps) ≈ 33ms
         if (timestamp - lastDrawTime.current < 33) {
@@ -46,21 +44,12 @@ export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
         }
         lastDrawTime.current = timestamp;
 
-        // CPU Optimization: Skip if no significant change and speed is 0
-        if (speed === 0 &&
-            Math.abs(natureFactorRef.current - lastValues.current.factor) < 0.01 &&
-            Math.abs(rotationSpeedRef.current - lastValues.current.rpm) < 0.01) {
-            rafRef.current = requestAnimationFrame(draw);
-            return;
-        }
-        lastValues.current = { factor: natureFactorRef.current, rpm: rotationSpeedRef.current };
-
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d', { alpha: false }); // Optimization: opaque canvas
         if (!ctx) return;
 
-        // 1. Data Sampling
+        // 1. Data Sampling (Always push to keep the waves moving)
         factorBuf.current.push(natureFactorRef.current);
         rpmBuf.current.push(rotationSpeedRef.current);
         if (factorBuf.current.length > BUFFER) factorBuf.current.shift();
