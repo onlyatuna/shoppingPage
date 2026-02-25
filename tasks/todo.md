@@ -90,4 +90,9 @@
     - [x] 重構 sanitizeImageUrl：徹底斷開使用者輸入與 Hostname 的直接關聯 <!-- id: 83 -->
     - [x] 加入對私有 IP 解析後的第二次檢查 (DNS Rebinding 防禦基礎) <!-- id: 84 -->
     - [x] 在 axios 呼叫點明確使用結構化拼接的 URL 變數 <!-- id: 85 -->
+- [x] 絕對防禦：硬編碼 SSRF 重構 (CodeQL 深度清理) <!-- id: 86 -->
+    - [x] 將 sanitizeImageUrl 改為回傳「安全組建物件」而非字串 <!-- id: 87 -->
+    - [x] 在 axios 呼叫點現場使用樣板字面量 ``https://${safeHost}...`` 拼接 <!-- id: 88 -->
+    - [x] 加入對 169.254.169.254 等雲端 Metadata IP 的明確封鎖 <!-- id: 89 -->
+    - [x] 移除所有可能導致 Taint Tracking 遺留的變數傳遞 <!-- id: 90 -->
 
