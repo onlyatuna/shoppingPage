@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Power, RotateCw, Timer, Leaf } from 'lucide-react';
 import { FanSpeed } from '@/features/breeze3d/types';
-import { Wind, RotateCw, Power, Leaf, Clock, ChevronDown } from 'lucide-react';
 
 interface ControlsProps {
   speed: FanSpeed;
@@ -10,19 +10,8 @@ interface ControlsProps {
   onSpeedChange: (speed: FanSpeed) => void;
   onOscillationToggle: () => void;
   onNatureModeToggle: () => void;
-  onSetTimer: (minutes: number | null) => void;
+  onSetTimer: (seconds: number | null) => void;
 }
-
-const getSpeedLabel = (level: number) => {
-  switch (level) {
-    case 0: return '關閉';
-    case 1: return '微風';
-    case 2: return '弱風';
-    case 3: return '強風';
-    case 4: return '超強';
-    default: return '';
-  }
-};
 
 export const Controls: React.FC<ControlsProps> = ({
   speed,
@@ -34,119 +23,69 @@ export const Controls: React.FC<ControlsProps> = ({
   onNatureModeToggle,
   onSetTimer
 }) => {
-  const [showTimerOptions, setShowTimerOptions] = useState(false);
-  const timerOptions = [null, 10, 30, 60, 120];
-
   return (
-    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl shadow-2xl w-[90%] max-w-lg z-50">
-      <div className="flex flex-col gap-6">
-
-        {/* Header Display */}
-        <div className="flex justify-between items-center px-2">
-          <div>
-            <h2 className="text-white font-bold text-lg italic tracking-tight">BREEZE MASTER <span className="text-blue-500">3000</span></h2>
-            <p className="text-gray-400 text-xs uppercase tracking-wider">
-              狀態: <span className={speed > 0 ? "text-green-400" : "text-red-400"}>{speed > 0 ? `運行中 (${natureMode ? '自然' : '恆定'})` : '待機中'}</span>
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            {natureMode && <Leaf className="w-5 h-5 text-green-400 animate-bounce" />}
-            <Wind className={`w-6 h-6 ${speed > 0 ? 'text-blue-400 animate-pulse' : 'text-gray-600'}`} />
-          </div>
-        </div>
+    <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 w-[95%] sm:w-auto max-w-md animate-in slide-in-from-bottom-4 duration-500">
+      <div className="bg-black/40 backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-2xl flex flex-col gap-3 sm:gap-6">
 
         {/* Speed Controls */}
-        <div className="grid grid-cols-5 gap-2 bg-black/20 p-1.5 rounded-xl">
-          {[0, 1, 2, 3, 4].map((lvl) => {
-            const isActive = speed === lvl;
-            return (
-              <button
-                key={lvl}
-                onClick={() => onSpeedChange(lvl as FanSpeed)}
-                className={`
-                  relative group overflow-hidden rounded-lg py-3 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer
-                  ${isActive
-                    ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.5)] scale-105 font-bold'
-                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}
-                `}
-              >
-                {lvl === 0 ? <Power size={18} /> : <span className="text-lg">{lvl}</span>}
-                <span className="text-[10px] mt-1 opacity-70">
-                  {getSpeedLabel(lvl)}
-                </span>
-                {isActive && (
-                  <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-green-400 rounded-full shadow-[0_0_5px_#4ade80]" />
-                )}
-              </button>
-            );
-          })}
+        <div className="flex items-center justify-between gap-1.5 sm:gap-4">
+          <button
+            onClick={() => onSpeedChange(0)}
+            className={`p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all ${speed === 0
+              ? 'bg-red-500/20 text-red-500 border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+              : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
+          >
+            <Power size={18} className="sm:w-6 sm:h-6" />
+          </button>
+
+          {[1, 2, 3, 4].map((s) => (
+            <button
+              key={s}
+              onClick={() => onSpeedChange(s as FanSpeed)}
+              className={`flex-1 py-2 sm:py-3 px-2 sm:px-6 rounded-xl sm:rounded-2xl font-black transition-all flex flex-col items-center gap-0.5 sm:gap-1 ${speed === s
+                ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] scale-105'
+                : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
+            >
+              <span className="text-[10px] sm:text-xs tracking-tighter opacity-70">
+                {s === 1 ? '微' : s === 2 ? '弱' : s === 3 ? '強' : '猛'}
+              </span>
+              <span className="text-sm sm:text-xl">{s}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Function Toggles */}
-        <div className="grid grid-cols-3 gap-2">
-          {/* Oscillation */}
+        {/* Secondary Actions */}
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-4">
           <button
             onClick={onOscillationToggle}
-            className={`
-               rounded-xl py-3 flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer border
-               ${isOscillating
-                ? 'bg-purple-600/20 text-purple-400 border-purple-500/50 shadow-[0_0_10px_rgba(147,51,234,0.2)]'
-                : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10 hover:text-white'}
-            `}
+            className={`flex flex-col items-center gap-1 sm:gap-2 py-2 sm:py-3 rounded-xl sm:rounded-2xl transition-all ${isOscillating
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
           >
-            <RotateCw size={18} className={`${isOscillating ? 'animate-spin-slow' : ''}`} />
-            <span className="text-xs font-medium">擺頭轉向</span>
+            <RotateCw size={16} className={`sm:w-5 sm:h-5 ${isOscillating ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} />
+            <span className="text-[10px] sm:text-xs font-bold">{window.innerWidth < 640 ? '擺頭' : '擺頭轉向'}</span>
           </button>
 
-          {/* Nature Mode */}
           <button
             onClick={onNatureModeToggle}
-            className={`
-               rounded-xl py-3 flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer border
-               ${natureMode
-                ? 'bg-green-600/20 text-green-400 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.2)]'
-                : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10 hover:text-white'}
-            `}
+            className={`flex flex-col items-center gap-1 sm:gap-2 py-2 sm:py-3 rounded-xl sm:rounded-2xl transition-all ${natureMode
+              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+              : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
           >
-            <Leaf size={18} />
-            <span className="text-xs font-medium">自然微風</span>
+            <Leaf size={16} className={`sm:w-5 sm:h-5 ${natureMode ? 'animate-pulse' : ''}`} />
+            <span className="text-[10px] sm:text-xs font-bold">{window.innerWidth < 640 ? '自然風' : '自然微風'}</span>
           </button>
 
-          {/* Timer */}
-          <div className="relative">
-            <button
-              onClick={() => setShowTimerOptions(!showTimerOptions)}
-              className={`
-                w-full h-full rounded-xl py-3 flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer border
-                ${timerLeft !== null
-                  ? 'bg-orange-600/20 text-orange-400 border-orange-500/50'
-                  : 'bg-white/5 text-gray-400 border-transparent hover:bg-white/10 hover:text-white'}
-              `}
-            >
-              <Clock size={18} />
-              <span className="text-xs font-medium">{timerLeft ? `${timerLeft}s` : '預約定時'}</span>
-              <ChevronDown size={14} className={`transition-transform ${showTimerOptions ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showTimerOptions && (
-              <div className="absolute bottom-full mb-2 left-0 right-0 bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-[60] animate-in slide-in-from-bottom-2 fade-in">
-                {timerOptions.map((opt) => (
-                  <button
-                    key={opt === null ? 'off' : opt}
-                    onClick={() => {
-                      onSetTimer(opt);
-                      setShowTimerOptions(false);
-                    }}
-                    className="w-full py-2.5 text-xs text-gray-300 hover:bg-white/10 transition-colors border-b border-white/5 last:border-0"
-                  >
-                    {opt === null ? '取消定時' : `${opt} 秒`}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => onSetTimer(timerLeft ? null : 30)}
+            className={`flex flex-col items-center gap-1 sm:gap-2 py-2 sm:py-3 rounded-xl sm:rounded-2xl transition-all ${timerLeft
+              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+              : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
+          >
+            <Timer size={16} className="sm:w-5 sm:h-5" />
+            <span className="text-[10px] sm:text-xs font-bold">{window.innerWidth < 640 ? '定時' : '預約定時'}</span>
+          </button>
         </div>
-
       </div>
     </div>
   );

@@ -102,50 +102,50 @@ const App: React.FC = () => {
       </Canvas>
 
       {/* Top Left Branding */}
-      <div className="absolute top-6 left-6 z-20">
-        <h1 className="text-2xl font-black text-white tracking-tighter italic">
+      <div className="absolute top-3 left-3 sm:top-6 sm:left-6 z-20">
+        <h1 className="text-lg sm:text-2xl font-black text-white tracking-tighter italic">
           BREEZE<span className="text-blue-500">MASTER</span>
         </h1>
-        <p className="text-gray-400 text-xs font-medium tracking-widest mt-1">3D 立體風扇模擬</p>
+        <p className="text-gray-400 text-[10px] sm:text-xs font-medium tracking-widest mt-0.5 sm:mt-1 hidden sm:block">3D 立體風扇模擬</p>
       </div>
 
       {/* Timer Indicator */}
       {timerLeft !== null && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 bg-blue-600/20 backdrop-blur-md border border-blue-500/30 px-4 py-1.5 rounded-full flex items-center gap-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-          <span className="text-blue-400 text-xs font-bold font-mono">TIMER: {timerLeft}s</span>
+        <div className="absolute top-3 sm:top-6 left-1/2 -translate-x-1/2 z-20 bg-blue-600/20 backdrop-blur-md border border-blue-500/30 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full flex items-center gap-1.5 sm:gap-2">
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-pulse" />
+          <span className="text-blue-400 text-[10px] sm:text-xs font-bold font-mono">{timerLeft}s</span>
         </div>
       )}
 
       {/* Help & Waveform Buttons */}
-      <div className="absolute top-6 right-6 z-20 flex items-center gap-2">
+      <div className="absolute top-3 right-3 sm:top-6 sm:right-6 z-20 flex items-center gap-1.5 sm:gap-2">
         <button
           onClick={() => setShowWaveform(!showWaveform)}
-          className={`p-2 transition-colors rounded-full ${showWaveform
+          className={`p-1.5 sm:p-2 transition-colors rounded-full ${showWaveform
             ? 'text-cyan-400 bg-cyan-500/20 border border-cyan-500/30'
             : 'text-white/50 hover:text-white bg-white/5 hover:bg-white/10'
             }`}
         >
-          <Activity size={20} />
+          <Activity size={16} className="sm:w-5 sm:h-5" />
         </button>
         <button
           onClick={() => setShowHelp(!showHelp)}
-          className="p-2 text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full"
+          className="p-1.5 sm:p-2 text-white/50 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-full"
         >
-          <Info size={20} />
+          <Info size={16} className="sm:w-5 sm:h-5" />
         </button>
       </div>
 
       {showHelp && (
-        <div className="absolute top-20 right-6 z-20 w-64 bg-black/80 backdrop-blur-md p-4 rounded-xl border border-white/10 text-sm text-gray-300 shadow-xl animate-in fade-in slide-in-from-top-2">
-          <p className="mb-2"><strong className="text-white">操作說明：</strong></p>
-          <ul className="list-disc pl-4 space-y-1">
-            <li>拖曳畫面可旋轉視角</li>
-            <li>滾輪可縮放遠近</li>
-            <li>使用下方按鈕調整 4 段風速</li>
-            <li>點擊 '擺頭' 可控制風扇轉向</li>
-            <li>'自然風' 模組會隨機變化風速</li>
-            <li>'定時' 功能可在指定時間後關機</li>
+        <div className="absolute top-12 right-3 sm:top-20 sm:right-6 z-20 w-48 sm:w-64 bg-black/80 backdrop-blur-md p-2.5 sm:p-4 rounded-xl border border-white/10 text-[11px] sm:text-sm text-gray-300 shadow-xl animate-in fade-in slide-in-from-top-2">
+          <p className="mb-1.5 sm:mb-2"><strong className="text-white">操作說明：</strong></p>
+          <ul className="list-disc pl-3 sm:pl-4 space-y-0.5 sm:space-y-1">
+            <li>拖曳旋轉視角</li>
+            <li>滾輪縮放</li>
+            <li>下方按鈕調整風速</li>
+            <li>擺頭控制轉向</li>
+            <li>自然風隨機變速</li>
+            <li>定時自動關機</li>
           </ul>
         </div>
       )}

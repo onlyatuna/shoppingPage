@@ -10,12 +10,11 @@ interface WaveformMonitorProps {
 }
 
 /**
- * Real-time dual-channel oscilloscope for natural wind debugging.
- *
- *   Cyan line  → Nature Factor (Perlin noise output, 0–1)
- *   Amber line → Actual blade rotation speed (after asymmetric lerp, 0–1)
- *
- * The lag between the two lines visualises the motor inertia effect.
+ * Optimized real-time waveform monitor.
+ * Fixed "Context Lost" issues by:
+ * 1. Removing per-frame Canvas Gradient creation (the GPU killer).
+ * 2. Throttling update rate to 30fps.
+ * 3. Proper lifecycle cleanup.
  */
 export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
     natureFactorRef,
@@ -28,30 +27,50 @@ export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
     const factorBuf = useRef<number[]>([]);
     const rpmBuf = useRef<number[]>([]);
     const rafRef = useRef<number | null>(null);
+    const lastDrawTime = useRef<number>(0);
 
-    const BUFFER = 200;
-    const W = 420;
-    const H = 130;
-    const PAD_L = 26;
+    // Constants (responsive)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const BUFFER = isMobile ? 80 : 200; // Further reduced for CPU
+    const W = isMobile ? 260 : 420;
+    const H = isMobile ? 70 : 130;
+    const PAD_L = isMobile ? 18 : 26;
 
-    const draw = useCallback(() => {
+    const lastValues = useRef({ factor: 0, rpm: 0 });
+
+    const draw = useCallback((timestamp: number) => {
+        // 30fps Throttle: (1000ms / 30fps) ≈ 33ms
+        if (timestamp - lastDrawTime.current < 33) {
+            rafRef.current = requestAnimationFrame(draw);
+            return;
+        }
+        lastDrawTime.current = timestamp;
+
+        // CPU Optimization: Skip if no significant change and speed is 0
+        if (speed === 0 &&
+            Math.abs(natureFactorRef.current - lastValues.current.factor) < 0.01 &&
+            Math.abs(rotationSpeedRef.current - lastValues.current.rpm) < 0.01) {
+            rafRef.current = requestAnimationFrame(draw);
+            return;
+        }
+        lastValues.current = { factor: natureFactorRef.current, rpm: rotationSpeedRef.current };
+
         const canvas = canvasRef.current;
         if (!canvas) return;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false }); // Optimization: opaque canvas
         if (!ctx) return;
 
-        // Sample
+        // 1. Data Sampling
         factorBuf.current.push(natureFactorRef.current);
         rpmBuf.current.push(rotationSpeedRef.current);
         if (factorBuf.current.length > BUFFER) factorBuf.current.shift();
         if (rpmBuf.current.length > BUFFER) rpmBuf.current.shift();
 
-        // Clear
-        ctx.clearRect(0, 0, W, H);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        // 2. Clear Scene
+        ctx.fillStyle = '#111827'; // Tailwind gray-900 (matches background)
         ctx.fillRect(0, 0, W, H);
 
-        // Grid
+        // 3. Draw Grid
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
         ctx.lineWidth = 1;
         for (let i = 1; i < 4; i++) {
@@ -62,37 +81,24 @@ export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
             ctx.stroke();
         }
 
-        // Y labels
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.font = '9px monospace';
+        // Y Axis Labels
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.font = isMobile ? '7px monospace' : '9px monospace';
         ctx.textAlign = 'left';
-        ctx.fillText('1.0', 3, 12);
-        ctx.fillText('0.5', 3, H / 2 + 4);
-        ctx.fillText('0', 3, H - 4);
+        ctx.fillText('1.0', 2, 8);
+        ctx.fillText('0.5', 2, H / 2 + 3);
+        ctx.fillText('0', 2, H - 3);
 
         const drawW = W - PAD_L;
         const stepX = drawW / (BUFFER - 1);
 
-        // Helper: draw a buffered line
-        const drawLine = (
-            buf: number[],
-            color1: string,
-            color2: string,
-            fillColor: string,
-            lineWidth: number
-        ) => {
+        // 4. Helper: Draw Line (Optimized: No gradients)
+        const drawLine = (buf: number[], color: string, lineWidth: number) => {
             if (buf.length < 2) return;
-
-            const grad = ctx.createLinearGradient(PAD_L, 0, W, 0);
-            grad.addColorStop(0, color1);
-            grad.addColorStop(1, color2);
-
-            ctx.strokeStyle = grad;
+            ctx.strokeStyle = color;
             ctx.lineWidth = lineWidth;
             ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
             ctx.beginPath();
-
             for (let i = 0; i < buf.length; i++) {
                 const x = PAD_L + i * stepX;
                 const y = H - buf[i] * (H - 10) - 5;
@@ -100,75 +106,42 @@ export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
                 else ctx.lineTo(x, y);
             }
             ctx.stroke();
-
-            // Fill
-            const lastX = PAD_L + (buf.length - 1) * stepX;
-            ctx.lineTo(lastX, H);
-            ctx.lineTo(PAD_L, H);
-            ctx.closePath();
-            ctx.fillStyle = fillColor;
-            ctx.fill();
         };
 
-        // ── Channel 1: Nature Factor (cyan) ──
-        drawLine(
-            factorBuf.current,
-            'rgba(34, 211, 238, 0.15)',
-            'rgba(34, 211, 238, 0.9)',
-            'rgba(34, 211, 238, 0.06)',
-            2
-        );
+        // Nature Factor (Cyan)
+        drawLine(factorBuf.current, '#22d3ee', isMobile ? 1.5 : 2);
+        // RPM (Amber)
+        drawLine(rpmBuf.current, '#fbbf24', isMobile ? 1 : 1.5);
 
-        // ── Channel 2: Rotation Speed (amber) ──
-        drawLine(
-            rpmBuf.current,
-            'rgba(251, 191, 36, 0.15)',
-            'rgba(251, 191, 36, 0.9)',
-            'rgba(251, 191, 36, 0.04)',
-            1.5
-        );
+        // 5. Head Point Decor
+        if (factorBuf.current.length > 0) {
+            const fVal = factorBuf.current[factorBuf.current.length - 1];
+            const rVal = rpmBuf.current[rpmBuf.current.length - 1];
+            const dotX = PAD_L + (factorBuf.current.length - 1) * stepX;
 
-        // ── Current values ──
-        const fVal = factorBuf.current[factorBuf.current.length - 1];
-        const rVal = rpmBuf.current[rpmBuf.current.length - 1];
+            // Cyan Dot
+            ctx.fillStyle = '#22d3ee';
+            ctx.beginPath();
+            ctx.arc(dotX, H - fVal * (H - 10) - 5, isMobile ? 1.5 : 2.5, 0, Math.PI * 2);
+            ctx.fill();
 
-        ctx.font = 'bold 10px monospace';
-        ctx.textAlign = 'right';
+            // Amber Dot
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(dotX, H - rVal * (H - 10) - 5, isMobile ? 1.5 : 2.5, 0, Math.PI * 2);
+            ctx.fill();
 
-        // Factor value
-        ctx.fillStyle = '#22d3ee';
-        ctx.fillText(fVal.toFixed(2), W - 6, 14);
-
-        // RPM value
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillText(rVal.toFixed(2), W - 6, 28);
-
-        // Dot on factor line head
-        const fDotX = PAD_L + (factorBuf.current.length - 1) * stepX;
-        const fDotY = H - fVal * (H - 10) - 5;
-        ctx.beginPath();
-        ctx.arc(fDotX, fDotY, 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(34, 211, 238, 0.3)';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(fDotX, fDotY, 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#22d3ee';
-        ctx.fill();
-
-        // Dot on RPM line head
-        const rDotX = PAD_L + (rpmBuf.current.length - 1) * stepX;
-        const rDotY = H - rVal * (H - 10) - 5;
-        ctx.beginPath();
-        ctx.arc(rDotX, rDotY, 4, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(251, 191, 36, 0.3)';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(rDotX, rDotY, 2, 0, Math.PI * 2);
-        ctx.fillStyle = '#fbbf24';
-        ctx.fill();
+            // Current values in corner
+            ctx.font = `bold ${isMobile ? 8 : 10}px monospace`;
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#22d3ee';
+            ctx.fillText(fVal.toFixed(2), W - 5, isMobile ? 10 : 14);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillText(rVal.toFixed(2), W - 5, isMobile ? 20 : 28);
+        }
 
         rafRef.current = requestAnimationFrame(draw);
-    }, [natureFactorRef, rotationSpeedRef]);
+    }, [natureFactorRef, rotationSpeedRef, isMobile, BUFFER, W, H, PAD_L]);
 
     useEffect(() => {
         if (visible) {
@@ -191,26 +164,29 @@ export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
                 rafRef.current = null;
             }
         };
-    }, [visible, draw]);
+    }, [visible, draw, W, H]);
 
     if (!visible) return null;
 
-    // Mode label
     const modeLabel = speed === 0
-        ? '待機 · Standby'
+        ? '待機'
         : natureMode
-            ? '自然風 · Perlin 3-Layer'
-            : '恆定 · Constant';
+            ? isMobile ? '自然風' : '自然風 · Perlin'
+            : isMobile ? '恆定' : '恆定 · Constant';
 
     return (
-        <div className="absolute bottom-44 right-6 z-50 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl">
+        <div className={`absolute z-50 animate-in fade-in duration-300 ${isMobile
+            ? 'top-14 left-1/2 -translate-x-1/2'
+            : 'bottom-44 right-6'
+            }`}>
+            <div className={`${isMobile ? 'p-1.5' : 'p-3'
+                } bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl`}>
                 {/* Header */}
-                <div className="flex items-center justify-between mb-2 px-1">
-                    <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full shadow-[0_0_6px] ${speed > 0 ? 'bg-cyan-400 shadow-cyan-400 animate-pulse' : 'bg-gray-600 shadow-gray-600'
+                <div className="flex items-center justify-between mb-1 px-1">
+                    <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${speed > 0 ? 'bg-cyan-400 animate-pulse' : 'bg-gray-600'
                             }`} />
-                        <span className="text-[10px] font-bold text-white/70 tracking-widest uppercase">
+                        <span className="text-[9px] font-bold text-white/70 tracking-tight uppercase">
                             {modeLabel}
                         </span>
                     </div>
@@ -224,18 +200,18 @@ export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
                 />
 
                 {/* Legend */}
-                <div className="flex items-center justify-between mt-1.5 px-1">
+                <div className="flex items-center justify-between mt-1 px-1">
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1">
-                            <div className="w-3 h-0.5 bg-cyan-400 rounded" />
-                            <span className="text-[9px] text-cyan-400/70">Factor</span>
+                            <div className="w-2 h-0.5 bg-cyan-400 rounded" />
+                            <span className="text-[8px] text-cyan-400/70">{isMobile ? 'F' : 'Factor'}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                            <div className="w-3 h-0.5 bg-amber-400 rounded" />
-                            <span className="text-[9px] text-amber-400/70">RPM</span>
+                            <div className="w-2 h-0.5 bg-amber-400 rounded" />
+                            <span className="text-[8px] text-amber-400/70">{isMobile ? 'RPM' : 'RPM'}</span>
                         </div>
                     </div>
-                    <span className="text-[9px] text-gray-500">Speed {speed}</span>
+                    <span className="text-[8px] text-gray-500">SPD {speed}</span>
                 </div>
             </div>
         </div>

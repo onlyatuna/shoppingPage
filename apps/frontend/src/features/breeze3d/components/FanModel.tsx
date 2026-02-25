@@ -107,14 +107,19 @@ const FanModelInner: React.FC<FanProps> = ({ speed, isOscillating, natureMode = 
   const oscillationDirection = useRef(1);
   const natureFactor = useRef(1);
 
-  // Pre-computed outside useFrame to avoid GC pressure
-  const targetSpeedMap: Record<number, number> = useMemo(() => ({
-    0: 0, 1: 0.15, 2: 0.35, 3: 0.6, 4: 0.9
-  }), []);
+  // Optimization: use array index [0,1,2,3,4] for fast lookup
+  const speedArray = useMemo(() => [0, 0.15, 0.35, 0.6, 0.9], []);
 
   useFrame((state, delta) => {
     // Clamp delta to prevent jumps after tab minimize/restore
     const safeDelta = Math.min(delta, 0.1);
+
+    // CPU Optimization: skip physics entirely if idle
+    if (speed === 0 && currentRotationSpeed.current < 0.001) {
+      if (currentRotationSpeed.current > 0) currentRotationSpeed.current = 0;
+      if (rotationSpeedRef) rotationSpeedRef.current = 0;
+      return;
+    }
 
     // Nature Mode: Perlin noise modulation (replaces simple sine wave)
     if (natureMode && speed > 0) {
@@ -126,7 +131,7 @@ const FanModelInner: React.FC<FanProps> = ({ speed, isOscillating, natureMode = 
     // Write to shared ref so WindParticles & FanAudio stay in sync
     natureFactorRef.current = natureFactor.current;
 
-    const targetSpeed = targetSpeedMap[speed] * natureFactor.current;
+    const targetSpeed = speedArray[speed] * natureFactor.current;
 
     // Asymmetric motor inertia:
     //   - Acceleration (electric motor driving): faster response

@@ -38,11 +38,36 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://static.cloudflareinsights.com"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://*.cdninstagram.com", "https://images.unsplash.com"],
-            fontSrc: ["'self'", "data:"],
-            connectSrc: ["'self'", "https://res.cloudinary.com", "https://api.cloudinary.com", "wss:", "ws:"],
+            scriptSrc: [
+                "'self'", "'unsafe-inline'", "'unsafe-eval'",
+                "https://static.cloudflareinsights.com",
+                "https://cdn.jsdelivr.net",   // MediaPipe (Hand Gesture)
+            ],
+            styleSrc: [
+                "'self'", "'unsafe-inline'",
+                "https://fonts.googleapis.com", // Google Fonts / Material Icons
+            ],
+            imgSrc: [
+                "'self'", "data:", "blob:",
+                "https://res.cloudinary.com",
+                "https://*.cdninstagram.com",
+                "https://images.unsplash.com",
+            ],
+            fontSrc: [
+                "'self'", "data:",
+                "https://fonts.gstatic.com",    // Google Fonts 字體檔案
+                "https://fonts.googleapis.com",
+            ],
+            connectSrc: [
+                "'self'",
+                "https://res.cloudinary.com",
+                "https://api.cloudinary.com",
+                "https://raw.githack.com",                    // Three.js HDRI assets
+                "https://raw.githubusercontent.com",          // Three.js HDRI assets (alternate CDN)
+                "https://generativelanguage.googleapis.com",  // Gemini AI API
+                "wss:", "ws:",
+            ],
+            workerSrc: ["'self'", "blob:"],     // Service Worker & Web Workers
             frameAncestors: ["'self'"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],

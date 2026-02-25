@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { NatureFactorRef } from '@/features/breeze3d/types';
@@ -9,33 +9,63 @@ interface WindParticlesProps {
     natureFactorRef: NatureFactorRef;
 }
 
-// Shared geometry & material (created once)
-const particleGeo = new THREE.SphereGeometry(1, 4, 4);
-const particleMat = new THREE.MeshStandardMaterial({
-    color: '#ffffff',
-    transparent: true,
-    opacity: 0.3,
-    emissive: '#38bdf8',
-    emissiveIntensity: 2,
-});
-
+/**
+ * CPU Optimized Wind Particles
+ * 1. Reduced count on mobile.
+ * 2. Static object allocation (dummy) to prevent GC pressure.
+ * 3. Simplified math for particle updates.
+ */
 const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natureFactorRef }) => {
-    const count = 30;
+    // Optimization: detect mobile to cut CPU load
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const count = isMobile ? 12 : 30;
+
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
 
-    // Smoothed intensity that lerps toward the target (0 when off, speed-based when on)
-    const currentIntensity = useRef(0);
+    // Resources with cleanup
+    const geometry = useMemo(() => new THREE.SphereGeometry(1, 3, 3), []); // Lower segments
+    const material = useMemo(() => new THREE.MeshStandardMaterial({
+        color: '#ffffff',
+        transparent: true,
+        opacity: 0.2,
+        emissive: '#38bdf8',
+        emissiveIntensity: 1.5,
+    }), []);
 
+    useEffect(() => {
+        return () => {
+            geometry.dispose();
+            material.dispose();
+        };
+    }, [geometry, material]);
+
+    const currentIntensity = useRef(0);
+    const hasInitialized = useRef(false);
+
+    useEffect(() => {
+        // Force hide all instances on mount
+        if (meshRef.current) {
+            dummy.scale.set(0, 0, 0);
+            dummy.updateMatrix();
+            for (let i = 0; i < count; i++) {
+                meshRef.current.setMatrixAt(i, dummy.matrix);
+            }
+            meshRef.current.instanceMatrix.needsUpdate = true;
+        }
+    }, [count, dummy]);
+
+    // Particle pool with pre-calculated static values
     const particles = useMemo(() => {
         const temp = [];
         for (let i = 0; i < count; i++) {
             temp.push({
-                x: (Math.random() - 0.5) * 3,
-                y: (Math.random() - 0.5) * 3,
+                x: (Math.random() - 0.5) * 2.8,
+                y: (Math.random() - 0.5) * 2.8,
                 z: Math.random() * -2,
-                velocity: 0.1 + Math.random() * 0.2,
+                velocity: 0.12 + Math.random() * 0.15,
                 life: Math.random(),
+                offset: Math.random() * 10, // Pre-randomized for noise
             });
         }
         return temp;
@@ -44,58 +74,60 @@ const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natur
     useFrame((state, delta) => {
         if (!meshRef.current) return;
 
-        // Clamp delta to prevent massive jumps after tab minimize/restore
-        const safeDelta = Math.min(delta, 0.1);
+        // Initialize: hide everything on first frame just in case
+        if (!hasInitialized.current) {
+            dummy.scale.set(0, 0, 0);
+            dummy.updateMatrix();
+            for (let i = 0; i < count; i++) {
+                meshRef.current.setMatrixAt(i, dummy.matrix);
+            }
+            meshRef.current.instanceMatrix.needsUpdate = true;
+            hasInitialized.current = true;
+        }
 
-        // Smooth transition: lerp intensity toward target
-        // Apply nature factor from the shared ref (written by FanModel each frame)
+        const safeDelta = Math.min(delta, 0.1);
         const natureMod = natureFactorRef.current;
         const targetIntensity = active && speed > 0 ? (speed / 4) * natureMod : 0;
-        currentIntensity.current = THREE.MathUtils.lerp(
-            currentIntensity.current,
-            targetIntensity,
-            safeDelta * 2 // Same acceleration factor as fan blades
-        );
 
-        // Snap to zero when very close (avoid infinite tiny particles)
+        // Lerp intensity
+        currentIntensity.current += (targetIntensity - currentIntensity.current) * safeDelta * 4;
+
         if (currentIntensity.current < 0.001) {
-            currentIntensity.current = 0;
+            if (currentIntensity.current !== 0) {
+                currentIntensity.current = 0;
+                // Force-hide all particles once
+                dummy.scale.set(0, 0, 0);
+                dummy.updateMatrix();
+                for (let i = 0; i < count; i++) {
+                    meshRef.current.setMatrixAt(i, dummy.matrix);
+                }
+                meshRef.current.instanceMatrix.needsUpdate = true;
+            }
+            return;
         }
 
         const intensity = currentIntensity.current;
         const t = state.clock.getElapsedTime();
 
         for (let i = 0; i < count; i++) {
-            const particle = particles[i];
+            const p = particles[i];
 
-            if (intensity > 0) {
-                // Update life — speed proportional to intensity
-                particle.life += safeDelta * (0.3 + intensity * 0.5);
-                if (particle.life > 1) {
-                    particle.life = 0;
-                    particle.x = (Math.random() - 0.5) * 3;
-                    particle.y = (Math.random() - 0.5) * 3;
-                    particle.z = -0.5;
-                }
-
-                // Move forward — velocity proportional to intensity
-                particle.z -= particle.velocity * intensity * 30 * safeDelta;
-
-                // Wobble noise
-                const noise = Math.sin(t * 5 + i) * 0.1;
-                dummy.position.set(
-                    particle.x + noise,
-                    particle.y + Math.cos(t * 3 + i) * 0.1,
-                    particle.z
-                );
-
-                // Scale proportional to intensity & life phase
-                const lifeScale = (1 - particle.life) * 0.1;
-                const s = lifeScale * intensity;
-                dummy.scale.set(s, s, s);
-            } else {
-                dummy.scale.set(0, 0, 0);
+            // Speed & Life update
+            p.life += safeDelta * (0.3 + intensity * 0.6);
+            if (p.life > 1) {
+                p.life = 0;
+                p.z = -0.4;
             }
+
+            p.z -= p.velocity * intensity * 35 * safeDelta;
+
+            // Simplified wobble (one sin instead of two)
+            const wobble = Math.sin(t * 4 + p.offset) * 0.08;
+            dummy.position.set(p.x + wobble, p.y + wobble, p.z);
+
+            // Scale based on life phase
+            const s = (1 - p.life) * 0.08 * intensity;
+            dummy.scale.setScalar(s);
 
             dummy.updateMatrix();
             meshRef.current.setMatrixAt(i, dummy.matrix);
@@ -105,7 +137,7 @@ const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natur
     });
 
     return (
-        <instancedMesh ref={meshRef} args={[particleGeo, particleMat, count]} frustumCulled={false} />
+        <instancedMesh ref={meshRef} args={[geometry, material, count]} frustumCulled={false} />
     );
 };
 
