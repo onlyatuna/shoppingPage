@@ -109,3 +109,16 @@
     - [x] Refactor `sanitizeImageUrl` to use exact host matching or safer subdomain validation <!-- id: 101 -->
     - [x] Remove redundant/unused `ALLOWED_IMAGE_DOMAINS` array and logic <!-- id: 102 -->
     - [x] Verify fix by running build/tests <!-- id: 103 -->
+
+- [x] Fix Incomplete multi-character sanitization (CodeQL Alert #60) <!-- id: 104 -->
+    - [x] Refactor `stripHtml` to apply regex replacement in a loop until stable <!-- id: 105 -->
+    - [x] Update `lessons.md` with the pattern for multi-character sanitization <!-- id: 106 -->
+    - [x] Verify fix by running build <!-- id: 107 -->
+
+- [x] Fix DOM text reinterpreted as HTML (CodeQL Alert #58) <!-- id: 108 -->
+    - [x] Sanitize `imageSrc` with `sanitizeUrl` when setting state from user upload <!-- id: 109 -->
+    - [x] Sanitize initial default URL via `sanitizeUrl` <!-- id: 110 -->
+    - [x] Sanitize the text display on line 90 with `stripHtml` <!-- id: 111 -->
+    - [x] Verify fix by running build <!-- id: 112 -->
+
+

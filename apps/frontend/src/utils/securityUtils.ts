@@ -9,8 +9,16 @@
  */
 export function stripHtml(str: string): string {
     if (!str || typeof str !== 'string') return '';
-    // Basic regex to remove HTML tags: < followed by any characters except > and ends with >
-    return str.replace(/<[^>]*>?/gm, '').trim();
+    // Stabilization loop: repeatedly strip HTML tags until no more can be formed.
+    // A single-pass replace is vulnerable to nested payloads like "<<script>script>"
+    // where removing the inner tag causes the outer fragments to reassemble.
+    let result = str;
+    let previous: string;
+    do {
+        previous = result;
+        result = result.replace(/<[^>]*>?/gm, '');
+    } while (result !== previous);
+    return result.trim();
 }
 
 /**
