@@ -8,12 +8,6 @@ import { MonitorService } from './monitor.service';
 // 確保有安裝最新版 SDK: npm install @google/generative-ai@latest
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// [SECURITY] Allowed domains for image fetching to prevent SSRF attacks
-const ALLOWED_IMAGE_DOMAINS = [
-    'res.cloudinary.com',
-    'cloudinary.com',
-    'evanchen316.com', // Production domain
-];
 
 interface SafeUrlComponents {
     host: string;
@@ -40,33 +34,29 @@ function sanitizeImageUrl(urlString: string): SafeUrlComponents {
     const hostname = url.hostname.toLowerCase();
     const isDev = process.env.NODE_ENV !== 'production';
 
-    // 1. Pure Literal Selection
-    // We explicitly assign from string literals. CodeQL can trace these as "clean".
-    let safeHost = '';
+    // 1. Strict Literal Whitelist
+    // We use a predefined list of trusted hostnames. 
+    // CodeQL (Alert #65) requires exact matching to prevent bypasses like 'attacker-cloudinary.com'.
+    const TRUSTED_HOSTS = [
+        'res.cloudinary.com',
+        'cloudinary.com',
+        'evanchen316.com'
+    ];
 
-    if (hostname === 'res.cloudinary.com' || hostname.endsWith('.res.cloudinary.com')) {
-        safeHost = 'res.cloudinary.com';
-    } else if (hostname === 'cloudinary.com' || hostname.endsWith('.cloudinary.com')) {
-        safeHost = 'cloudinary.com';
-    } else if (hostname === 'evanchen316.com') {
-        safeHost = 'evanchen316.com';
-    } else if (isDev && hostname === 'localhost') {
-        safeHost = 'localhost';
-    } else if (isDev && hostname === '127.0.0.1') {
-        safeHost = '127.0.0.1';
+    if (isDev) {
+        TRUSTED_HOSTS.push('localhost', '127.0.0.1');
     }
+
+    // Perform exact equality check. We pick the literal from the whitelist to break taint flow.
+    const safeHost = TRUSTED_HOSTS.find(h => h === hostname);
 
     if (!safeHost) {
         throw new Error(`Domain not allowed: ${hostname}`);
     }
 
-    // 2. IP & Infrastructure Blocking (Cloud Metadata SSRF Protection)
-    const FORBIDDEN_IPS = ['169.254.169.254', '127.0.0.1', '0.0.0.0', '::1', 'fd00:ec2::254'];
-    if (FORBIDDEN_IPS.includes(safeHost) && !(isDev && (safeHost === 'localhost' || safeHost === '127.0.0.1'))) {
-        throw new Error('Access to infrastructure metadata or loopback is prohibited');
-    }
-
-    // 3. Component Extraction (Using cleaned literals/purified parts)
+    // 2. Component Extraction (Using purified parts)
+    // Since safeHost is now one of the hardcoded literals, it is inherently safe from SSRF metadata/loopback
+    // unless explicitly allowed in dev (localhost/127.0.0.1).
     const safePort = url.port ? `:${url.port.replace(/[^0-9]/g, '')}` : '';
     const safePath = url.pathname.replace(/[^\/a-zA-Z0-9._-]/g, '');
     const safeSearch = url.search.startsWith('?') ? '?' + url.search.substring(1).replace(/[^a-zA-Z0-9=&._-]/g, '') : '';

@@ -105,3 +105,7 @@
     - [x] 在 axios 呼叫點改用完全由常數構成的主機名拼接 <!-- id: 98 -->
     - [x] 驗證 Cloudinary 靜態網域方案是否足以涵蓋現有需求 <!-- id: 99 -->
 
+- [x] Fix Incomplete URL substring sanitization (CodeQL Alert #65) <!-- id: 100 -->
+    - [x] Refactor `sanitizeImageUrl` to use exact host matching or safer subdomain validation <!-- id: 101 -->
+    - [x] Remove redundant/unused `ALLOWED_IMAGE_DOMAINS` array and logic <!-- id: 102 -->
+    - [x] Verify fix by running build/tests <!-- id: 103 -->
