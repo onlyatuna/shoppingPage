@@ -36,3 +36,16 @@ test-monitoring.ts
 
 # Windows 檔案串流垃圾檔
 *:Zone.Identifier
+
+# --- AI Agent 工具目錄 ---
+.agent/
+.agents/
+tasks/
+
+# --- 臨時產出與分析檔案 ---
+build_log.txt
+lint_results.json
+lint_results_pretty.json
+new_lint_results_v2.json
+hooks_lint.txt
+project_structure.txt

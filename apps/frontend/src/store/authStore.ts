@@ -1,7 +1,7 @@
 //authStore.ts
 import { create } from 'zustand';
-import { User } from '../types';
-import apiClient from '../api/client';
+import { User } from '@/types/interface_definitions';
+import apiClient from '@/api/client';
 
 interface AuthState {
     user: User | null;
@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             const res = await apiClient.get('/auth/me');
             set({ user: res.data.user, isInitialized: true });
-        } catch (error) {
+        } catch {
             set({ user: null, isInitialized: true });
         }
     },

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '@/store/authStore';
 
 const apiClient = axios.create({
     baseURL: '/api/v1',
@@ -17,8 +17,8 @@ apiClient.interceptors.response.use(
             logout(); // 這裡只是清 Zustand，Cookie 由後端 /logout 路由清
 
             // 避免在登入頁無限重整
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
+            if (window.location.pathname !== '/app/login') {
+                window.location.href = '/app/login';
             }
         }
         return Promise.reject(error);

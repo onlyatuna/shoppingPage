@@ -16,6 +16,13 @@
         "isolatedModules": true,
         "noEmit": true,
         "jsx": "react-jsx",
+        /* Path Mapping */
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ]
+        },
         /* Linting */
         "strict": true,
         "noUnusedLocals": true,

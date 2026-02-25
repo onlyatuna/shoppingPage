@@ -4,6 +4,7 @@
   "main": "dist/app.js",
   "scripts": {
     "dev": "tsx watch src/app.ts",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/app.js",

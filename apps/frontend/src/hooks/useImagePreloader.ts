@@ -1,23 +1,26 @@
 import { useState, useEffect } from 'react';
 
 export function useImagePreloader(urls: (string | undefined)[]) {
-    const [imagesLoaded, setImagesLoaded] = useState(false);
+    const validUrls = urls.filter(Boolean) as string[];
+    const [imagesLoaded, setImagesLoaded] = useState(validUrls.length === 0);
     const [error, setError] = useState<Error | null>(null);
 
-    useEffect(() => {
-        const validUrls = urls.filter(Boolean) as string[];
-
-        if (validUrls.length === 0) {
-            setImagesLoaded(true);
-            return;
-        }
-
-        setImagesLoaded(false);
+    // Track URLs to reset state when they change
+    const [trackedUrls, setTrackedUrls] = useState(JSON.stringify(urls));
+    if (JSON.stringify(urls) !== trackedUrls) {
+        setTrackedUrls(JSON.stringify(urls));
+        setImagesLoaded(validUrls.length === 0);
         setError(null);
+    }
+
+    useEffect(() => {
+        const currentUrls = JSON.parse(trackedUrls) as (string | undefined)[];
+        const currentValidUrls = currentUrls.filter(Boolean) as string[];
+        if (currentValidUrls.length === 0) return;
 
         let mounted = true;
 
-        const loadPromises = validUrls.map(url => {
+        const loadPromises = currentValidUrls.map(url => {
             return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.src = url;
@@ -42,7 +45,7 @@ export function useImagePreloader(urls: (string | undefined)[]) {
         return () => {
             mounted = false;
         };
-    }, [JSON.stringify(urls)]);
+    }, [trackedUrls]);
 
     return { imagesLoaded, error };
 }
