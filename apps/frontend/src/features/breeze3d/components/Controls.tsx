@@ -42,14 +42,11 @@ export const Controls: React.FC<ControlsProps> = ({
             <button
               key={s}
               onClick={() => onSpeedChange(s as FanSpeed)}
-              className={`flex-1 py-2 sm:py-3 px-2 sm:px-6 rounded-xl sm:rounded-2xl font-black transition-all flex flex-col items-center gap-0.5 sm:gap-1 ${speed === s
+              className={`flex-1 py-3 sm:py-5 px-4 sm:px-8 rounded-xl sm:rounded-2xl font-black transition-all flex items-center justify-center ${speed === s
                 ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)] scale-105'
-                : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
+                : 'bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'}`}
             >
-              <span className="text-[10px] sm:text-xs tracking-tighter opacity-70">
-                {s === 1 ? '微' : s === 2 ? '弱' : s === 3 ? '強' : '猛'}
-              </span>
-              <span className="text-sm sm:text-xl">{s}</span>
+              <span className="text-lg sm:text-2xl">{s}</span>
             </button>
           ))}
         </div>
@@ -58,32 +55,29 @@ export const Controls: React.FC<ControlsProps> = ({
         <div className="grid grid-cols-3 gap-1.5 sm:gap-4">
           <button
             onClick={onOscillationToggle}
-            className={`flex flex-col items-center gap-1 sm:gap-2 py-2 sm:py-3 rounded-xl sm:rounded-2xl transition-all ${isOscillating
+            className={`flex flex-col items-center gap-1 sm:gap-2 py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all ${isOscillating
               ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
               : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
           >
-            <RotateCw size={16} className={`sm:w-5 sm:h-5 ${isOscillating ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} />
-            <span className="text-[10px] sm:text-xs font-bold">{window.innerWidth < 640 ? '擺頭' : '擺頭轉向'}</span>
+            <RotateCw size={20} className={`sm:w-6 sm:h-6 ${isOscillating ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} />
           </button>
 
           <button
             onClick={onNatureModeToggle}
-            className={`flex flex-col items-center gap-1 sm:gap-2 py-2 sm:py-3 rounded-xl sm:rounded-2xl transition-all ${natureMode
+            className={`flex flex-col items-center gap-1 sm:gap-2 py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all ${natureMode
               ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
               : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
           >
-            <Leaf size={16} className={`sm:w-5 sm:h-5 ${natureMode ? 'animate-pulse' : ''}`} />
-            <span className="text-[10px] sm:text-xs font-bold">{window.innerWidth < 640 ? '自然風' : '自然微風'}</span>
+            <Leaf size={20} className={`sm:w-6 sm:h-6 ${natureMode ? 'animate-pulse' : ''}`} />
           </button>
 
           <button
             onClick={() => onSetTimer(timerLeft ? null : 30)}
-            className={`flex flex-col items-center gap-1 sm:gap-2 py-2 sm:py-3 rounded-xl sm:rounded-2xl transition-all ${timerLeft
+            className={`flex flex-col items-center gap-1 sm:gap-2 py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all ${timerLeft
               ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
               : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
           >
-            <Timer size={16} className="sm:w-5 sm:h-5" />
-            <span className="text-[10px] sm:text-xs font-bold">{window.innerWidth < 640 ? '定時' : '預約定時'}</span>
+            <Timer size={20} className="sm:w-6 sm:h-6" />
           </button>
         </div>
       </div>
