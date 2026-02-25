@@ -13,18 +13,13 @@ const ALLOWED_IMAGE_DOMAINS = [
     'res.cloudinary.com',
     'cloudinary.com',
     'evanchen316.com', // Production domain
-    'localhost', // Development
 ];
 
 /**
  * Sanitizes and validates an image URL against the allowlist.
  * Reconstructs URL from validated components to prevent SSRF attacks.
- * @param urlString - The URL to validate
- * @returns A reconstructed URL from validated components
- * @throws Error if URL is not from an allowed domain
  */
 function sanitizeImageUrl(urlString: string): string {
-    // Parse URL to validate format
     let url: URL;
     try {
         url = new URL(urlString);
@@ -32,51 +27,41 @@ function sanitizeImageUrl(urlString: string): string {
         throw new Error('Invalid URL format');
     }
 
-    // Extract and validate hostname
     const hostname = url.hostname.toLowerCase();
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+    const isDev = process.env.NODE_ENV !== 'production';
 
-    // Only allow HTTPS in production (allow HTTP for localhost in development)
-    const protocol = isLocalhost ? url.protocol : 'https:';
-    if (!isLocalhost && url.protocol !== 'https:') {
+    // 1. Protocol Validation
+    if (url.protocol !== 'https:' && !(isDev && isLocalhost)) {
         throw new Error('Only HTTPS URLs are allowed');
     }
 
-    // Check if hostname matches any allowed domain
-    const isAllowed = ALLOWED_IMAGE_DOMAINS.some(domain =>
+    // 2. Strict Domain Allowlist Validation
+    const isAllowedDomain = ALLOWED_IMAGE_DOMAINS.some(domain =>
         hostname === domain || hostname.endsWith('.' + domain)
     );
 
-    if (!isAllowed) {
-        throw new Error(`Image URL domain not allowed: ${hostname}`);
+    // Development backdoor for localhost images
+    const allowLocal = isDev && isLocalhost;
+
+    if (!isAllowedDomain && !allowLocal) {
+        throw new Error(`Domain not allowed: ${hostname}`);
     }
 
-    // Block private IP ranges to prevent SSRF to internal services
-    const privatePatterns = [
-        /^10\./,
-        /^172\.(1[6-9]|2[0-9]|3[01])\./,
-        /^192\.168\./,
-        /^169\.254\./,
-        /^127\./,
-    ];
-
-    // Only check IP patterns if it looks like an IP address
-    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
-        const isPrivate = privatePatterns.some(pattern => pattern.test(hostname));
-        if (isPrivate && !isLocalhost) {
-            throw new Error('Private IP addresses are not allowed');
-        }
+    // 3. IP Address Blocking (Anti-SSRF for internal services)
+    const isIpAddress = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname) || hostname.includes(':');
+    if (isIpAddress && !allowLocal) {
+        throw new Error('Direct IP access is prohibited');
     }
 
-    // Reconstruct URL from validated components (CodeQL recognizes this as safe)
-    // Using validated hostname from allowlist, sanitized pathname
-    const safePath = url.pathname.replace(/\.\./g, ''); // Remove path traversal
-    const safeSearch = url.search; // Query string
+    // 4. Reconstruct URL from validated components
+    // CodeQL recognizes this pattern: using a validated hostname to build a new URL
+    const protocol = allowLocal ? url.protocol : 'https:';
+    const port = url.port ? `:${url.port}` : '';
+    const safePath = url.pathname.startsWith('/') ? url.pathname : `/${url.pathname}`;
+    const safeSearch = url.search;
 
-    // Construct new URL from validated parts
-    const reconstructedUrl = `${protocol}//${hostname}${url.port ? ':' + url.port : ''}${safePath}${safeSearch}`;
-
-    return reconstructedUrl;
+    return `${protocol}//${hostname}${port}${safePath}${safeSearch}`;
 }
 
 export class GeminiService {
