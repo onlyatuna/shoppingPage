@@ -27,9 +27,22 @@ export default defineConfig({
                         purpose: 'any maskable'
                     }
                 ]
+            },
+            workbox: {
+                maximumFileSizeToCacheInBytes: 4 * 1024 * 1024 // 4 MiB
             }
         })
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
+                    'lucide-vendor': ['lucide-react'],
+                }
+            }
+        }
+    },
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./src"),
