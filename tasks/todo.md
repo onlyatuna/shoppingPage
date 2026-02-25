@@ -1,0 +1,93 @@
+# Task: Initialize Project Management and Fix Workflow Issues
+
+## Todo List
+- [x] Initialize project tasks structure (tasks/todo.md, tasks/lessons.md) <!-- id: 0 -->
+- [x] Investigate and fix the `.agents/workflows/init-task.md` error <!-- id: 1 -->
+- [x] Fix ESLint 9 configuration in monorepo <!-- id: 4 -->
+    - [x] Analyze current linting requirements for frontend and backend <!-- id: 5 -->
+    - [x] Create `eslint.config.js` for `apps/frontend` <!-- id: 6 -->
+    - [x] Create `eslint.config.js` for `apps/backend` <!-- id: 7 -->
+    - [x] Update `package.json` scripts to remove deprecated flags <!-- id: 8 -->
+    - [x] Verify linting passes <!-- id: 9 -->
+- [ ] Fix the 147 linting errors found during verification <!-- id: 10 -->
+    - [x] Phase 1: Structural & TypeScript Fixes (`BreezePage.tsx`, `Skeleton.tsx`, `AdminProductFormPage.tsx`) <!-- id: 11 -->
+    - [x] Phase 2: Logic & Purity Fixes (`calculationService.ts`, `FrameUploadModal.tsx`) <!-- id: 12 -->
+    - [x] Update todo with fresh status (Identify files needing refactor)
+    - [x] Refactor `AdminProductFormPage.tsx` (Move state sync to render phase)
+    - [x] Refactor `ProductFormModal.tsx` (Move state sync to render phase)
+    - [x] Verify `VerifyEmailPage.tsx` and `ResetPasswordPage.tsx` (Confirm async patterns)
+    - [x] Final lint check for `set-state-in-effect` violations
+    - [x] Phase 4: Cleanup Easy Warnings (Unused variables, etc.) <!-- id: 14 -->
+    - [x] Final Verification <!-- id: 15 -->
+- [x] Review current project state and ensure engineering standards are met <!-- id: 2 -->
+- [x] Verify if the backslash error is a misconfiguration in any project files <!-- id: 3 -->
+- [x] Enhance BREEZEMASTER 3D Features <!-- id: 16 -->
+    - [x] Implement Visual Wind Particles (Flow visualization) <!-- id: 17 -->
+    - [x] Implement "Nature Mode" (Dynamic speed variation) <!-- id: 18 -->
+    - [x] Add Sleep Timer functionality <!-- id: 19 -->
+    - [x] Refine 3D Model (Curved blades, better motor housing) <!-- id: 20 -->
+    - [x] Add simple UI-triggered Audio (Fan humming) <!-- id: 21 -->
+- [x] Fix Natural Wind Sync (Blade ↔ Particles ↔ Audio) <!-- id: 22 -->
+    - [x] Create `naturalWindEngine.ts` (Perlin noise + wave layering + calm intervals) <!-- id: 23 -->
+    - [x] Update `types.ts` & `BreezePage.tsx` (shared `natureFactorRef`) <!-- id: 24 -->
+    - [x] Update `FanModel.tsx` (use engine, asymmetric lerp, write to shared ref) <!-- id: 25 -->
+    - [x] Update `WindParticles.tsx` (read from shared ref, modulate intensity) <!-- id: 26 -->
+    - [x] Update `FanAudio.tsx` (read from shared ref, dynamic low-pass filter) <!-- id: 27 -->
+    - [x] Verify build <!-- id: 28 -->
+- [x] Redesign FanAudio as DC Fan (dual-layer sound system) <!-- id: 29 -->
+    - [x] Layer 1: White noise + dynamic lowpass → wind cutting sound (90%) <!-- id: 30 -->
+    - [x] Layer 2: Sine wave motor hum- [x] 優化控制面板 (Controls) UI 視覺與文字 <!-- id: 66 -->
+    - [x] 移除風速按鈕上的中文字（微、弱、強、猛），僅保留數字提升簡約感 <!-- id: 67 -->
+    - [x] 提高按鈕數字的對比度與不透明度，增強可讀性 <!-- id: 68 -->
+    - [x] 移除「擺頭轉向」、「自然微風」、「預約定時」等長文字，改用精簡標籤或純圖示風格 <!-- id: 69 -->
+    - [x] 進行本機驗證，確認手機與電腦端視覺效果 <!-- id: 70 -->
+- [x] Git Push + Security Audit <!-- id: 35 -->
+    - [x] Scan for hardcoded API keys, secrets, tokens <!-- id: 36 -->
+    - [x] Update .gitignore (exclude .agent/, .agents/, tasks/, temp files) <!-- id: 37 -->
+    - [x] Commit and push all feature-based architecture changes <!-- id: 38 -->
+- [x] Fix PWA Build Error (bundle too large) <!-- id: 39 -->
+    - [x] Add manualChunks in vite.config.ts for vendor splitting <!-- id: 40 -->
+    - [x] Convert all routes to React.lazy() code splitting <!-- id: 41 -->
+    - [x] Increase workbox.maximumFileSizeToCacheInBytes to 5 MiB <!-- id: 42 -->
+- [x] Fix CSP (Content Security Policy) blocking external resources <!-- id: 43 -->
+    - [x] Allow Google Fonts, jsdelivr CDN, Gemini AI in helmet CSP <!-- id: 44 -->
+    - [x] Add mobile-web-app-capable meta tag <!-- id: 45 -->
+- [x] Localize HDRI asset and tighten CSP <!-- id: 46 -->
+    - [x] Download potsdamer_platz_1k.hdr to public/hdri/ <!-- id: 47 -->
+    - [x] Update Environment component to use local file <!-- id: 48 -->
+    - [x] Remove raw.githack.com and raw.githubusercontent.com from CSP <!-- id: 49 -->
+- [x] Mobile UI Optimization for BREEZEMASTER <!-- id: 50 -->
+    - [x] Shrink Controls panel (smaller padding, abbreviated text) <!-- id: 51 -->
+    - [x] Shrink WaveformMonitor and move to top on mobile <!-- id: 52 -->
+    - [x] Shrink branding text on mobile <!-- id: 53 -->
+    - [x] Verify responsive design <!-- id: 54 -->
+- [x] Fix WaveformMonitor and Restore Mobile UI Optimization <!-- id: 55 -->
+    - [x] Optimize WaveformMonitor.tsx (throttling, cleanup, remove per-frame gradients) <!-- id: 56 -->
+    - [x] Re-enable WaveformMonitor in BreezePage.tsx <!-- id: 57 -->
+    - [x] Apply mobile-responsive layout/abbreviations safely <!-- id: 58 -->
+    - [x] Verify stability on desktop & mobile <!-- id: 59 -->
+- [x] Fix GeminiService SSRF Security Vulnerability (CodeQL Alert #55) <!-- id: 60 -->
+    - [x] Sanitize and validate hostnames against strict allowlist <!-- id: 61 -->
+    - [x] Block private IP ranges and loopback in production <!-- id: 62 -->
+    - [x] Reconstruct URL from trusted components only <!-- id: 63 -->
+    - [x] Verify fix by running build/tests <!-- id: 64 -->
+- [x] Strict SSRF Remediation for CodeQL Alerts #54 & #55 <!-- id: 71 -->
+    - [x] Refactor sanitizeImageUrl to use a mapping approach for hostnames <!-- id: 72 -->
+    - [x] Ensure hostname is selected from trusted data structures <!-- id: 73 -->
+    - [x] Verify fix by running build/tests <!-- id: 74 -->
+- [x] 優化控制面板 (Controls) UI 視覺與文字 <!-- id: 66 -->
+    - [x] 移除風速按鈕上的中文字（微、弱、強、猛），僅保留數字提升簡約感 <!-- id: 67 -->
+    - [x] 提高按鈕數字的對比度與不透明度，增強可讀性 <!-- id: 68 -->
+    - [x] 移除「擺頭轉向」、「自然微風」、「預約定時」等長文字，改用精簡標籤或純圖示風格 <!-- id: 69 -->
+    - [x] 進行本機驗證，確認手機與電腦端視覺效果 <!-- id: 70 -->
+- [x] 修復 DOM text reinterpreted as HTML 安全漏洞 (CodeQL Alert #59) <!-- id: 76 -->
+    - [x] 建立 securityUtils.ts 工具函式 (stripHtml, sanitizeUrl) <!-- id: 77 -->
+    - [x] 更新 FrameSelector.tsx 使用顯式過濾處理使用者輸入 <!-- id: 78 -->
+    - [x] 強化 EditorPage.tsx 載入 LocalStorage 時的驗證 <!-- id: 79 -->
+    - [x] 驗證 build 並確認 XSS 風險消除 <!-- id: 80 -->
+- [x] 終極 SSRF 防禦強化 (根據 CodeQL 邏輯建議) <!-- id: 81 -->
+    - [x] 更新 axios 請求設定，強制拒絕重定向 (maxRedirects: 0) <!-- id: 82 -->
+    - [x] 重構 sanitizeImageUrl：徹底斷開使用者輸入與 Hostname 的直接關聯 <!-- id: 83 -->
+    - [x] 加入對私有 IP 解析後的第二次檢查 (DNS Rebinding 防禦基礎) <!-- id: 84 -->
+    - [x] 在 axios 呼叫點明確使用結構化拼接的 URL 變數 <!-- id: 85 -->
+

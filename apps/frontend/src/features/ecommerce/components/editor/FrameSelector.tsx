@@ -1,37 +1,6 @@
 import { X, Plus } from 'lucide-react';
 import { Frame, BUILT_IN_FRAMES } from '../../../../types/frame';
-
-/**
- * Sanitize URL to prevent XSS via javascript: protocol
- * Uses strict allowlist approach for safe protocols
- */
-function sanitizeImageUrl(url: string): string {
-    if (!url || typeof url !== 'string') return '';
-
-    const trimmed = url.trim();
-    if (!trimmed) return '';
-
-    // Allow data:image/ URLs (base64 images)
-    if (trimmed.toLowerCase().startsWith('data:image/')) {
-        return trimmed;
-    }
-
-    // Validate URL structure and protocol
-    try {
-        const parsed = new URL(trimmed, window.location.origin);
-        // Only allow http and https protocols
-        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-            return parsed.href;
-        }
-    } catch {
-        // If it's a relative path, allow it (will be resolved against origin)
-        if (trimmed.startsWith('/') || trimmed.startsWith('./')) {
-            return trimmed;
-        }
-    }
-
-    return '';
-}
+import { stripHtml, sanitizeUrl } from '@/utils/securityUtils';
 
 interface FrameSelectorProps {
     isOpen: boolean;
@@ -98,13 +67,13 @@ export default function FrameSelector({
                                     </div>
                                 ) : (
                                     <img
-                                        src={sanitizeImageUrl(frame.preview)}
-                                        alt={frame.name}
+                                        src={sanitizeUrl(frame.preview)}
+                                        alt={stripHtml(frame.name)}
                                         className="w-full h-full object-cover"
                                     />
                                 )}
                                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                                    <p className="text-xs font-medium text-white truncate">{frame.name}</p>
+                                    <p className="text-xs font-medium text-white truncate">{stripHtml(frame.name)}</p>
                                 </div>
                             </button>
                         ))}

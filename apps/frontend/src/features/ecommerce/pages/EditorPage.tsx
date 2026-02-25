@@ -23,6 +23,7 @@ import FrameUploadModal from '../components/editor/FrameUploadModal';
 import { Frame } from '../../../types/frame';
 import MockupGrid from '../components/editor/MockupGrid';
 import { UniversalMockup, Mockup, PrintableMockup } from '../../../types/mockup';
+import { sanitizeObject } from '@/utils/securityUtils';
 
 export default function EditorPage() {
     const location = useLocation();
@@ -218,7 +219,15 @@ export default function EditorPage() {
         // Load custom frames from localStorage
         const storedFrames = localStorage.getItem('customFrames');
         if (storedFrames) {
-            setCustomFrames(JSON.parse(storedFrames));
+            try {
+                const parsed = JSON.parse(storedFrames);
+                if (Array.isArray(parsed)) {
+                    const sanitized = parsed.map(frame => sanitizeObject(frame as Frame));
+                    setCustomFrames(sanitized);
+                }
+            } catch (e) {
+                console.error('Failed to parse custom frames', e);
+            }
         }
 
         // Load custom styles from backend API

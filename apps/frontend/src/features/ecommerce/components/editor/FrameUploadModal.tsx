@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Upload, Check } from 'lucide-react';
 import { Frame } from '../../../../types/frame';
 import { toast } from 'sonner';
+import { stripHtml } from '@/utils/securityUtils';
 
 interface FrameUploadModalProps {
     isOpen: boolean;
@@ -46,14 +47,15 @@ export default function FrameUploadModal({
     };
 
     const handleSave = () => {
-        if (!frameName || !previewUrl) {
+        const sanitizedName = stripHtml(frameName);
+        if (!sanitizedName || !previewUrl) {
             toast.error('請填寫圖框名稱並上傳圖片');
             return;
         }
 
         const newFrame: Frame = {
             id: generateFrameId(),
-            name: frameName,
+            name: sanitizedName,
             preview: previewUrl,
             url: previewUrl,
             isCustom: true
