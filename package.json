@@ -27,8 +27,13 @@
   },
   "dependencies": {
     "@google/genai": "^1.40.0",
-    "axios": "^1.13.5",
+    "axios": "1.13.5",
     "qs": "^6.15.0",
     "recharts": "^3.7.0"
+  },
+  "overrides": {
+    "axios": "1.13.5",
+    "fast-xml-parser": "5.3.6",
+    "tar": "7.5.9"
   }
 }

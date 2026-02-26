@@ -1,9 +1,13 @@
-# ==========================================
 # 階段 1: Builder
 # ==========================================
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 
-RUN apt-get update -y && apt-get install -y openssl ca-certificates
+RUN apt-get update && \
+    apt-get install -y openssl ca-certificates && \
+    npm install -g npm@latest && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 
 WORKDIR /app
 
@@ -27,9 +31,14 @@ RUN npm run build --workspace=apps/backend
 # ==========================================
 # 階段 2: Runner
 # ==========================================
-FROM node:20-slim AS runner
+FROM node:22-slim AS runner
 
-RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y openssl ca-certificates && \
+    npm install -g npm@latest && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 
 WORKDIR /app
 
