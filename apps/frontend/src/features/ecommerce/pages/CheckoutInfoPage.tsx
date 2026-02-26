@@ -44,7 +44,7 @@ export default function CheckoutInfoPage() {
             queryClient.invalidateQueries({ queryKey: ['orders'] });
             // Assuming data.data.orderId is the structure based on previous controllers
             const orderId = data.data.orderId;
-            navigate(`/orders/success/${orderId}`);
+            navigate(`/app/orders/success/${orderId}`);
         },
     });
 
