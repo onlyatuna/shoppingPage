@@ -242,7 +242,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ onRetake, result }) => {
               重新測驗
             </button>
             <div className="h-10 w-10 rounded-full bg-gray-200 bg-cover bg-center border-2 border-white dark:border-gray-600 shadow-sm cursor-pointer"
-              style={{ backgroundImage: `url('/assets/avatars/user_1.png')` }}>
+              style={{ backgroundImage: `url('https://picsum.photos/id/1005/100/100')` }}>
             </div>
           </div>
         </div>
@@ -383,45 +383,26 @@ export const ResultPage: React.FC<ResultPageProps> = ({ onRetake, result }) => {
               </div>
             </div>
 
-            <div className="flex-grow flex flex-col items-center justify-start gap-8 pt-4">
-              <div className="relative w-40 h-40 flex-shrink-0">
+            <div className="flex-grow flex flex-col items-center justify-center gap-6">
+              <div className="relative w-48 h-48 flex-shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ bottom: 10 }}>
+                  <PieChart>
                     <Pie
                       data={content.allocation}
                       cx="50%"
                       cy="50%"
-                      innerRadius={55}
-                      outerRadius={75}
-                      paddingAngle={4}
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={5}
                       dataKey="value"
-                      isAnimationActive={true}
                     >
                       {content.allocation.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.96)',
-                        borderRadius: '12px',
-                        border: 'none',
-                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                        padding: '8px 12px',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        color: '#111417',
-                        zIndex: 100
-                      }}
-                      itemStyle={{ color: '#111417' }}
-                      allowEscapeViewBox={{ x: true, y: true }}
-                    />
+                    <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter">Total</span>
-                  <span className="text-xl font-black text-[#111417] dark:text-white">100%</span>
-                </div>
               </div>
 
               <div className="flex flex-col gap-2 w-full">
