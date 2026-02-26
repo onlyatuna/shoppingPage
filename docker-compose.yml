@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 👇 [新增] Caddy 服務 (負責 HTTPS)
   caddy:
@@ -7,11 +5,11 @@ services:
     container_name: shopping-caddy
     restart: always
     ports:
-      - "80:80"   # HTTP (自動轉 HTTPS)
+      - "80:80" # HTTP (自動轉 HTTPS)
       - "443:443" # HTTPS
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile # 掛載設定檔
-      - caddy_data:/data                 # 持久化憑證
+      - caddy_data:/data # 持久化憑證
       - caddy_config:/config
     depends_on:
       - app
@@ -21,7 +19,7 @@ services:
     image: ghcr.io/onlyatuna/shoppingpage:latest
     container_name: shopping-app
     restart: always
-    
+
     # 2. [設定] 連接埠
     # 您原本寫 80:3000，如果您沒有用 Caddy/Nginx，這樣可以直接用 IP 訪問
     # 如果有用 Caddy，建議改回 3000:3000
@@ -32,7 +30,7 @@ services:
     # 這樣就不用把密碼寫死在這裡，而且能讀到最新的 GitHub Secrets
     env_file:
       - .env
-      
+
     depends_on:
       - db
 
@@ -60,5 +58,5 @@ services:
 
 volumes:
   mysql_data:
-  caddy_data:   # [新增]
+  caddy_data: # [新增]
   caddy_config: # [新增]

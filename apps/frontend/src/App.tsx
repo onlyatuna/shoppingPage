@@ -149,6 +149,9 @@ function App() {
             {/* 訂單頁面重導向：/orders → /app/orders */}
             <Route path="/orders" element={<Navigate to="/app/orders" replace />} />
 
+            {/* 支付頁面重導向：/payment/callback → /app/payment/callback */}
+            <Route path="/payment/callback" element={<Navigate to="/app/payment/callback" replace />} />
+
             {/* 個人資料頁面重導向：/profile → /app/profile */}
             <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
 
