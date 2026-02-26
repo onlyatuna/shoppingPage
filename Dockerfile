@@ -28,6 +28,9 @@ RUN npm run build --workspace=packages/shared
 RUN npm run build --workspace=apps/frontend
 RUN npm run build --workspace=apps/backend
 
+# 移除開發用的依賴，只保留 production 需要的模組
+RUN npm prune --production
+
 # ==========================================
 # 階段 2: Runner
 # ==========================================
