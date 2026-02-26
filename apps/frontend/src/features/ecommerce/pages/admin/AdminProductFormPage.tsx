@@ -72,7 +72,7 @@ export default function AdminProductFormPage() {
     const { data: product, isLoading: isLoadingProduct } = useQuery({
         queryKey: ['product', id],
         queryFn: async () => {
-            const res = await apiClient.get<{ data: Product }>(`/ products / ${id} `);
+            const res = await apiClient.get<{ data: Product }>(`/products/${id}`);
             return res.data.data;
         },
         enabled: isEditMode,
