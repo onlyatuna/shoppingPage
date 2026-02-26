@@ -54,8 +54,8 @@ app.use(helmet({
                 "https://images.unsplash.com",
             ],
             fontSrc: [
-                "'self'", "data:",
-                "https://fonts.gstatic.com",    // Google Fonts 字體檔案
+                "'self'", "data:", "blob:",
+                "https://fonts.gstatic.com",
                 "https://fonts.googleapis.com",
             ],
             connectSrc: [
@@ -68,7 +68,7 @@ app.use(helmet({
                 "https://cdn.jsdelivr.net",                   // MediaPipe WASM assets
                 "wss:", "ws:",
             ],
-            workerSrc: ["'self'", "blob:"],     // Service Worker & Web Workers
+            workerSrc: ["'self'", "blob:", "data:"],     // Service Worker & Web Workers
             frameAncestors: ["'self'"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],

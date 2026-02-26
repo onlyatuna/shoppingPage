@@ -145,3 +145,8 @@
     - [x] 確認 `AdminProductsPage.tsx` 中的 `navigate` 路徑正確性 <!-- id: 138 -->
     - [x] 驗證其它後台頁面 (Promotions, Categories) 是否有類似問題 <!-- id: 139 -->
     - [x] 修正並測試確認 <!-- id: 140 -->
+
+- [x] 修復 LINE Pay 付款回調參數遺失與 CSP 字體封鎖問題 <!-- id: 141 -->
+    - [x] 修復 `App.tsx` 中的 `Navigate` 會丟棄 Query Params 的問題 <!-- id: 142 -->
+    - [x] 更新 `app.ts` 中的 `helmet` CSP 許可 `font-src data:;` <!-- id: 143 -->
+    - [x] 驗證並 push <!-- id: 144 -->

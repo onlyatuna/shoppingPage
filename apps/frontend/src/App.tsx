@@ -5,7 +5,15 @@
  * 應用程式採用多模組架構，包含投資組合、電商後台、診斷室、退休金計算等功能。
  */
 
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+// ============================================================================
+// 輔助組件：保留查詢參數的重導向
+// ============================================================================
+const NavigateWithQuery = ({ to, replace }: { to: string, replace?: boolean }) => {
+    const { search } = useLocation();
+    return <Navigate to={`${to}${search}`} replace={replace} />;
+};
 
 // ============================================================================
 // 模組導入區
@@ -150,10 +158,10 @@ function App() {
             <Route path="/orders" element={<Navigate to="/app/orders" replace />} />
 
             {/* 支付頁面重導向：/payment/callback → /app/payment/callback */}
-            <Route path="/payment/callback" element={<Navigate to="/app/payment/callback" replace />} />
+            <Route path="/payment/callback" element={<NavigateWithQuery to="/app/payment/callback" replace />} />
 
             {/* 個人資料頁面重導向：/profile → /app/profile */}
-            <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
+            <Route path="/profile" element={<NavigateWithQuery to="/app/profile" replace />} />
 
 
 
