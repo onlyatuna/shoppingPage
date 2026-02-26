@@ -16,8 +16,7 @@ export const requestLinePay = async (req: Request, res: Response) => {
 
 export const confirmLinePay = async (req: Request, res: Response) => {
     try {
-        const safeBody = String(JSON.stringify(req.body)).replace(/\n|\r/g, ' ');
-        console.log('💰 [Confirm Payment] Body:', safeBody);
+        console.log('💰 [Confirm Payment] Body:', String(JSON.stringify(req.body)).replace(/\n|\r/g, ' '));
         const { transactionId, orderId } = req.body;
         const userId = req.user!.userId; // 從 JWT Token 取得使用者 ID
 
@@ -30,8 +29,7 @@ export const confirmLinePay = async (req: Request, res: Response) => {
         await PaymentService.confirmLinePay(orderId, transactionId, userId);
         res.json({ status: 'success', message: '付款成功' });
     } catch (error: any) {
-        const safeMsg = String(error.message).replace(/\n|\r/g, ' ');
-        console.error('❌ [Confirm Error]:', safeMsg);
+        console.error('❌ [Confirm Error]:', String(error.message).replace(/\n|\r/g, ' '));
         res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
     }
 };
