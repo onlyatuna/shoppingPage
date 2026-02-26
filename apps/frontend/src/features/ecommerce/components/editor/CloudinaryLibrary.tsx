@@ -112,7 +112,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
     const refresh = () => {
         const currentCursor = cursorStack[currentPageIndex];
         loadPage(currentCursor);
-    }
+    };
 
     const handleDelete = async (publicId: string, e: React.MouseEvent | React.TouchEvent) => {
         e.stopPropagation();
