@@ -1,7 +1,10 @@
 # Task: Initialize Project Management and Fix Workflow Issues
 
 ## Todo List
-- [x] 修復缺少 CSRF Middleware 問題 (CodeQL Alert #53) <!-- id: 148 -->
+- [x] 修復使用者受控防護繞過問題 (CodeQL Alert #399) <!-- id: 152 -->
+    - [x] 在 `auth.schema.ts` 建立嚴格的 `token` 正則驗證 <!-- id: 153 -->
+    - [x] 重構 `auth.controller.ts` 所有端點改用 Zod 驗證 Query/Body <!-- id: 154 -->
+- [x] 修復缺少 CSRF Middleware 問題 (CodeQL Alert #53 & #67) <!-- id: 148 -->
     - [x] 建立 `csrf.middleware.ts` 實作 Double Submit Cookie 模式 <!-- id: 149 -->
     - [x] 在 `app.ts` 註冊 CSRF 中間層 <!-- id: 150 -->
     - [x] 配置 `api/client.ts` 使 Axios 自動讀取與傳遞 XSRF Token <!-- id: 151 -->

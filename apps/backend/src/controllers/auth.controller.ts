@@ -1,7 +1,7 @@
 // auth.controller.ts
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
-import { registerSchema, loginSchema } from '../schemas/auth.schema';
+import { registerSchema, loginSchema, verificationSchema, resetPasswordSchema, requestPasswordResetSchema } from '../schemas/auth.schema';
 import { StatusCodes } from 'http-status-codes';
 import { ZodError } from 'zod';
 
@@ -52,8 +52,9 @@ export const login = async (req: Request, res: Response) => {
             },
         });
     } catch (error: any) {
-        // 針對不同錯誤回傳不同狀態碼
-        if (error.message === '請先至信箱收取驗證信啟用帳號') {
+        if (error instanceof ZodError) {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
+        } else if (error.message === '請先至信箱收取驗證信啟用帳號') {
             res.status(StatusCodes.FORBIDDEN).json({ message: error.message });
         } else {
             res.status(StatusCodes.UNAUTHORIZED).json({
@@ -79,12 +80,8 @@ export const logout = async (req: Request, res: Response) => {
 
 export const verifyEmail = async (req: Request, res: Response) => {
     try {
-        const token = req.query.token as string;
-
-        if (!token) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: '無效的驗證請求' });
-            return;
-        }
+        // 1. 驗證 Token 格式 (從 Query String)
+        const { token } = verificationSchema.parse(req.query);
 
         const result = await AuthService.verifyEmail(token);
 
@@ -93,56 +90,72 @@ export const verifyEmail = async (req: Request, res: Response) => {
             message: result.message
         });
     } catch (error: any) {
-        res.status(StatusCodes.BAD_REQUEST).json({
-            message: error.message || '驗證失敗'
-        });
+        if (error instanceof ZodError) {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
+        } else {
+            res.status(StatusCodes.BAD_REQUEST).json({
+                message: error.message || '驗證失敗'
+            });
+        }
     }
 };
 
 export const resendVerification = async (req: Request, res: Response) => {
     try {
-        const { email } = req.body;
-        if (!email) throw new Error('Email is required');
+        const { email } = requestPasswordResetSchema.parse(req.body);
 
         const result = await AuthService.resendVerification(email);
         res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
     } catch (error: any) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+        if (error instanceof ZodError) {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
+        } else {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+        }
     }
 };
 
 export const requestPasswordReset = async (req: Request, res: Response) => {
     try {
-        const { email } = req.body;
-        if (!email) throw new Error('Email is required');
+        const { email } = requestPasswordResetSchema.parse(req.body);
 
         const result = await AuthService.requestPasswordReset(email);
         res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
     } catch (error: any) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+        if (error instanceof ZodError) {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
+        } else {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+        }
     }
 };
 
 export const verifyResetToken = async (req: Request, res: Response) => {
     try {
-        const token = req.query.token as string;
-        if (!token) throw new Error('Token is required');
+        const { token } = verificationSchema.parse(req.query);
 
         const result = await AuthService.verifyResetToken(token);
         res.status(StatusCodes.OK).json({ status: 'success', data: result });
     } catch (error: any) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+        if (error instanceof ZodError) {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
+        } else {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+        }
     }
 };
 
 export const resetPassword = async (req: Request, res: Response) => {
     try {
-        const { token, password } = req.body;
-        if (!token || !password) throw new Error('Token and password are required');
+        const { token, password } = resetPasswordSchema.parse(req.body);
 
         const result = await AuthService.resetPassword(token, password);
         res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
     } catch (error: any) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+        if (error instanceof ZodError) {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
+        } else {
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+        }
     }
 };
