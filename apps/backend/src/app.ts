@@ -55,6 +55,7 @@ app.use(helmet({
                 "https://res.cloudinary.com",
                 "https://*.cdninstagram.com",
                 "https://images.unsplash.com",
+                "https://picsum.photos",
             ],
             fontSrc: [
                 "'self'", "data:", "blob:",
