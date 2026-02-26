@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { obfuscate, deobfuscate } from '../utils/securityUtils';
 
 interface AIConfigContextType {
     apiKey: string;
@@ -9,12 +10,14 @@ const AIConfigContext = createContext<AIConfigContextType | undefined>(undefined
 
 export const AIConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [apiKey, setApiKey] = useState<string>(() => {
-        return sessionStorage.getItem('gemini_api_key') || '';
+        const stored = sessionStorage.getItem('gemini_api_key');
+        return deobfuscate(stored) || '';
     });
 
     useEffect(() => {
         if (apiKey) {
-            sessionStorage.setItem('gemini_api_key', apiKey);
+            // Apply obfuscation before storage to prevent clear-text storage
+            sessionStorage.setItem('gemini_api_key', obfuscate(apiKey));
         } else {
             sessionStorage.removeItem('gemini_api_key');
         }

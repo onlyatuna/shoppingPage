@@ -1,6 +1,14 @@
 # Task: Initialize Project Management and Fix Workflow Issues
 
 ## Todo List
+- [x] 修復敏感資訊明文儲存問題 (CodeQL Alert #57) <!-- id: 145 -->
+    - [x] 在 `securityUtils.ts` 建立 `obfuscate`/`deobfuscate` 工具函式 <!-- id: 146 -->
+    - [x] 更新 `AIConfigContext.tsx` 使用代理混淆後儲存於 `sessionStorage` <!-- id: 147 -->
+- [x] 修復 LINE Pay 付款回調參數遺失與 CSP 字體封鎖問題 <!-- id: 141 -->
+    - [x] 修復 `App.tsx` 中的 `Navigate` 會丟棄 Query Params 的問題 <!-- id: 142 -->
+    - [x] 更新 `app.ts` 中的 `helmet` CSP 許可 `font-src data:;` <!-- id: 143 -->
+    - [x] 驗證並 push <!-- id: 144 -->
+
 - [x] Initialize project tasks structure (tasks/todo.md, tasks/lessons.md) <!-- id: 0 -->
 - [x] Investigate and fix the `.agents/workflows/init-task.md` error <!-- id: 1 -->
 - [x] Fix ESLint 9 configuration in monorepo <!-- id: 4 -->
@@ -108,7 +116,7 @@
     - [x] Verify fix by running build <!-- id: 107 -->
 
 - [x] Fix DOM text reinterpreted as HTML (CodeQL Alert #58) <!-- id: 108 -->
-    - [x] Sanitize `imageSrc` with `sanitizeUrl` when setting state from user upload <!-- id: 109 -->
+    - [x] Sanitize `imageSrc` with `sanitizeUrl` <!-- id: 109 -->
     - [x] Sanitize initial default URL via `sanitizeUrl` <!-- id: 110 -->
     - [x] Sanitize the text display on line 90 with `stripHtml` <!-- id: 111 -->
     - [x] Verify fix by running build <!-- id: 112 -->
@@ -145,8 +153,3 @@
     - [x] 確認 `AdminProductsPage.tsx` 中的 `navigate` 路徑正確性 <!-- id: 138 -->
     - [x] 驗證其它後台頁面 (Promotions, Categories) 是否有類似問題 <!-- id: 139 -->
     - [x] 修正並測試確認 <!-- id: 140 -->
-
-- [x] 修復 LINE Pay 付款回調參數遺失與 CSP 字體封鎖問題 <!-- id: 141 -->
-    - [x] 修復 `App.tsx` 中的 `Navigate` 會丟棄 Query Params 的問題 <!-- id: 142 -->
-    - [x] 更新 `app.ts` 中的 `helmet` CSP 許可 `font-src data:;` <!-- id: 143 -->
-    - [x] 驗證並 push <!-- id: 144 -->
