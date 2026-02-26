@@ -2,7 +2,7 @@
 import { prisma } from '../utils/prisma';
 import { createOrderSchema } from '../schemas/order.schema';
 import { z } from 'zod';
-import { Prisma, OrderStatus } from '@prisma/client';
+import { OrderStatus } from '@prisma/client';
 
 type CreateOrderInput = z.infer<typeof createOrderSchema>;
 
