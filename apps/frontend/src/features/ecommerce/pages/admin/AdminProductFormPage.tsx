@@ -346,6 +346,7 @@ export default function AdminProductFormPage() {
             images: imageArray,
             price: Number(data.price),
             stock: totalStock, // Use calculated total stock
+            isActive: data.isActive === true || data.isActive === 'true' as unknown,
 
             options: enableVariants ? options.filter(o => o.name && o.values.length > 0) : [],
             variants: enableVariants ? variants : []
