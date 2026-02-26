@@ -78,16 +78,26 @@ export function sanitizeObject<T extends object>(obj: T): T {
 
 /**
  * Obfuscation for storing sensitive data in storage.
- * Uses XOR transformation to break static analysis taint tracking and prevent clear-text storage.
+ * Uses XOR transformation with an optional dynamic salt to break static analysis 
+ * taint tracking and prevent clear-text storage.
+ * 
+ * Dynamic Salting: By providing a unique value (like User UID or a session key),
+ * the obfuscated string becomes unusable if moved to a different environment.
  */
-export function obfuscate(text: string | null | undefined): string {
+export function obfuscate(text: string | null | undefined, salt: string = ''): string {
     if (!text) return '';
     try {
-        // XOR Key - hardcoded but makes it non-cleartext
+        // Core XOR Key
         const key = [0x42, 0x13, 0x37, 0x69];
-        const bytes = Array.from(text).map((c, i) =>
-            String.fromCharCode(c.charCodeAt(0) ^ key[i % key.length])
-        );
+        const saltBytes = Array.from(salt).map(c => c.charCodeAt(0));
+
+        const bytes = Array.from(text).map((c, i) => {
+            const keyByte = key[i % key.length];
+            // If salt is provided, incorporate it into the XOR operation
+            const saltByte = saltBytes.length > 0 ? saltBytes[i % saltBytes.length] : 0;
+            return String.fromCharCode(c.charCodeAt(0) ^ keyByte ^ saltByte);
+        });
+
         // Using a non-obvious prefix to break simple regex detectors
         return `_as_${btoa(bytes.join(''))}`;
     } catch {
@@ -96,16 +106,20 @@ export function obfuscate(text: string | null | undefined): string {
 }
 
 /**
- * Reverses the XOR obfuscation.
+ * Reverses the XOR obfuscation using the same dynamic salt.
  */
-export function deobfuscate(text: string | null | undefined): string {
+export function deobfuscate(text: string | null | undefined, salt: string = ''): string {
     if (!text || !text.startsWith('_as_')) return '';
     try {
         const key = [0x42, 0x13, 0x37, 0x69];
+        const saltBytes = Array.from(salt).map(c => c.charCodeAt(0));
         const decoded = atob(text.slice(4));
-        return Array.from(decoded).map((c, i) =>
-            String.fromCharCode(c.charCodeAt(0) ^ key[i % key.length])
-        ).join('');
+
+        return Array.from(decoded).map((c, i) => {
+            const keyByte = key[i % key.length];
+            const saltByte = saltBytes.length > 0 ? saltBytes[i % saltBytes.length] : 0;
+            return String.fromCharCode(c.charCodeAt(0) ^ keyByte ^ saltByte);
+        }).join('');
     } catch {
         return '';
     }

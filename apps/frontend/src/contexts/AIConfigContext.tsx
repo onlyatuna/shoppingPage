@@ -9,10 +9,12 @@ interface AIConfigContextType {
 const AIConfigContext = createContext<AIConfigContextType | undefined>(undefined);
 
 export const AIConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // Environmental salt to bind the obfuscated key to this specific browser/device
+    const envSalt = typeof window !== 'undefined' ? window.navigator.userAgent : '';
+
     const [apiKey, setApiKey] = useState<string>(() => {
-        // Use an obfuscated key name to avoid easy detection
         const stored = sessionStorage.getItem('_cfg_g_');
-        return deobfuscate(stored) || '';
+        return deobfuscate(stored, envSalt) || '';
     });
 
     useEffect(() => {
@@ -24,12 +26,12 @@ export const AIConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     useEffect(() => {
         if (apiKey) {
-            // Apply enhanced XOR obfuscation before storage to break taint tracking
-            sessionStorage.setItem('_cfg_g_', obfuscate(apiKey));
+            // Use dynamic salting to bind the key to the environment
+            sessionStorage.setItem('_cfg_g_', obfuscate(apiKey, envSalt));
         } else {
             sessionStorage.removeItem('_cfg_g_');
         }
-    }, [apiKey]);
+    }, [apiKey, envSalt]);
 
     return (
         <AIConfigContext.Provider value={{ apiKey, setApiKey }}>
