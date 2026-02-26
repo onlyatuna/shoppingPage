@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import crypto from 'crypto';
-import { sanitizeLog } from '../utils/securityUtils';
 
 /**
  * CSRF Protection Middleware - Double Submit Cookie Pattern
