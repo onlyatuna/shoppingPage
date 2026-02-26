@@ -33,7 +33,9 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
 
     // In some edge cases (like testing), tokens might be present but mismatch
     if (!xsrfHeader || !xsrfToken || xsrfHeader !== xsrfToken) {
-        console.warn(`⚠️ CSRF Protection: Blocked request. Method: ${String(req.method).replace(/\n|\r/g, ' ')}, Path: ${String(req.path).replace(/\n|\r/g, ' ')}`);
+        let safeMethod = String(req.method).replace(/\n|\r/g, "");
+        let safePath = String(req.path).replace(/\n|\r/g, "");
+        console.warn(`⚠️ CSRF Protection: Blocked request. Method: ${safeMethod}, Path: ${safePath}`);
         return res.status(StatusCodes.FORBIDDEN).json({
             message: 'CSRF validation failed: Token mismatch or missing'
         });
@@ -67,7 +69,9 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
     }
 
     if (!isValidSource) {
-        console.warn(`⚠️ CSRF Protection: Blocked request from invalid source: ${String(origin || referer || 'none').replace(/\n|\r/g, ' ')}`);
+        let source = String(origin || referer || 'none');
+        source = source.replace(/\n|\r/g, "");
+        console.warn(`⚠️ CSRF Protection: Blocked request from invalid source: ${source}`);
         return res.status(StatusCodes.FORBIDDEN).json({
             message: 'CSRF validation failed: Invalid request source'
         });
