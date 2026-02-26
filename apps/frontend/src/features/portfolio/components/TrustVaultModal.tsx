@@ -17,25 +17,15 @@ interface TrustVaultModalProps {
 
 const TrustVaultModal: React.FC<TrustVaultModalProps> = ({ isOpen, onClose, onVerify }) => {
     const { apiKey, setApiKey } = useAIConfig();
-    // 預設為空字串，避免顯示舊的 Context 值，除非使用者真的有存過
     const [localKey, setLocalKey] = useState(apiKey || "");
     const [showKey, setShowKey] = useState(false);
-
-    // 預設勾選 Session Only
-    const [isSessionOnly, setIsSessionOnly] = useState(true);
 
     if (!isOpen) return null;
 
     const handleConnect = () => {
-        // 邏輯：只有在「未勾選」Session Only 時，才存入全域 Context (持久化到 LocalStorage)
-        if (!isSessionOnly) {
-            setApiKey(localKey);
-        } else {
-            // 如果是 Session Only，確保全域 Context 被清空 (避免之前存的殘留)
-            setApiKey("");
-        }
-
-        // 透過 onVerify 將 Key 傳回給當前頁面的 State (記憶體狀態)
+        // 統一存入 AIConfigContext (目前已實作為 SessionStorage + 動態鹽值)
+        setApiKey(localKey);
+        // 透過 onVerify 將 Key 傳回給當前頁面的 State (高優先級主動記憶體狀態)
         onVerify?.(localKey);
         onClose();
     };
@@ -97,27 +87,10 @@ const TrustVaultModal: React.FC<TrustVaultModalProps> = ({ isOpen, onClose, onVe
                                 {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                         </form>
-                        <p className="text-[10px] text-gray-500 pt-1">
-                            {isSessionOnly
-                                ? "Key 僅保留在記憶體中，關閉分頁或重新整理即消失。"
-                                : "Key 將會儲存在瀏覽器中 (LocalStorage)，方便下次使用。"
-                            }
+                        <p className="text-[10px] text-gray-500 pt-2">
+                            <Lock className="w-3 h-3 inline mr-1" />
+                            Key 僅保留在本次分頁會話 (Session) 中，重新整理或關閉分頁即消失。
                         </p>
-                    </div>
-
-                    <div className="space-y-3">
-                        <label className="flex items-center gap-3 cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                checked={isSessionOnly}
-                                onChange={(e) => setIsSessionOnly(e.target.checked)}
-                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <div className="text-sm">
-                                <span className="block font-medium text-gray-700 dark:text-gray-200">僅限本次工作階段 (Current session only)</span>
-                                <span className="block text-xs text-gray-500">建議在公用電腦上使用此選項。</span>
-                            </div>
-                        </label>
                     </div>
 
                     <button

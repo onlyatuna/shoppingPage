@@ -9,8 +9,20 @@ interface AIConfigContextType {
 const AIConfigContext = createContext<AIConfigContextType | undefined>(undefined);
 
 export const AIConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Environmental salt to bind the obfuscated key to this specific browser/device
-    const envSalt = typeof window !== 'undefined' ? window.navigator.userAgent : '';
+    // Environmental & Session salts to bind the key tightly to this specific session and browser
+    const [envSalt] = useState(() => {
+        if (typeof window === 'undefined') return '';
+
+        // Combine UserAgent with a unique Session ID to ensure cross-tab isolation
+        let sessionId = sessionStorage.getItem('_s_id_');
+        if (!sessionId) {
+            // Generate a unique Session ID (UUID-like)
+            sessionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+            sessionStorage.setItem('_s_id_', sessionId);
+        }
+        // Use UserAgent combined with the Session UUID for stronger dynamic salting
+        return `${window.navigator.userAgent}-${sessionId}`;
+    });
 
     const [apiKey, setApiKey] = useState<string>(() => {
         const stored = sessionStorage.getItem('_cfg_g_');
