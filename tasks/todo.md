@@ -175,3 +175,8 @@
     - [x] 完成第一波(關鍵攔截點)與第二波高價值目標 (Payment, Order, External APIs) 的日誌重構 <!-- id: 166 -->
     - [x] 將 Prisma 的事件 (query, info, warn, error) 導向 Pino logger <!-- id: 168 -->
     - [x] 驗證日誌系統產出格式並確認無誤 <!-- id: 167 -->
+
+- [x] 日誌安全性與可追溯性強化 (Log Security & Traceability) <!-- id: 169 -->
+    - [x] 實作 PII 資料脫敏 (Redaction)：在 `utils/logger.ts` 中配置 Pino 去除密碼與信用卡等敏感欄位 <!-- id: 170 -->
+    - [x] 實作日誌關聯追蹤 (Correlation ID)：使用 `AsyncLocalStorage` 自動在全域 Service 與 Prisma 中帶入 `req.id`，不改動原有方法簽名 <!-- id: 171 -->
+    - [x] 建立 `docs/logging.md` 並記錄 Action 命名規範與最佳實踐 <!-- id: 172 -->

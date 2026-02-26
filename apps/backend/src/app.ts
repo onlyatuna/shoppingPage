@@ -3,7 +3,9 @@ import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import morgan from 'morgan';
+import pinoHttp from 'pino-http';
+import { randomUUID } from 'crypto';
+import { logger, asyncLocalStorage } from './utils/logger';
 import helmet from 'helmet';
 import lusca from 'lusca';
 import rateLimit from 'express-rate-limit';
@@ -99,7 +101,23 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser()); // 解析 Cookie
 app.use(csrf);  // [SECURITY] CSRF Protection (Double Submit Cookie Pattern)
-app.use(morgan('dev'));
+
+// [SECURITY & OBSERVABILITY] Replace morgan with pino-http
+app.use(pinoHttp({
+    logger,
+    genReqId: function (req, res) {
+        const existingID = req.id ?? req.headers["x-request-id"];
+        if (existingID) return existingID;
+        return randomUUID();
+    }
+}));
+
+// Provide Correlation ID via AsyncLocalStorage to all downstream services and Prisma
+app.use((req, res, next) => {
+    const store = new Map<string, any>();
+    store.set('reqId', req.id);
+    asyncLocalStorage.run(store, () => next());
+});
 
 // [SECURITY] Plus security headers via Lusca for all endpoints
 app.use(lusca({
