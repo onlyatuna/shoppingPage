@@ -296,7 +296,7 @@ export class PaymentService {
             return res.data.info;
         } catch (error: any) {
             const errorDetail = error.response?.data || error.message;
-            console.error('Get Details Error:', sanitizeLog(errorDetail));
+            console.error('Get Details Error:', String(errorDetail).replace(/\n|\r/g, ' '));
             throw error;
         }
     }
@@ -333,7 +333,8 @@ export class PaymentService {
             if (res.data.returnCode !== '0000') {
                 // 1198: Request is already refunded (重複退款視為成功)
                 if (res.data.returnCode === '1198') {
-                    console.log(`⚠️ Order ${sanitizeLog(orderId)} already refunded (1198).`);
+                    const safeId = String(orderId).replace(/\n|\r/g, ' ');
+                    console.log(`⚠️ Order ${safeId} already refunded (1198).`);
                 } else {
                     throw new Error(`Refund Failed: ${res.data.returnMessage}`);
                 }

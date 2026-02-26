@@ -1,7 +1,7 @@
 # Task: Initialize Project Management and Fix Workflow Issues
 
 ## Todo List
-- [x] 修復日誌注入漏洞 (CodeQL Alert #406, #421 & #422) <!-- id: 155 -->
+- [x] 修復日誌注入漏洞 (CodeQL Alert #406, #420, #421 & #422) <!-- id: 155 -->
     - [x] 在後端 `securityUtils.ts` 建立 `sanitizeLog` 指令輔助函式 <!-- id: 156 -->
     - [x] 對 `payment.service.ts` 全面實施「行內清洗」(Inline Sanitization) 以滿足 CodeQL 信任邊界 <!-- id: 157 -->
 - [x] 修復使用者受控防護繞過問題 (CodeQL Alert #399) <!-- id: 152 -->
