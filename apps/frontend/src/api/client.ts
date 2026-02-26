@@ -5,6 +5,8 @@ const apiClient = axios.create({
     baseURL: '/api/v1',
     headers: { 'Content-Type': 'application/json' },
     withCredentials: true, // [關鍵] 必須開啟，才會自動帶 Cookie
+    xsrfCookieName: 'XSRF-TOKEN', // 從這個 Cookie 讀取 Token
+    xsrfHeaderName: 'X-XSRF-TOKEN', // 將 Token 放進這個 Header 發送
 });
 
 // 回應攔截器 (處理 401 登出)

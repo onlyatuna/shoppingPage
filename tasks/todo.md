@@ -1,6 +1,10 @@
 # Task: Initialize Project Management and Fix Workflow Issues
 
 ## Todo List
+- [x] 修復缺少 CSRF Middleware 問題 (CodeQL Alert #53) <!-- id: 148 -->
+    - [x] 建立 `csrf.middleware.ts` 實作 Double Submit Cookie 模式 <!-- id: 149 -->
+    - [x] 在 `app.ts` 註冊 CSRF 中間層 <!-- id: 150 -->
+    - [x] 配置 `api/client.ts` 使 Axios 自動讀取與傳遞 XSRF Token <!-- id: 151 -->
 - [x] 修復敏感資訊明文儲存問題 (CodeQL Alert #57) <!-- id: 145 -->
     - [x] 在 `securityUtils.ts` 建立 `obfuscate`/`deobfuscate` 工具函式 <!-- id: 146 -->
     - [x] 更新 `AIConfigContext.tsx` 使用代理混淆後儲存於 `sessionStorage` <!-- id: 147 -->

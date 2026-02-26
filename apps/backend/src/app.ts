@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import lusca from 'lusca';
 import rateLimit from 'express-rate-limit';
+import { csrfProtection } from './middlewares/csrf.middleware';
 import { prisma } from './utils/prisma';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/auth.routes';
@@ -93,50 +94,15 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+
+
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser()); // 解析 Cookie
 app.use(morgan('dev'));
 
-// [SECURITY] CSRF Protection - Validate Origin for state-changing requests
-const ALLOWED_ORIGINS = [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://evanchen316.com'
-];
-
-app.use('/api', (req, res, next) => {
-    // Skip CSRF check for safe methods (GET, HEAD, OPTIONS)
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-        return next();
-    }
-
-    // Get Origin or Referer header
-    const origin = req.get('Origin');
-    const referer = req.get('Referer');
-
-    // Validate origin
-    let isValidOrigin = false;
-
-    if (origin) {
-        isValidOrigin = ALLOWED_ORIGINS.some(allowed => origin === allowed);
-    } else if (referer) {
-        // Fallback to Referer if Origin is not present
-        try {
-            const refererUrl = new URL(referer);
-            const refererOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
-            isValidOrigin = ALLOWED_ORIGINS.some(allowed => refererOrigin === allowed);
-        } catch {
-            isValidOrigin = false;
-        }
-    }
-
-    if (!isValidOrigin) {
-        console.warn(`⚠️ CSRF Protection: Blocked request from origin: ${origin || referer || 'unknown'}`);
-        return res.status(403).json({ message: 'CSRF validation failed: Invalid origin' });
-    }
-
-    next();
-});
+// [SECURITY] CSRF Protection - Double Submit Cookie Pattern
+// Validates X-XSRF-TOKEN header against XSRF-TOKEN cookie for state-changing requests
+app.use('/api', csrfProtection);
 
 // [SECURITY] Lusca security middleware for additional security headers
 // Note: CSRF protection is handled by Origin validation above (stateless SPA pattern)
