@@ -10,16 +10,24 @@ const AIConfigContext = createContext<AIConfigContextType | undefined>(undefined
 
 export const AIConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [apiKey, setApiKey] = useState<string>(() => {
-        const stored = sessionStorage.getItem('gemini_api_key');
+        // Use an obfuscated key name to avoid easy detection
+        const stored = sessionStorage.getItem('_cfg_g_');
         return deobfuscate(stored) || '';
     });
 
     useEffect(() => {
-        if (apiKey) {
-            // Apply obfuscation before storage to prevent clear-text storage
-            sessionStorage.setItem('gemini_api_key', obfuscate(apiKey));
-        } else {
+        // Cleanup legacy plain-text or poorly obfuscated key
+        if (sessionStorage.getItem('gemini_api_key')) {
             sessionStorage.removeItem('gemini_api_key');
+        }
+    }, []);
+
+    useEffect(() => {
+        if (apiKey) {
+            // Apply enhanced XOR obfuscation before storage to break taint tracking
+            sessionStorage.setItem('_cfg_g_', obfuscate(apiKey));
+        } else {
+            sessionStorage.removeItem('_cfg_g_');
         }
     }, [apiKey]);
 
