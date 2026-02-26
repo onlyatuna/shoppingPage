@@ -13,14 +13,16 @@ export const AIConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [envSalt] = useState(() => {
         if (typeof window === 'undefined') return '';
 
-        // Combine UserAgent with a unique Session ID to ensure cross-tab isolation
+        // Combine UserAgent with a cryptographically strong Session UUID to ensure cross-tab isolation
         let sessionId = sessionStorage.getItem('_s_id_');
         if (!sessionId) {
-            // Generate a unique Session ID (UUID-like)
-            sessionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+            // [SECURITY] Use Web Crypto API for better entropy if available
+            sessionId = typeof window.crypto?.randomUUID === 'function'
+                ? window.crypto.randomUUID()
+                : Math.random().toString(36).substring(2) + Date.now().toString(36);
             sessionStorage.setItem('_s_id_', sessionId);
         }
-        // Use UserAgent combined with the Session UUID for stronger dynamic salting
+        // Use UserAgent combined with the cryptographically strong UUID for extreme dynamic salting
         return `${window.navigator.userAgent}-${sessionId}`;
     });
 
