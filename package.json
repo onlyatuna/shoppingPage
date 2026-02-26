@@ -27,6 +27,8 @@
   },
   "dependencies": {
     "@google/genai": "^1.40.0",
+    "axios": "^1.13.5",
+    "qs": "^6.15.0",
     "recharts": "^3.7.0"
   }
 }
