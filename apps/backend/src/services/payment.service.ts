@@ -1,7 +1,6 @@
 import { prisma } from '../utils/prisma';
 import { linePayClient } from '../utils/linePay';
 import Decimal from 'decimal.js';
-import { sanitizeLog } from '../utils/securityUtils';
 
 /**
  * [SECURITY] Sanitizes and validates LINE Pay transaction ID to prevent SSRF
