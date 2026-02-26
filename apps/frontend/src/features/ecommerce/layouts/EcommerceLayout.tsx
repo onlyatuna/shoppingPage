@@ -82,110 +82,110 @@ function EcommerceLayout() {
             <div className={isEditorPage ? '' : 'max-w-7xl mx-auto'}>
                 <Routes>
                     <Route path="/" element={<HomePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<Navigate to="/app/login" replace />} />
-                    <Route path="/verify-email" element={<VerifyEmailPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="login" element={<LoginPage />} />
+                    <Route path="register" element={<Navigate to="/app/login" replace />} />
+                    <Route path="verify-email" element={<VerifyEmailPage />} />
+                    <Route path="forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="reset-password" element={<ResetPasswordPage />} />
 
-                    <Route path="/profile" element={
+                    <Route path="profile" element={
                         <ProtectedRoute>
                             <ProfilePage />
                         </ProtectedRoute>
                     } />
 
                     {/* 購物車路由 (受保護) */}
-                    <Route path="/cart" element={
+                    <Route path="cart" element={
                         <ProtectedRoute>
                             <CartPage />
                         </ProtectedRoute>
                     } />
 
                     {/* Step 2: 填寫資料 (受保護) */}
-                    <Route path="/checkout/info" element={
+                    <Route path="checkout/info" element={
                         <ProtectedRoute>
                             <CheckoutInfoPage />
                         </ProtectedRoute>
                     } />
 
                     {/* Step 3: 訂單確認 (受保護) */}
-                    <Route path="/orders/success/:id" element={
+                    <Route path="orders/success/:id" element={
                         <ProtectedRoute>
                             <OrderSuccessPage />
                         </ProtectedRoute>
                     } />
 
                     {/* 訂單路由 (受保護) */}
-                    <Route path="/orders" element={
+                    <Route path="orders" element={
                         <ProtectedRoute>
                             <OrdersPage />
                         </ProtectedRoute>
                     } />
 
                     {/* 支付回調路由 */}
-                    <Route path="/payment/callback" element={<PaymentCallbackPage />} />
+                    <Route path="payment/callback" element={<PaymentCallbackPage />} />
 
                     {/* 後台商品管理路由 */}
-                    <Route path="/admin/products" element={
+                    <Route path="admin/products" element={
                         <AdminRoute>
                             <AdminProductsPage />
                         </AdminRoute>
                     } />
 
                     {/* 後台商品新增/編輯路由 */}
-                    <Route path="/admin/products/new" element={
+                    <Route path="admin/products/new" element={
                         <AdminRoute>
                             <AdminProductFormPage />
                         </AdminRoute>
                     } />
 
-                    <Route path="/admin/products/edit/:id" element={
+                    <Route path="admin/products/edit/:id" element={
                         <AdminRoute>
                             <AdminProductFormPage />
                         </AdminRoute>
                     } />
 
                     {/* 後台促銷管理路由 */}
-                    <Route path="/admin/promotions" element={
+                    <Route path="admin/promotions" element={
                         <AdminRoute>
                             <AdminPromotionsPage />
                         </AdminRoute>
                     } />
 
                     {/* 後台分類管理路由 */}
-                    <Route path="/admin/categories" element={
+                    <Route path="admin/categories" element={
                         <AdminRoute>
                             <AdminCategoriesPage />
                         </AdminRoute>
                     } />
 
                     {/* 後台訂單管理路由 */}
-                    <Route path="/admin/orders" element={
+                    <Route path="admin/orders" element={
                         <AdminRoute>
                             <AdminOrdersPage />
                         </AdminRoute>
                     } />
 
                     {/* 後台使用者管理路由 */}
-                    <Route path="/admin/users" element={
+                    <Route path="admin/users" element={
                         <AdminRoute>
                             <AdminUsersPage />
                         </AdminRoute>} />
 
                     {/* 專業圖片編輯工作站 */}
-                    <Route path="/editor" element={
+                    <Route path="editor" element={
                         <AdminRoute>
                             <EditorPage />
                         </AdminRoute>} />
 
                     {/* 雲端圖庫 */}
-                    <Route path="/library" element={
+                    <Route path="library" element={
                         <AdminRoute>
                             <CloudLibraryPage />
                         </AdminRoute>} />
 
                     {/* 商品詳細頁 (公開) */}
-                    <Route path="/products/:slug" element={<ProductPage />} />
+                    <Route path="products/:slug" element={<ProductPage />} />
 
                     {/* Fallback for unknown routes under /app */}
                     <Route path="*" element={<Navigate to="/app" replace />} />

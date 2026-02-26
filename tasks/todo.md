@@ -126,3 +126,22 @@
     - [x] CheckoutInfoPage 修正結帳成功導航從 /orders/success → /app/orders/success <!-- id: 122 -->
     - [x] 驗證 TypeScript 編譯通過並 push <!-- id: 123 -->
 
+- [x] 全面修正電商模組缺少 /app 前綴的導航路徑 <!-- id: 124 -->
+    - [x] AdminProductsPage: 修正編輯商品 navigate 路徑 (x2) <!-- id: 125 -->
+    - [x] ProductCard: 修正商品連結 Link to 路徑 (x2) <!-- id: 126 -->
+    - [x] CartPage: 修正購物車內商品連結路徑 <!-- id: 127 -->
+    - [x] Navbar: 修正搜尋、最新商品、熱銷排行、分類篩選等路徑 (x6) <!-- id: 128 -->
+    - [x] 驗證 TypeScript 編譯通過並 push <!-- id: 129 -->
+
+- [x] 修正 AdminProductFormPage API 路徑空格問題 <!-- id: 130 -->
+    - [x] 修正 `/ products / ${id} ` → `/products/${id}` (多餘空格導致 404) <!-- id: 131 -->
+    - [x] 驗證並 push <!-- id: 132 -->
+
+- [x] 修正 /hand-gesture 的 CSP 阻擋問題 <!-- id: 133 -->
+    - [x] 在 connect-src 中加入 https://cdn.jsdelivr.net 以允許下載 MediaPipe WASM 檔案 <!-- id: 134 -->
+    - [x] 驗證並 push <!-- id: 135 -->
+- [x] 修復 Admin 商品編輯按鈕重導向問題 <!-- id: 136 -->
+    - [x] 調查 `EcommerceLayout.tsx` 路由定義 (確認是否需移除 leading slash) <!-- id: 137 -->
+    - [x] 確認 `AdminProductsPage.tsx` 中的 `navigate` 路徑正確性 <!-- id: 138 -->
+    - [x] 驗證其它後台頁面 (Promotions, Categories) 是否有類似問題 <!-- id: 139 -->
+    - [x] 修正並測試確認 <!-- id: 140 -->
