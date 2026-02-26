@@ -20,15 +20,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 新增步驟：將 Repository 名稱轉為小寫並存入環境變數
+      - name: Set lower case repo name
+        run: |
+          echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       - name: Build an image from Dockerfile
         run: |
-          # 使用動態變數避免佔位符錯誤
-          docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+          # 使用轉化後的環境變數 env.REPO_LC
+          docker build -t ghcr.io/${{ env.REPO_LC }}:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
         with:
-          image-ref: 'ghcr.io/${{ github.repository }}:${{ github.sha }}'
+          image-ref: 'ghcr.io/${{ env.REPO_LC }}:${{ github.sha }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
