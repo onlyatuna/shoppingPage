@@ -9,8 +9,7 @@ datasource db {
 // 產生 TypeScript Client
 generator client {
   provider      = "prisma-client-js"
-  // [修正] 加入 debian-openssl-3.0.x 以支援 Node 20 容器環境
-  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 // --------------------------------------
