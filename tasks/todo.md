@@ -1,7 +1,7 @@
 # Task: Initialize Project Management and Fix Workflow Issues
 
 ## Todo List
-- [x] 移除未使用的導入與變數 (CodeQL Alert #413 & #414) <!-- id: 162 -->
+- [x] 移除未使用的導入與變數 (CodeQL Alert #412, #413 & #414) <!-- id: 162 -->
 - [x] 修復遺漏的分號 (CodeQL Alert #417) <!-- id: 161 -->
 - [x] 修復無用的變數賦值 (CodeQL Alert #407) <!-- id: 160 -->
 - [x] 修復冗餘的條件判斷 (CodeQL Alert #415) <!-- id: 159 -->

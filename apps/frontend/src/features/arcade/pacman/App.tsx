@@ -9,14 +9,13 @@ import {
   INITIAL_PACMAN_POS,
   INITIAL_GHOSTS_POS,
   MAP_LAYOUT,
-  GHOST_NAMES,
   DOT_SCORE,
   POWER_PELLET_SCORE,
   GHOST_SCORE,
   FRIGHTENED_DURATION,
   GHOST_RELEASE_DOT_COUNT
 } from './constants';
-import { GameState, Pacman, Ghost } from './types';
+import { GameState, Pacman, Ghost, Direction } from './types';
 import { isWall, getOppositeDirection, getDistance } from './utils';
 
 const App: React.FC = () => {
@@ -37,7 +36,7 @@ const App: React.FC = () => {
 
   const resetLevel = useCallback(() => {
     setPacman({ ...INITIAL_PACMAN_POS, dir: 'left', nextDir: 'left', isAnimating: false, animationFrame: 0 });
-    setGhosts(INITIAL_GHOSTS_POS.map(g => ({...g, x: g.startX, y: g.startY, isFrightened: false, isEaten: false, isReleased: false})));
+    setGhosts(INITIAL_GHOSTS_POS.map(g => ({ ...g, x: g.startX, y: g.startY, isFrightened: false, isEaten: false, isReleased: false })));
     setFrightenedMode(false);
     setFrightenedTimer(0);
     setGhostsEaten(0);
@@ -80,26 +79,26 @@ const App: React.FC = () => {
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (gameState === GameState.Playing) {
-        let nextDir = pacman.nextDir;
-        switch (e.key) {
-          case 'ArrowUp':
-          case 'w':
-            nextDir = 'up';
-            break;
-          case 'ArrowDown':
-          case 's':
-            nextDir = 'down';
-            break;
-          case 'ArrowLeft':
-          case 'a':
-            nextDir = 'left';
-            break;
-          case 'ArrowRight':
-          case 'd':
-            nextDir = 'right';
-            break;
-        }
-        setPacman(p => ({ ...p, nextDir }));
+      let nextDir = pacman.nextDir;
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+          nextDir = 'up';
+          break;
+        case 'ArrowDown':
+        case 's':
+          nextDir = 'down';
+          break;
+        case 'ArrowLeft':
+        case 'a':
+          nextDir = 'left';
+          break;
+        case 'ArrowRight':
+        case 'd':
+          nextDir = 'right';
+          break;
+      }
+      setPacman(p => ({ ...p, nextDir }));
     } else if (gameState === GameState.Ready || gameState === GameState.GameOver) {
       newGame();
     }
@@ -111,39 +110,39 @@ const App: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [handleKeyDown]);
-  
+
   const movePacman = useCallback(() => {
     setPacman(p => {
-        let { x, y, dir, nextDir } = p;
-        let newX = x;
-        let newY = y;
-        let canMoveInNextDir = false;
-        
-        // Try to move in the next direction
-        if (nextDir === 'left' && !isWall(x - 1, y)) canMoveInNextDir = true;
-        if (nextDir === 'right' && !isWall(x + 1, y)) canMoveInNextDir = true;
-        if (nextDir === 'up' && !isWall(x, y - 1)) canMoveInNextDir = true;
-        if (nextDir === 'down' && !isWall(x, y + 1)) canMoveInNextDir = true;
+      let { x, y, dir, nextDir } = p;
+      let newX = x;
+      let newY = y;
+      let canMoveInNextDir = false;
 
-        if (canMoveInNextDir) {
-            dir = nextDir;
-        }
+      // Try to move in the next direction
+      if (nextDir === 'left' && !isWall(x - 1, y)) canMoveInNextDir = true;
+      if (nextDir === 'right' && !isWall(x + 1, y)) canMoveInNextDir = true;
+      if (nextDir === 'up' && !isWall(x, y - 1)) canMoveInNextDir = true;
+      if (nextDir === 'down' && !isWall(x, y + 1)) canMoveInNextDir = true;
 
-        if (dir === 'left') newX--;
-        if (dir === 'right') newX++;
-        if (dir === 'up') newY--;
-        if (dir === 'down') newY++;
-        
-        // Tunnel
-        if (newX < 0) newX = MAP_WIDTH -1;
-        if (newX >= MAP_WIDTH) newX = 0;
+      if (canMoveInNextDir) {
+        dir = nextDir;
+      }
 
-        if (!isWall(newX, newY)) {
-            x = newX;
-            y = newY;
-        }
+      if (dir === 'left') newX--;
+      if (dir === 'right') newX++;
+      if (dir === 'up') newY--;
+      if (dir === 'down') newY++;
 
-        return { ...p, x, y, dir, animationFrame: (p.animationFrame + 1) % 4};
+      // Tunnel
+      if (newX < 0) newX = MAP_WIDTH - 1;
+      if (newX >= MAP_WIDTH) newX = 0;
+
+      if (!isWall(newX, newY)) {
+        x = newX;
+        y = newY;
+      }
+
+      return { ...p, x, y, dir, animationFrame: (p.animationFrame + 1) % 4 };
     });
   }, []);
 
@@ -168,7 +167,7 @@ const App: React.FC = () => {
       case 'Inky': // Cyan: Complex targeting
         return { x: pacman.x, y: pacman.y }; // Simplified for now
       case 'Clyde': // Orange: Targets Pac-Man if far, scatters if close
-        if (getDistance({x: ghost.x, y: ghost.y}, {x: pacman.x, y: pacman.y}) > 8) {
+        if (getDistance({ x: ghost.x, y: ghost.y }, { x: pacman.x, y: pacman.y }) > 8) {
           return { x: pacman.x, y: pacman.y };
         } else {
           return ghost.scatterTarget;
@@ -181,17 +180,17 @@ const App: React.FC = () => {
   const moveGhosts = useCallback(() => {
     setGhosts(currentGhosts => currentGhosts.map(ghost => {
       let { x, y, dir, isReleased, name } = ghost;
-      
+
       const eatenDots = initialDotCount - dotCount;
       if (!isReleased) {
         if (name === 'Blinky' || eatenDots > GHOST_RELEASE_DOT_COUNT[name]) {
-            isReleased = true;
+          isReleased = true;
         } else {
-            return {...ghost};
+          return { ...ghost };
         }
       }
-      
-      const possibleMoves = [];
+
+      const possibleMoves: Direction[] = [];
       const oppositeDir = getOppositeDirection(dir);
 
       if (dir !== 'down' && !isWall(x, y - 1)) possibleMoves.push('up');
@@ -201,32 +200,32 @@ const App: React.FC = () => {
 
       let bestMove = dir;
       if (possibleMoves.length > 1 || !possibleMoves.includes(dir)) {
-          let minDistance = Infinity;
-          const target = getGhostTarget(ghost, pacman);
+        let minDistance = Infinity;
+        const target = getGhostTarget(ghost, pacman);
 
-          for (const move of possibleMoves) {
-              if (move === oppositeDir) continue;
-              let nextX = x, nextY = y;
-              if (move === 'left') nextX--;
-              if (move === 'right') nextX++;
-              if (move === 'up') nextY--;
-              if (move === 'down') nextY++;
-              const distance = getDistance({ x: nextX, y: nextY }, target);
-              if (distance < minDistance) {
-                  minDistance = distance;
-                  bestMove = move;
-              }
+        for (const move of possibleMoves) {
+          if (move === oppositeDir) continue;
+          let nextX = x, nextY = y;
+          if (move === 'left') nextX--;
+          if (move === 'right') nextX++;
+          if (move === 'up') nextY--;
+          if (move === 'down') nextY++;
+          const distance = getDistance({ x: nextX, y: nextY }, target);
+          if (distance < minDistance) {
+            minDistance = distance;
+            bestMove = move;
           }
+        }
       } else if (possibleMoves.length === 0) {
         bestMove = oppositeDir;
       }
-      
+
       dir = bestMove;
       if (dir === 'left') x--;
       if (dir === 'right') x++;
       if (dir === 'up') y--;
       if (dir === 'down') y++;
-      
+
       if (x < 0) x = MAP_WIDTH - 1;
       if (x >= MAP_WIDTH) x = 0;
 
@@ -271,7 +270,7 @@ const App: React.FC = () => {
       setScore(s => s + DOT_SCORE);
       setDotCount(d => d - 1);
     }
-    
+
     // Power Pellets
     const pelletIndex = powerPellets.findIndex(p => p.x === pacman.x && p.y === pacman.y);
     if (pelletIndex > -1) {
@@ -291,13 +290,13 @@ const App: React.FC = () => {
     moveGhosts();
     checkCollisions();
 
-    if (dotCount -1 <= 0 && powerPellets.length === 0) {
-        setLevel(l => l + 1);
-        initializeMap();
-        resetLevel();
+    if (dotCount - 1 <= 0 && powerPellets.length === 0) {
+      setLevel(l => l + 1);
+      initializeMap();
+      resetLevel();
     }
   }, [gameState, movePacman, moveGhosts, checkCollisions, dotCount, powerPellets, initializeMap, resetLevel]);
-  
+
   useEffect(() => {
     const interval = setInterval(gameLoop, 200);
     return () => clearInterval(interval);
@@ -328,7 +327,7 @@ const App: React.FC = () => {
               <p className="text-lg text-white">PRESS ANY KEY TO START</p>
             </div>
           )}
-          <GameBoard 
+          <GameBoard
             dots={dots}
             powerPellets={powerPellets}
             pacman={pacman}
