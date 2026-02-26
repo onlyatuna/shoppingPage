@@ -5,11 +5,71 @@ import {
 } from 'recharts';
 import { AlertTriangle, Activity, Target, BrainCircuit } from 'lucide-react';
 
+import { Skeleton } from '@/components/ui/Skeleton';
+
 interface ResultsDashboardProps {
     results: SimulationResult;
     advisorData: AdvisorResponse | null;
     isLoadingAdvice: boolean;
 }
+
+// 骨架屏組件：模擬整體的儀表板佈局
+const DashboardSkeleton = () => (
+    <div className="space-y-6 animate-pulse">
+        {/* 指標卡片骨架 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-xl p-6 border border-gray-100 h-32 flex flex-col justify-between">
+                    <Skeleton className="h-4 w-24 bg-gray-100" />
+                    <Skeleton className="h-8 w-32 bg-gray-100" />
+                    <Skeleton className="h-3 w-40 bg-gray-100" />
+                </div>
+            ))}
+        </div>
+
+        {/* 收入拆解骨架 */}
+        <div className="bg-white p-6 rounded-xl border border-gray-100 space-y-6">
+            <Skeleton className="h-6 w-48 bg-gray-100" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 bg-gray-50 rounded-lg" />)}
+            </div>
+            <div className="flex justify-between pt-4 border-t border-gray-100">
+                <div className="space-y-2"><Skeleton className="h-4 w-20 bg-gray-100" /><Skeleton className="h-8 w-28 bg-gray-100" /></div>
+                <div className="space-y-2 text-right flex flex-col items-end"><Skeleton className="h-4 w-20 bg-gray-100" /><Skeleton className="h-8 w-28 bg-gray-100" /></div>
+            </div>
+        </div>
+
+        {/* 圖表骨架 */}
+        <div className="bg-white p-6 rounded-xl border border-gray-100 space-y-4">
+            <Skeleton className="h-6 w-64 bg-gray-100" />
+            <Skeleton className="h-80 w-full bg-gray-50 rounded-lg" />
+        </div>
+
+        {/* AI 顧問區塊骨架 */}
+        <div className="bg-gradient-to-br from-[#1a237e] to-[#0d47a1] p-6 rounded-xl shadow-xl border border-white/5 space-y-6">
+            <div className="flex items-center gap-2 border-b border-white/10 pb-4">
+                <div className="w-5 h-5 bg-white/20 rounded-full" />
+                <Skeleton className="h-5 w-32 bg-white/20" />
+            </div>
+            <div className="space-y-4">
+                <div className="bg-white/5 p-5 rounded-lg border border-white/10 space-y-3">
+                    <Skeleton className="h-3 w-20 bg-white/10" />
+                    <Skeleton className="h-4 w-full bg-white/10" />
+                    <Skeleton className="h-4 w-3/4 bg-white/10" />
+                </div>
+                <div className="space-y-3">
+                    <Skeleton className="h-3 w-32 bg-white/10" />
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="flex gap-4 items-center">
+                            <Skeleton className="h-6 w-6 rounded-full bg-white/10 shrink-0" />
+                            <Skeleton className="h-4 w-full bg-white/10" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 const CurrencyFormatter = new Intl.NumberFormat('zh-TW', {
     style: 'currency',
@@ -42,11 +102,26 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, adv
     // 格式化函數
     const formatMoney = (val: number) => Math.round(val).toLocaleString();
 
+    // 如果 AI 正在載入，顯示整體的骨架屏
+    if (isLoadingAdvice) {
+        return <DashboardSkeleton />;
+    }
+
+    // 如果 AI 回應失敗且也沒有結果，可以顯示提示（通常不會發生，因為有 Mock Fallback）
+    if (!advisorData && !isLoadingAdvice) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-dashed border-gray-300">
+                <BrainCircuit className="w-12 h-12 text-gray-300 mb-4" />
+                <p className="text-gray-500">尚無試算結果，請輸入資料後點擊「開始試算」</p>
+            </div>
+        );
+    }
+
     const isSafe = results.successRate > 80;
     const successColor = isSafe ? 'text-emerald-600' : results.successRate > 50 ? 'text-yellow-600' : 'text-red-600';
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in zoom-in-95 duration-700 ease-out">
             {/* 1. 核心指標卡片 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <StatCard
@@ -195,36 +270,34 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, adv
             </div>
 
             {/* 4. AI 建議區塊 */}
-            <div className="bg-gradient-to-br from-indigo-900 to-blue-900 text-white p-6 rounded-xl shadow">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 border-b border-white/20 pb-4">
-                    <BrainCircuit className="text-yellow-400" />
-                    AI 退休規劃顧問
-                    {isLoadingAdvice && <span className="animate-pulse text-xs bg-white/20 px-2 py-0.5 rounded ml-auto">Thinking...</span>}
+            <div className="bg-gradient-to-br from-[#1a237e] to-[#0d47a1] text-white p-6 rounded-xl shadow-xl border border-white/5">
+                <h3 className="text-lg font-bold mb-6 flex items-center gap-2 border-b border-white/10 pb-4">
+                    <BrainCircuit className="text-blue-300 w-5 h-5" />
+                    <span className="tracking-tight text-blue-50">AI 退休規劃顧問</span>
                 </h3>
 
-                <div className="space-y-4">
-                    {advisorData ? (
-                        <div className="animate-in fade-in duration-500 space-y-4">
-                            <div className="bg-white/10 p-4 rounded-lg border border-white/10">
-                                <h4 className="font-bold text-yellow-400 text-xs mb-2 uppercase tracking-wider">Analysis</h4>
-                                <p className="text-sm opacity-90 leading-relaxed text-indigo-100">{advisorData.analysis}</p>
-                            </div>
+                <div className="min-h-[200px]">
+                    <div className="animate-in fade-in duration-700 space-y-6">
+                        <div className="bg-white/5 p-5 rounded-lg border border-white/10 backdrop-blur-sm shadow-inner">
+                            <h4 className="font-bold text-blue-200 text-[10px] mb-3 uppercase tracking-[0.2em]">Professional Analysis</h4>
+                            <p className="text-sm leading-relaxed text-blue-50/90 font-medium">
+                                {advisorData?.analysis}
+                            </p>
+                        </div>
+                        <div className="space-y-4">
+                            <h4 className="font-bold text-emerald-300 text-[10px] uppercase tracking-[0.2em] mb-2">Key Recommendations</h4>
                             <div className="space-y-3">
-                                <h4 className="font-bold text-emerald-400 text-xs uppercase tracking-wider">Recommendations</h4>
-                                {advisorData.suggestions.map((s, idx) => (
-                                    <div key={idx} className="flex gap-3 text-sm opacity-90 group hover:opacity-100 transition-opacity">
-                                        <span className="bg-white/20 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs mt-0.5 font-bold">{idx + 1}</span>
-                                        <p className="leading-relaxed">{s}</p>
+                                {advisorData?.suggestions.map((s, idx) => (
+                                    <div key={idx} className="flex gap-4 text-sm text-white/80 group hover:text-white transition-all duration-300 items-start">
+                                        <span className="bg-white/10 text-white/60 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] mt-0.5 font-bold group-hover:bg-blue-500/30 group-hover:text-white border border-white/5 transition-all">
+                                            {idx + 1}
+                                        </span>
+                                        <p className="leading-relaxed pt-0.5">{s}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-40 opacity-40 space-y-3">
-                            <BrainCircuit className="w-16 h-16" />
-                            <p className="text-sm text-center">請點擊「開始試算」<br />以獲取 AI 投資建議</p>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>

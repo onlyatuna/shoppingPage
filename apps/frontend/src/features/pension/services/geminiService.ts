@@ -55,9 +55,11 @@ export const generateActionableAdvice = async (
     results: SimulationResult,
     apiKey?: string
 ): Promise<AdvisorResponse> => {
+    // 💡 Sanitization: Remove hidden whitespace, newlines, and non-ASCII characters from the API key
+    const sanitizedApiKey = apiKey?.replace(/[^\x20-\x7E]/g, '').trim() || '';
 
     // 1. 判斷是否為 Mock 模式
-    const isMockMode = !apiKey || apiKey.trim() === '';
+    const isMockMode = !sanitizedApiKey || sanitizedApiKey === '';
 
     // [Mode A] Mock Mode
     if (isMockMode) {
@@ -71,7 +73,7 @@ export const generateActionableAdvice = async (
 
     // [Mode B] Live Mode (Real API)
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
+        const genAI = new GoogleGenerativeAI(sanitizedApiKey);
 
         const modelId = "gemini-2.5-flash";
 

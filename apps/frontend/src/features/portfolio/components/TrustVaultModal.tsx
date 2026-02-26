@@ -73,18 +73,21 @@ const TrustVaultModal: React.FC<TrustVaultModalProps> = ({ isOpen, onClose, onVe
                         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                             Gemini API Key
                         </label>
-                        <div className="relative">
-                            {/* ✅ 關鍵修正：阻擋瀏覽器自動填入 (Autofill) */}
+                        <form
+                            className="relative"
+                            onSubmit={(e) => { e.preventDefault(); handleConnect(); }}
+                        >
                             <input
-                                type={showKey ? "text" : "password"}
+                                type="text"
                                 value={localKey}
                                 onChange={(e) => setLocalKey(e.target.value)}
                                 placeholder="sk-..."
                                 className="block w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-[#0b1219] text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 pl-3 pr-10"
-                                autoComplete="new-password"
-                                name="gemini_api_key_no_save"
-                                id="gemini_api_key_no_save"
+                                autoComplete="off"
+                                name="_st_vault_token"
+                                id="_st_vault_token"
                                 data-lpignore="true"
+                                style={{ WebkitTextSecurity: showKey ? 'none' : 'disc' } as any}
                             />
                             <button
                                 onClick={() => setShowKey(!showKey)}
@@ -93,7 +96,7 @@ const TrustVaultModal: React.FC<TrustVaultModalProps> = ({ isOpen, onClose, onVe
                             >
                                 {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
-                        </div>
+                        </form>
                         <p className="text-[10px] text-gray-500 pt-1">
                             {isSessionOnly
                                 ? "Key 僅保留在記憶體中，關閉分頁或重新整理即消失。"

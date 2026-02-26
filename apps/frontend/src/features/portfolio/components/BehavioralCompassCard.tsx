@@ -23,7 +23,7 @@ const AVAILABLE_MODELS = [
     { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Recommended)' },
     { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview' },
     { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
-    { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro (Paid Tier Only)' },
+    { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro (Pre-release)' },
 ];
 
 // === 💀 骨架屏組件 (Skeleton) ===

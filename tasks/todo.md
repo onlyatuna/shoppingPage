@@ -180,3 +180,9 @@
     - [x] 實作 PII 資料脫敏 (Redaction)：在 `utils/logger.ts` 中配置 Pino 去除密碼與信用卡等敏感欄位 <!-- id: 170 -->
     - [x] 實作日誌關聯追蹤 (Correlation ID)：使用 `AsyncLocalStorage` 自動在全域 Service 與 Prisma 中帶入 `req.id`，不改動原有方法簽名 <!-- id: 171 -->
     - [x] 建立 `docs/logging.md` 並記錄 Action 命名規範與最佳實踐 <!-- id: 172 -->
+
+- [x] 退休金試算器 UI/UX 優化 <!-- id: 184 -->
+    - [x] 為 AI 顧問區塊增加 Skeleton Screen (骨架屏) <!-- id: 185 -->
+    - [x] 優化 AI 顧問區塊文字與背景配色 (改為淺色質感) <!-- id: 186 -->
+    - [x] 確保結果載入完成後才轉換 UI 狀態 <!-- id: 187 -->
+    - [x] 驗證 build & UI 表現 <!-- id: 188 -->

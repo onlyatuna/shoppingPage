@@ -115,11 +115,15 @@ const PensionPage: React.FC = () => {
                             {showKeyInput ? (
                                 <form onSubmit={handleKeySubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300">
                                     <input
-                                        type="password"
+                                        type="text"
+                                        name="_st_token"
+                                        id="_st_token"
                                         value={apiKey}
                                         onChange={(e) => setApiKey(e.target.value)}
                                         placeholder="Enter Gemini API Key..."
+                                        autoComplete="off"
                                         className="text-xs bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 w-48 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                        style={{ WebkitTextSecurity: 'disc' } as any}
                                         autoFocus
                                     />
                                     <button type="submit" className="p-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
