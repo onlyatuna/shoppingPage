@@ -112,11 +112,15 @@ const SYSTEM_INSTRUCTION = `
 在 Reframing Script 中，**請勿使用特定人名或稱謂**，讓話術成為通用的句型。
 `;
 
-// ✅ 修改：接收 model 參數，預設為 gemini-2.0-flash
-export const analyzeScenario = async (inputText: string, apiKey: string, model: string = "gemini-2.0-flash"): Promise<AnalysisResult> => {
-    if (!apiKey) {
+// ✅ 修改：接收 model 參數，預設為 gemini-2.5-flash
+export const analyzeScenario = async (inputText: string, rawApiKey: string, model: string = "gemini-2.5-flash"): Promise<AnalysisResult> => {
+    if (!rawApiKey) {
         throw new Error("API Key is missing.");
     }
+
+    // 💡 Sanitization: Remove hidden whitespace, newlines, and non-ASCII characters from the API key
+    // This prevents the "String contains non ISO-8859-1 code point" error in WebAuth/Headers
+    const apiKey = rawApiKey.replace(/[^\x20-\x7E]/g, '').trim();
 
     // 初始化 Google Gen AI
     const genAI = new GoogleGenAI({ apiKey });
