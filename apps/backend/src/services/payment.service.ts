@@ -114,7 +114,7 @@ export class PaymentService {
 
             if (res.data.returnCode !== '0000') {
                 console.error('[LINE Pay Error Details]', {
-                    orderId: String(orderId).replace(/\n|\r/g, ' '),
+                    orderId: String(order.id).replace(/\n|\r/g, ' '),
                     returnCode: res.data.returnCode,
                     returnMessage: res.data.returnMessage,
                     info: res.data.info
