@@ -386,7 +386,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ onRetake, result }) => {
             <div className="flex-grow flex flex-col items-center justify-start gap-8 pt-4">
               <div className="relative w-40 h-40 flex-shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ bottom: 10 }}>
                     <Pie
                       data={content.allocation}
                       cx="50%"
@@ -395,12 +395,27 @@ export const ResultPage: React.FC<ResultPageProps> = ({ onRetake, result }) => {
                       outerRadius={75}
                       paddingAngle={4}
                       dataKey="value"
+                      isAnimationActive={true}
                     >
                       {content.allocation.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.96)',
+                        borderRadius: '12px',
+                        border: 'none',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                        padding: '8px 12px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        color: '#111417',
+                        zIndex: 100
+                      }}
+                      itemStyle={{ color: '#111417' }}
+                      allowEscapeViewBox={{ x: true, y: true }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
