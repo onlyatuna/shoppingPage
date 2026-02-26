@@ -1,6 +1,7 @@
 # Task: Initialize Project Management and Fix Workflow Issues
 
 ## Todo List
+- [x] 修復冗餘的條件判斷 (CodeQL Alert #415) <!-- id: 159 -->
 - [x] 修復無法執行的程式碼路徑 (CodeQL Alert #416) <!-- id: 158 -->
 - [x] 修復日誌注入漏洞 (CodeQL Alert #400, #401, #406, #418, #419, #420, #421 & #422) <!-- id: 155 -->
     - [x] 在後端 `securityUtils.ts` 建立 `sanitizeLog` 指令輔助函式 <!-- id: 156 -->
