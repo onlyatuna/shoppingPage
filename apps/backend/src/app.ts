@@ -66,8 +66,6 @@ app.use(helmet({
                 "'self'",
                 "https://res.cloudinary.com",
                 "https://api.cloudinary.com",
-                "https://raw.githack.com",                    // Three.js HDRI assets
-                "https://raw.githubusercontent.com",          // Three.js HDRI assets (alternate CDN)
                 "https://generativelanguage.googleapis.com",  // Gemini AI API
                 "https://cdn.jsdelivr.net",                   // MediaPipe WASM assets
                 "wss:", "ws:",

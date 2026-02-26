@@ -81,7 +81,7 @@ const App: React.FC = () => {
           castShadow
           shadow-mapSize={512}
         />
-        <Environment preset="city" />
+        <Environment files="/hdri/potsdamer_platz_1k.hdr" />
 
         {/* The Fan */}
         <Suspense fallback={null}>
