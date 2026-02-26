@@ -21,7 +21,7 @@
     - [x] 更新 `AIConfigContext.tsx` 並更改儲存 Key 名稱為 `_cfg_g_` <!-- id: 147 -->
 - [x] 修復 LINE Pay 付款回調參數遺失與 CSP 字體封鎖問題 <!-- id: 141 -->
     - [x] 修復 `App.tsx` 中的 `Navigate` 會丟棄 Query Params 的問題 <!-- id: 142 -->
-    - [x] 更新 `app.ts` 中的 `helmet` CSP 許可 `font-src data:;` <!-- id: 143 -->
+    - : [x] 更新 `app.ts` 中的 `helmet` CSP 許可 `font-src data:;` <!-- id: 143 -->
     - [x] 驗證並 push <!-- id: 144 -->
 
 - [x] Initialize project tasks structure (tasks/todo.md, tasks/lessons.md) <!-- id: 0 -->
@@ -186,3 +186,7 @@
     - [x] 優化 AI 顧問區塊文字與背景配色 (改為淺色質感) <!-- id: 186 -->
     - [x] 確保結果載入完成後才轉換 UI 狀態 <!-- id: 187 -->
     - [x] 驗證 build & UI 表現 <!-- id: 188 -->
+
+- [x] 修復 Useless conditional 安全警報 (CodeQL Alert #434) <!-- id: 189 -->
+    - [x] 移除 `ResultsDashboard.tsx` 中冗餘的 `!isLoadingAdvice` 判斷 <!-- id: 190 -->
+    - [x] 驗證 build 並確認邏輯無損 <!-- id: 191 -->

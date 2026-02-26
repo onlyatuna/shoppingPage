@@ -108,7 +108,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, adv
     }
 
     // 如果 AI 回應失敗且也沒有結果，可以顯示提示（通常不會發生，因為有 Mock Fallback）
-    if (!advisorData && !isLoadingAdvice) {
+    if (!advisorData) {
         return (
             <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-dashed border-gray-300">
                 <BrainCircuit className="w-12 h-12 text-gray-300 mb-4" />
