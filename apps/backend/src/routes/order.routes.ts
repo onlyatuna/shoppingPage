@@ -43,7 +43,7 @@ router.patch('/:id/pay', async (req, res) => {
         });
 
         res.json({ status: 'success', message: '付款成功' });
-    } catch (error) {
+    } catch (_error) {
         res.status(500).json({ message: '付款失敗' });
     }
 });

@@ -33,7 +33,7 @@ export const getMyOrders = async (req: Request, res: Response) => {
         const userId = req.user!.userId;
         const orders = await OrderService.getMyOrders(userId);
         res.json({ status: 'success', data: orders });
-    } catch (error) {
+    } catch (_error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '取得訂單失敗' });
     }
 };
@@ -45,7 +45,7 @@ export const getOrderById = async (req: Request, res: Response) => {
         const orderId = req.params.id;
         const order = await OrderService.getOrderById(userId, orderId);
         res.json({ status: 'success', data: order });
-    } catch (error) {
+    } catch (_error) {
         res.status(StatusCodes.NOT_FOUND).json({ message: '訂單不存在' });
     }
 };
@@ -61,7 +61,7 @@ export const getAllOrders = async (req: Request, res: Response) => {
 
         const orders = await OrderService.findAllAdmin(filterStatus);
         res.json({ status: 'success', data: orders });
-    } catch (error) {
+    } catch (_error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '取得訂單列表失敗' });
     }
 };

@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 function slugify(text: string, id: number) {
     // Remove non-ASCII, toLowerCase, replace space with hyphen
-    let slug = text.toLowerCase()
+    const slug = text.toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '') // keep only alphanumeric space hyphen
         .trim()
         .replace(/\s+/g, '-');

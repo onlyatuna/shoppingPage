@@ -13,6 +13,7 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 // 這是為了讓 TypeScript 知道 req 物件裡面多了一個 user 屬性
 // 否則你在 Controller 寫 req.user.userId 時會報錯
 declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Express {
         interface Request {
             user?: {

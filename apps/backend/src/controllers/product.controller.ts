@@ -9,7 +9,7 @@ export const getProducts = async (req: Request, res: Response) => {
         const query = queryProductSchema.parse(req.query); // 驗證並轉換 query params
         const result = await ProductService.findAll(query);
         res.json({ status: 'success', ...result });
-    } catch (error) {
+    } catch (_error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '取得列表失敗' });
     }
 };
@@ -25,7 +25,7 @@ export const getProduct = async (req: Request, res: Response) => {
         if (/^\d+$/.test(key)) {
             try {
                 product = await ProductService.findById(Number(key));
-            } catch (e) {
+            } catch (_e) {
                 // If not found by ID, it might be a numeric slug
                 product = await ProductService.findBySlug(key);
             }
@@ -34,7 +34,7 @@ export const getProduct = async (req: Request, res: Response) => {
         }
 
         res.json({ status: 'success', data: product });
-    } catch (error) {
+    } catch (_error) {
         res.status(StatusCodes.NOT_FOUND).json({ message: '找不到商品' });
     }
 };
@@ -67,7 +67,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
         const id = Number(req.params.id);
         await ProductService.delete(id);
         res.status(StatusCodes.NO_CONTENT).send(); // 204 No Content
-    } catch (error) {
+    } catch (_error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '刪除失敗' });
     }
 };
@@ -77,7 +77,7 @@ export const getAdminProducts = async (req: Request, res: Response) => {
         const { search } = req.query;
         const products = await ProductService.findAllAdmin(search as string);
         res.json({ status: 'success', data: products });
-    } catch (error) {
+    } catch (_error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '取得列表失敗' });
     }
 };

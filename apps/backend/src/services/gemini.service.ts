@@ -59,7 +59,7 @@ function sanitizeImageUrl(urlString: string): SafeUrlComponents {
     // Since safeHost is now one of the hardcoded literals, it is inherently safe from SSRF metadata/loopback
     // unless explicitly allowed in dev (localhost/127.0.0.1).
     const safePort = url.port ? `:${url.port.replace(/[^0-9]/g, '')}` : '';
-    const safePath = url.pathname.replace(/[^\/a-zA-Z0-9._-]/g, '');
+    const safePath = url.pathname.replace(/[^/a-zA-Z0-9._-]/g, '');
     const safeSearch = url.search.startsWith('?') ? '?' + url.search.substring(1).replace(/[^a-zA-Z0-9=&._-]/g, '') : '';
 
     return {

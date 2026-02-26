@@ -10,7 +10,7 @@ export const getMyCart = async (req: Request, res: Response) => {
         const userId = req.user!.userId; // 來自 authenticateToken Middleware
         const cart = await CartService.getCart(userId);
         res.json({ status: 'success', data: cart });
-    } catch (error) {
+    } catch (_error) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '無法取得購物車' });
     }
 };

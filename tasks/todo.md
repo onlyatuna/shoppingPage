@@ -168,3 +168,9 @@
     - [x] 確認 `AdminProductsPage.tsx` 中的 `navigate` 路徑正確性 <!-- id: 138 -->
     - [x] 驗證其它後台頁面 (Promotions, Categories) 是否有類似問題 <!-- id: 139 -->
     - [x] 修正並測試確認 <!-- id: 140 -->
+
+- [x] 實作全域結構化日誌與防禦日誌上下文偽造 (Structured Logging) <!-- id: 163 -->
+    - [x] 在 `utils/logger.ts` 建立結構化 JSON 輸出邏輯 <!-- id: 164 -->
+    - [x] 將 `csrf.middleware.ts` 內的日誌警告改為傳遞物件 (Object Payload) 的 JSON 結構化日誌 <!-- id: 165 -->
+    - [x] 完成第一波(關鍵攔截點)與第二波高價值目標 (Payment, Order, External APIs) 的日誌重構 <!-- id: 166 -->
+    - [x] 驗證日誌系統產出格式並確認無誤 <!-- id: 167 -->
