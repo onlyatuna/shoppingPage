@@ -23,7 +23,12 @@ export const getProduct = async (req: Request, res: Response) => {
         // Strong assumption: IDs are numeric, Slugs are strings.
         // Actually, simple regex check: if purely digits, treat as ID.
         if (/^\d+$/.test(key)) {
-            product = await ProductService.findById(Number(key));
+            try {
+                product = await ProductService.findById(Number(key));
+            } catch (e) {
+                // If not found by ID, it might be a numeric slug
+                product = await ProductService.findBySlug(key);
+            }
         } else {
             product = await ProductService.findBySlug(key);
         }

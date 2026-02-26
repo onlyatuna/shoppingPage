@@ -356,7 +356,7 @@ export default function AdminProductFormPage() {
         if (!payload.slug || payload.slug.startsWith('new-')) {
             const rawSlug = slugify(payload.name);
             // If slug becomes empty (e.g. Chinese name only), use timestamp to ensure validity
-            payload.slug = rawSlug || `product - ${Date.now()} `;
+            payload.slug = rawSlug || `product-${Date.now()}`;
         }
 
         console.log('Submitting Product Payload:', payload);

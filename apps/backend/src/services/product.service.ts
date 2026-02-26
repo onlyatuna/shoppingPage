@@ -53,7 +53,9 @@ export class ProductService {
     static async findById(id: number) {
         const product = await prisma.product.findUnique({
             where: { id },
-            include: { category: true },
+            include: {
+                category: true,
+            },
         });
         if (!product || product.deletedAt) throw new Error('找不到該商品'); // [新增] 檢查是否已刪除
         return product;
@@ -63,7 +65,9 @@ export class ProductService {
     static async findBySlug(slug: string) {
         const product = await prisma.product.findUnique({
             where: { slug },
-            include: { category: true },
+            include: {
+                category: true,
+            },
         });
         if (!product || product.deletedAt) throw new Error('找不到該商品');
         return product;
