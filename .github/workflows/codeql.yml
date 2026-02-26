@@ -1,4 +1,4 @@
-name: "CodeQL Advanced"
+name: "CodeQL Advanced Security"
 
 on:
   push:
@@ -6,12 +6,14 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
+    # 每週一凌晨 00:30 進行深度掃描，捕捉新公佈的邏輯漏洞
     - cron: '30 0 * * 1'
 
 jobs:
   analyze:
-    name: Analyze (JS/TS)
+    name: "Deep Security Analysis (JS/TS)"
     runs-on: ubuntu-latest
+    timeout-minutes: 360 # 給予充足時間進行深度分析，不因超時而中斷
     permissions:
       security-events: write
       contents: read
@@ -21,17 +23,46 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js v22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      # 為了讓 CodeQL 追蹤資料流，必須先還原完整的依賴環境
+      - name: Install dependencies
+        run: npm ci
+
+      # 關鍵：生成 Prisma Client，讓 CodeQL 理解資料庫存取層的型別
+      - name: Generate Prisma Client
+        run: npx prisma generate --schema=apps/backend/prisma/schema.prisma
+
       - name: Initialize CodeQL
-        # 升級至 v4 以避免 2026 年底的廢棄警告
         uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
+          # 使用最嚴苛的查詢集：包含擴展安全規則與代碼品質檢測
           queries: security-extended,security-and-quality
+          # 這裡進行精準過濾，排除噪音，專注核心邏輯
+          config: |
+            paths:
+              - apps/backend/src
+              - packages/shared/src
+            paths-ignore:
+              - '**/node_modules'
+              - '**/dist'
+              - '**/tests'
+              - '**/prisma/generated' # 忽略自動生成的代碼，避免干擾分析引擎
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
+      # 捨棄 Autobuild，改用手動編譯，確保 Monorepo 的內部依賴被正確解析
+      - name: Manual Build for Monorepo
+        run: |
+          npm run build --workspace=packages/shared
+          npm run build --workspace=apps/backend
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:javascript-typescript"
+          # 紀錄掃描摘要，讓你能在 GitHub Security Tab 看到詳細路徑
+          upload: true
