@@ -332,7 +332,6 @@ const App: React.FC = () => {
             powerPellets={powerPellets}
             pacman={pacman}
             ghosts={ghosts}
-            frightenedMode={frightenedMode}
             frightenedTimer={frightenedTimer}
           />
         </div>
