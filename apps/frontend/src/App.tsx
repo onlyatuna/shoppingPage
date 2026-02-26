@@ -43,6 +43,11 @@ import HandGesturePage from '@/features/HandGestureZoom/pages/HandGesturePage';
 // 功能：3D 視覺化微風效果展示
 import BreezePage from '@/features/breeze3d/pages/BreezePage';
 
+// === 7. 復古遊戲模組（Arcade Module）===
+// 路徑：src/features/arcade/pages/ArcadePage.tsx
+// 功能：復古遊戲選單，包含 Tetris 與 Pac-Man 兩款經典遊戲
+import ArcadePage from '@/features/arcade/pages/ArcadePage';
+
 // ============================================================================
 // 主應用元件
 // ============================================================================
@@ -97,6 +102,14 @@ function App() {
              * 說明：3D 視覺化微風效果展示頁面
              */}
             <Route path="/breeze" element={<BreezePage />} />
+
+            {/* 
+             * 復古遊戲路由
+             * 路徑：/arcade
+             * 元件：ArcadePage
+             * 說明：復古遊戲選單，包含 Tetris 與 Pac-Man
+             */}
+            <Route path="/arcade" element={<ArcadePage />} />
 
             {/* 
              * 電商後台路由（巢狀路由）

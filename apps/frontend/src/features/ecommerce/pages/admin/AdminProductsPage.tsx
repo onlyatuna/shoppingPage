@@ -174,7 +174,7 @@ export default function AdminProductsPage() {
                                     </button>
                                 </td>
                                 <td className="p-4 flex gap-2">
-                                    <button type="button" onClick={() => navigate(`/admin/products/edit/${product.id}`)} className="p-2 text-gray-600 hover:bg-gray-200 rounded" aria-label="編輯商品">
+                                    <button type="button" onClick={() => navigate(`/app/admin/products/edit/${product.id}`)} className="p-2 text-gray-600 hover:bg-gray-200 rounded" aria-label="編輯商品">
                                         <Edit size={18} />
                                     </button>
                                     <button type="button" onClick={() => handleDelete(product)} className="p-2 text-red-500 hover:bg-red-50 rounded" aria-label="刪除商品">
@@ -228,7 +228,7 @@ export default function AdminProductsPage() {
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => navigate(`/admin/products/edit/${product.id}`)}
+                                        onClick={() => navigate(`/app/admin/products/edit/${product.id}`)}
                                         className="flex items-center gap-1 text-xs bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200"
                                     >
                                         <Edit size={14} /> 編輯

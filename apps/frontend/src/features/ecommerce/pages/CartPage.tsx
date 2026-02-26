@@ -148,7 +148,7 @@ export default function CartPage() {
                             {/* 商品資訊 */}
                             <div className="flex-1">
                                 <h3 className="font-bold text-lg">
-                                    <Link to={`/products/${item.product.slug}`} className="hover:underline">
+                                    <Link to={`/app/products/${item.product.slug}`} className="hover:underline">
                                         {item.product.name}
                                     </Link>
                                 </h3>

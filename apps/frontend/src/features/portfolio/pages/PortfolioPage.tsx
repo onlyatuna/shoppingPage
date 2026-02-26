@@ -370,7 +370,7 @@ const PortfolioPage = () => {
                             {[
                                 { title: "Hand Gesture Zoom", tag: "TensorFlow.js", color: "purple", desc: "Control UI scale using webcam hand distance.", path: "/hand-gesture", image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=60" },
                                 { title: "BREEZEMASTER 3D", tag: "Three.js", color: "orange", desc: "Interactive 3D fan simulation with real-time audio synthesis & dynamic nature-mode wind logic.", path: "/breeze", image: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&auto=format&fit=crop&q=60" },
-                                { title: "Retro Arcade", tag: "Canvas API", color: "green", desc: "JS re-creations of Tetris and Pac-Man.", path: "#", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60" }
+                                { title: "Retro Arcade", tag: "Canvas API", color: "green", desc: "JS re-creations of Tetris and Pac-Man.", path: "/arcade", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60" }
                             ].map((item, i) => {
                                 const colorStyles = {
                                     purple: "bg-purple-500/20 text-purple-300 border-purple-500/30",

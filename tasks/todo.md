@@ -9,7 +9,7 @@
     - [x] Create `eslint.config.js` for `apps/backend` <!-- id: 7 -->
     - [x] Update `package.json` scripts to remove deprecated flags <!-- id: 8 -->
     - [x] Verify linting passes <!-- id: 9 -->
-- [ ] Fix the 147 linting errors found during verification <!-- id: 10 -->
+- [x] Fix the 147 linting errors found during verification <!-- id: 10 -->
     - [x] Phase 1: Structural & TypeScript Fixes (`BreezePage.tsx`, `Skeleton.tsx`, `AdminProductFormPage.tsx`) <!-- id: 11 -->
     - [x] Phase 2: Logic & Purity Fixes (`calculationService.ts`, `FrameUploadModal.tsx`) <!-- id: 12 -->
     - [x] Update todo with fresh status (Identify files needing refactor)
@@ -36,11 +36,7 @@
     - [x] Verify build <!-- id: 28 -->
 - [x] Redesign FanAudio as DC Fan (dual-layer sound system) <!-- id: 29 -->
     - [x] Layer 1: White noise + dynamic lowpass → wind cutting sound (90%) <!-- id: 30 -->
-    - [x] Layer 2: Sine wave motor hum- [x] 優化控制面板 (Controls) UI 視覺與文字 <!-- id: 66 -->
-    - [x] 移除風速按鈕上的中文字（微、弱、強、猛），僅保留數字提升簡約感 <!-- id: 67 -->
-    - [x] 提高按鈕數字的對比度與不透明度，增強可讀性 <!-- id: 68 -->
-    - [x] 移除「擺頭轉向」、「自然微風」、「預約定時」等長文字，改用精簡標籤或純圖示風格 <!-- id: 69 -->
-    - [x] 進行本機驗證，確認手機與電腦端視覺效果 <!-- id: 70 -->
+    - [x] Layer 2: Sine wave motor hum <!-- id: 31 -->
 - [x] Git Push + Security Audit <!-- id: 35 -->
     - [x] Scan for hardcoded API keys, secrets, tokens <!-- id: 36 -->
     - [x] Update .gitignore (exclude .agent/, .agents/, tasks/, temp files) <!-- id: 37 -->
@@ -75,11 +71,7 @@
     - [x] Refactor sanitizeImageUrl to use a mapping approach for hostnames <!-- id: 72 -->
     - [x] Ensure hostname is selected from trusted data structures <!-- id: 73 -->
     - [x] Verify fix by running build/tests <!-- id: 74 -->
-- [x] 優化控制面板 (Controls) UI 視覺與文字 <!-- id: 66 -->
-    - [x] 移除風速按鈕上的中文字（微、弱、強、猛），僅保留數字提升簡約感 <!-- id: 67 -->
-    - [x] 提高按鈕數字的對比度與不透明度，增強可讀性 <!-- id: 68 -->
-    - [x] 移除「擺頭轉向」、「自然微風」、「預約定時」等長文字，改用精簡標籤或純圖示風格 <!-- id: 69 -->
-    - [x] 進行本機驗證，確認手機與電腦端視覺效果 <!-- id: 70 -->
+
 - [x] 修復 DOM text reinterpreted as HTML 安全漏洞 (CodeQL Alert #59) <!-- id: 76 -->
     - [x] 建立 securityUtils.ts 工具函式 (stripHtml, sanitizeUrl) <!-- id: 77 -->
     - [x] 更新 FrameSelector.tsx 使用顯式過濾處理使用者輸入 <!-- id: 78 -->
@@ -121,4 +113,16 @@
     - [x] Sanitize the text display on line 90 with `stripHtml` <!-- id: 111 -->
     - [x] Verify fix by running build <!-- id: 112 -->
 
+- [x] 整合 Arcade 進 PortfolioPage 並清理多餘檔案 <!-- id: 113 -->
+    - [x] 建立 `TetrisGame.tsx` 與 `PacmanGame.tsx` 包裝器（re-export App.tsx） <!-- id: 114 -->
+    - [x] 在 `App.tsx` 路由新增 `/arcade` 路由 <!-- id: 115 -->
+    - [x] 更新 `PortfolioPage.tsx` Creative Lab 中 "Retro Arcade" 卡片連結為 `/arcade` <!-- id: 116 -->
+    - [x] 刪除 tetris/pacman 資料夾中的獨立專案殘留檔案 <!-- id: 117 -->
+    - [x] 刪除所有 `:Zone.Identifier` 檔案 <!-- id: 118 -->
+    - [x] 驗證 build 成功 <!-- id: 119 -->
+
+- [x] 修復訂單管理頁面 & 結帳導航路徑 <!-- id: 120 -->
+    - [x] EcommerceLayout 新增 AdminOrdersPage import 及 /admin/orders 路由 <!-- id: 121 -->
+    - [x] CheckoutInfoPage 修正結帳成功導航從 /orders/success → /app/orders/success <!-- id: 122 -->
+    - [x] 驗證 TypeScript 編譯通過並 push <!-- id: 123 -->
 

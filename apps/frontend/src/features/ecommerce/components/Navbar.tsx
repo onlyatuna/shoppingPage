@@ -61,7 +61,7 @@ export default function Navbar() {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        navigate(`/?search=${encodeURIComponent(searchInput)}`);
+        navigate(`/app?search=${encodeURIComponent(searchInput)}`);
         setIsMobileMenuOpen(false);
     };
 
@@ -205,15 +205,15 @@ export default function Navbar() {
                 <div className="max-w-7xl mx-auto px-4 h-12 flex items-center relative">
                     {/* Centered Navigation Links */}
                     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-8 text-base font-bold h-full items-center text-white">
-                        <Link to="/?sort=new" className="hover:text-[#1A2B42] transition-colors">最新商品</Link>
-                        <Link to="/?sort=popular" className="hover:text-[#1A2B42] transition-colors">熱銷排行</Link>
+                        <Link to="/app?sort=new" className="hover:text-[#1A2B42] transition-colors">最新商品</Link>
+                        <Link to="/app?sort=popular" className="hover:text-[#1A2B42] transition-colors">熱銷排行</Link>
                         <div className="group relative h-full flex items-center">
                             <button type="button" className="flex items-center gap-1 hover:text-[#1A2B42] transition-colors cursor-pointer h-full">
                                 商品分類 <ChevronDown size={14} />
                             </button>
                             <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border-2 border-[#1A2B42] shadow-[4px_4px_0px_#1A2B42] rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-40 translate-y-2 group-hover:translate-y-0 text-left">
                                 {categories?.map(cat => (
-                                    <Link key={cat.id} to={`/?categoryId=${cat.id}`} className="block px-4 py-2 hover:bg-gray-50 text-[#1A2B42] hover:text-[#E85D3F] font-medium border-b border-dashed border-gray-100 last:border-0">
+                                    <Link key={cat.id} to={`/app?categoryId=${cat.id}`} className="block px-4 py-2 hover:bg-gray-50 text-[#1A2B42] hover:text-[#E85D3F] font-medium border-b border-dashed border-gray-100 last:border-0">
                                         {cat.name}
                                     </Link>
                                 ))}
@@ -266,7 +266,7 @@ export default function Navbar() {
                                 </button>
                             </form>
 
-                            <Link to="/?sort=new" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
+                            <Link to="/app?sort=new" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
                                 最新商品
                             </Link>
 
@@ -277,7 +277,7 @@ export default function Navbar() {
                                 {mobileExpandCategory && (
                                     <div className="bg-white/40 px-4 py-2 space-y-2">
                                         {categories?.map(cat => (
-                                            <Link key={cat.id} to={`/?categoryId=${cat.id}`} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-600 pl-2 border-l-2 border-transparent hover:border-black">
+                                            <Link key={cat.id} to={`/app?categoryId=${cat.id}`} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-600 pl-2 border-l-2 border-transparent hover:border-black">
                                                 {cat.name}
                                             </Link>
                                         ))}
