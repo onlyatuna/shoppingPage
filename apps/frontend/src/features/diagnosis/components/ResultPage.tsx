@@ -135,7 +135,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ result, onRetake }) => {
         <div className="bg-white dark:bg-[#1A1D24] rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center min-h-[300px]">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 w-full text-left">Attribute Map</h3>
           <div className="w-full h-64">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                 <PolarGrid stroke="#e5e7eb" />
                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#9CA3AF', fontSize: 12 }} />
@@ -157,7 +157,7 @@ export const ResultPage: React.FC<ResultPageProps> = ({ result, onRetake }) => {
         <div className="bg-white dark:bg-[#1A1D24] rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Suggested Allocation</h3>
           <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <PieChart>
                 <Pie
                   data={pieData}

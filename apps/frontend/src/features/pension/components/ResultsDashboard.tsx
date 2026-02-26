@@ -109,7 +109,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({ results, adv
             <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">資產餘額預測 (蒙地卡羅模擬 10,000次)</h3>
                 <div className="h-96 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                         <AreaChart data={results.trajectory}>
                             <defs>
                                 <linearGradient id="colorP90" x1="0" y1="0" x2="0" y2="1">
