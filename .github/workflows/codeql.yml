@@ -1,4 +1,4 @@
-name: "CodeQL Security Deep Scan"
+name: "CodeQL Advanced"
 
 on:
   push:
@@ -6,42 +6,32 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '0 0 * * 1' # 每週一固定全身檢查
+    - cron: '30 0 * * 1'
 
 jobs:
   analyze:
-    name: Deep Analysis (JS/TS)
+    name: Analyze (JS/TS)
     runs-on: ubuntu-latest
     permissions:
       security-events: write
       contents: read
+      actions: read
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        # 升級至 v4 以避免 2026 年底的廢棄警告
+        uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
-          # 1. 啟動最強規則包：包含安全性、效能、與代碼品質
           queries: security-extended,security-and-quality
-          # 2. 強制掃描所有子目錄，不留死角
-          config: |
-            paths:
-              - apps/**
-              - packages/**
-              - services/**
-            paths-ignore:
-              - '**/node_modules'
-              - '**/dist'
 
-      # 3. 透過 Autobuild 讓 CodeQL 理解 TypeScript 的型別流向
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
-          # 4. 上傳多維度報告，方便在 Security 面板追蹤
           category: "/language:javascript-typescript"
