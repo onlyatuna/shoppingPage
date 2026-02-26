@@ -79,8 +79,7 @@ export class PaymentService {
         // [Security Log] 檢查金額是否一致
         const dbAmount = new Decimal(order.totalAmount.toString()).toNumber();
         if (calculatedAmount !== dbAmount) {
-            const safeId = String(orderId).replace(/\n|\r/g, ' ');
-            console.warn(`⚠️ [Security Alert] 訂單 ${safeId} 金額不一致! DB: ${dbAmount}, Calc: ${calculatedAmount}`);
+            console.warn(`⚠️ [Security Alert] 訂單 ${String(order.id).replace(/\n|\r/g, ' ')} 金額不一致! DB: ${dbAmount}, Calc: ${calculatedAmount}`);
         }
 
         const packages = [{
@@ -107,8 +106,7 @@ export class PaymentService {
                 throw new Error('系統設定錯誤：缺少 LINE_PAY_RETURN_HOST');
             }
 
-            const safeId = String(orderId).replace(/\n|\r/g, ' ');
-            console.log(`[LINE Pay] Initiating request for Order ${safeId}, Amount: ${calculatedAmount}`);
+            console.log(`[LINE Pay] Initiating request for Order ${String(order.id).replace(/\n|\r/g, ' ')}, Amount: ${calculatedAmount}`);
 
             const res = await linePayClient.post('/v3/payments/request', orderBody, {
                 timeout: 20000
@@ -168,16 +166,14 @@ export class PaymentService {
 
         // [開發環境容錯]
         if (order.paymentId && order.paymentId !== safeTransactionId) {
-            console.warn(`⚠️ Transaction ID Mismatch: Auto-correcting to ${String(safeTransactionId).replace(/\n|\r/g, ' ')}`);
+            console.warn(`⚠️ Transaction ID Mismatch: Auto-correcting to ${String(transactionId).replace(/\n|\r/g, ' ')}`);
             await prisma.order.update({ where: { id: orderId }, data: { paymentId: safeTransactionId } });
         } else if (!order.paymentId) {
             await prisma.order.update({ where: { id: orderId }, data: { paymentId: safeTransactionId } });
         }
 
         if (order.status === 'PAID') {
-            // [Security] Double-sanitize orderId inline to satisfy static analysis trust boundaries
-            const safeId = String(orderId).replace(/\n|\r/g, ' ');
-            console.log(`ℹ️ Order ${safeId} is already PAID.`);
+            console.log(`ℹ️ Order ${String(order.id).replace(/\n|\r/g, ' ')} is already PAID.`);
             return order;
         }
 
@@ -333,8 +329,7 @@ export class PaymentService {
             if (res.data.returnCode !== '0000') {
                 // 1198: Request is already refunded (重複退款視為成功)
                 if (res.data.returnCode === '1198') {
-                    const safeId = String(orderId).replace(/\n|\r/g, ' ');
-                    console.log(`⚠️ Order ${safeId} already refunded (1198).`);
+                    console.log(`⚠️ Order ${String(order.id).replace(/\n|\r/g, ' ')} already refunded (1198).`);
                 } else {
                     throw new Error(`Refund Failed: ${res.data.returnMessage}`);
                 }
