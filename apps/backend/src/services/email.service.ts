@@ -1,5 +1,6 @@
 // apps/backend/src/services/email.service.ts
 import nodemailer from 'nodemailer';
+import { sanitizeLog } from '../utils/securityUtils';
 
 export class EmailService {
   private static transporter = nodemailer.createTransport({
@@ -16,12 +17,12 @@ export class EmailService {
     // 🔒 防呆檢查：確保環境變數已設定
     const frontendUrl = process.env.FRONTEND_URL;
     if (!frontendUrl) {
-        console.error('❌ Missing FRONTEND_URL in .env');
-        throw new Error('系統設定錯誤：缺少前端網址設定');
+      console.error('❌ Missing FRONTEND_URL in .env');
+      throw new Error('系統設定錯誤：缺少前端網址設定');
     }
 
     // 移除結尾斜線 (避免產生 //verify-email)
-    const baseUrl = frontendUrl.replace(/\/$/, ''); 
+    const baseUrl = frontendUrl.replace(/\/$/, '');
     const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
 
     const mailOptions = {
@@ -41,7 +42,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      console.log(`[Email] Verification sent to ${email}`);
+      console.log(`[Email] Verification sent to ${sanitizeLog(email)}`);
     } catch (error) {
       console.error('[Email Error]', error);
       throw new Error('郵件發送失敗，請稍後再試');
@@ -85,7 +86,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      console.log(`[Email] Password reset sent to ${email}`);
+      console.log(`[Email] Password reset sent to ${sanitizeLog(email)}`);
     } catch (error) {
       console.error('[Email Error]', error);
       throw new Error('郵件發送失敗，請稍後再試');

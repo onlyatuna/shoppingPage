@@ -5,6 +5,7 @@ import { registerSchema, loginSchema } from '../schemas/auth.schema';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { sanitizeLog } from '../utils/securityUtils';
 
 export class AuthService {
 
@@ -37,7 +38,7 @@ export class AuthService {
             select: { id: true, email: true, name: true, role: true },
         });
 
-        EmailService.sendVerificationEmail(data.email, verificationToken).catch(console.error);
+        EmailService.sendVerificationEmail(data.email, verificationToken).catch(err => console.error(sanitizeLog(err)));
 
         return {
             message: '註冊成功！請檢查您的信箱以完成驗證。',
@@ -92,7 +93,7 @@ export class AuthService {
             }
         });
 
-        EmailService.sendVerificationEmail(user.email, newToken).catch(console.error);
+        EmailService.sendVerificationEmail(user.email, newToken).catch(err => console.error(sanitizeLog(err)));
 
         return { message: '驗證信已重新發送，請檢查信箱' };
     }
@@ -154,7 +155,7 @@ export class AuthService {
             },
         });
 
-        EmailService.sendPasswordResetEmail(user.email, resetToken).catch(console.error);
+        EmailService.sendPasswordResetEmail(user.email, resetToken).catch(err => console.error(sanitizeLog(err)));
 
         return { message: '如果該信箱存在，重設密碼連結已發送' };
     }

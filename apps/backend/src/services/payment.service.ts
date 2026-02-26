@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { linePayClient } from '../utils/linePay';
 import Decimal from 'decimal.js';
+import { sanitizeLog } from '../utils/securityUtils';
 
 /**
  * [SECURITY] Sanitizes and validates LINE Pay transaction ID to prevent SSRF
@@ -78,7 +79,7 @@ export class PaymentService {
         // [Security Log] 檢查金額是否一致
         const dbAmount = new Decimal(order.totalAmount.toString()).toNumber();
         if (calculatedAmount !== dbAmount) {
-            console.warn(`⚠️ [Security Alert] 訂單 ${orderId} 金額不一致! DB: ${dbAmount}, Calc: ${calculatedAmount}`);
+            console.warn(`⚠️ [Security Alert] 訂單 ${sanitizeLog(orderId)} 金額不一致! DB: ${dbAmount}, Calc: ${calculatedAmount}`);
         }
 
         const packages = [{
@@ -105,7 +106,7 @@ export class PaymentService {
                 throw new Error('系統設定錯誤：缺少 LINE_PAY_RETURN_HOST');
             }
 
-            console.log(`[LINE Pay] Initiating request for Order ${orderId}, Amount: ${calculatedAmount}`);
+            console.log(`[LINE Pay] Initiating request for Order ${sanitizeLog(orderId)}, Amount: ${calculatedAmount}`);
 
             const res = await linePayClient.post('/v3/payments/request', orderBody, {
                 timeout: 20000
@@ -113,7 +114,7 @@ export class PaymentService {
 
             if (res.data.returnCode !== '0000') {
                 console.error('[LINE Pay Error Details]', {
-                    orderId,
+                    orderId: sanitizeLog(orderId),
                     returnCode: res.data.returnCode,
                     returnMessage: res.data.returnMessage,
                     info: res.data.info
@@ -134,7 +135,7 @@ export class PaymentService {
 
         } catch (error: any) {
             const errorDetail = error.response?.data || error.message;
-            console.error('LinePay Request Exception:', errorDetail);
+            console.error('LinePay Request Exception:', sanitizeLog(errorDetail));
 
             // 如果是 LINE Pay 回傳的錯誤，直接拋出其訊息
             if (error.response?.data?.returnMessage) {
@@ -165,14 +166,14 @@ export class PaymentService {
 
         // [開發環境容錯]
         if (order.paymentId && order.paymentId !== safeTransactionId) {
-            console.warn(`⚠️ Transaction ID Mismatch: Auto-correcting to ${safeTransactionId}`);
+            console.warn(`⚠️ Transaction ID Mismatch: Auto-correcting to ${sanitizeLog(safeTransactionId)}`);
             await prisma.order.update({ where: { id: orderId }, data: { paymentId: safeTransactionId } });
         } else if (!order.paymentId) {
             await prisma.order.update({ where: { id: orderId }, data: { paymentId: safeTransactionId } });
         }
 
         if (order.status === 'PAID') {
-            console.log(`ℹ️ Order ${orderId} is already PAID.`);
+            console.log(`ℹ️ Order ${sanitizeLog(orderId)} is already PAID.`);
             return order;
         }
 
@@ -191,7 +192,7 @@ export class PaymentService {
                 if (res.data.returnCode === '1172') {
                     console.log('⚠️ [Idempotency] LINE Pay returned 1172. Treating as success.');
                 } else {
-                    console.error('LINE Pay Confirm Failed:', res.data);
+                    console.error('LINE Pay Confirm Failed:', sanitizeLog(res.data));
                     throw new Error(`LINE Pay Confirm Error: ${res.data.returnMessage}`);
                 }
             }
@@ -207,7 +208,7 @@ export class PaymentService {
             return updatedOrder;
 
         } catch (error: any) {
-            console.error('LinePay Confirm Exception:', error.response?.data || error.message);
+            console.error('LinePay Confirm Exception:', sanitizeLog(error.response?.data || error.message));
             if (error.message.includes('LINE Pay Confirm Error')) {
                 throw error;
             }
@@ -245,7 +246,7 @@ export class PaymentService {
             });
 
         } catch (error: any) {
-            console.error('LinePay Capture Exception:', error.response?.data || error.message);
+            console.error('LinePay Capture Exception:', sanitizeLog(error.response?.data || error.message));
             throw new Error('請款失敗');
         }
     }
@@ -261,7 +262,7 @@ export class PaymentService {
             });
             return res.data;
         } catch (error: any) {
-            console.error('Check Status Error:', error.message);
+            console.error('Check Status Error:', sanitizeLog(error.message));
             throw new Error('無法查詢付款狀態');
         }
     }
@@ -285,13 +286,13 @@ export class PaymentService {
             });
 
             if (res.data.returnCode !== '0000') {
-                console.error('[LINE Pay Details Error Response]', res.data);
+                console.error('[LINE Pay Details Error Response]', sanitizeLog(res.data));
                 throw new Error(res.data.returnMessage);
             }
             return res.data.info;
         } catch (error: any) {
             const errorDetail = error.response?.data || error.message;
-            console.error('Get Details Error:', errorDetail);
+            console.error('Get Details Error:', sanitizeLog(errorDetail));
             throw error;
         }
     }
@@ -328,7 +329,7 @@ export class PaymentService {
             if (res.data.returnCode !== '0000') {
                 // 1198: Request is already refunded (重複退款視為成功)
                 if (res.data.returnCode === '1198') {
-                    console.log(`⚠️ Order ${orderId} already refunded (1198).`);
+                    console.log(`⚠️ Order ${sanitizeLog(orderId)} already refunded (1198).`);
                 } else {
                     throw new Error(`Refund Failed: ${res.data.returnMessage}`);
                 }
@@ -351,7 +352,7 @@ export class PaymentService {
             return res.data.info;
 
         } catch (error: any) {
-            console.error('LinePay Refund Exception:', error.response?.data || error.message);
+            console.error('LinePay Refund Exception:', sanitizeLog(error.response?.data || error.message));
             throw new Error('退款失敗');
         }
     }
@@ -386,7 +387,7 @@ export class PaymentService {
             return res.data;
 
         } catch (error: any) {
-            console.error('LinePay Void Exception:', error.response?.data || error.message);
+            console.error('LinePay Void Exception:', sanitizeLog(error.response?.data || error.message));
             throw new Error('取消授權失敗');
         }
     }

@@ -1,6 +1,9 @@
 # Task: Initialize Project Management and Fix Workflow Issues
 
 ## Todo List
+- [x] 修復日誌注入漏洞 (CodeQL Alert #406) <!-- id: 155 -->
+    - [x] 在後端 `securityUtils.ts` 建立 `sanitizeLog` 指令輔助函式 <!-- id: 156 -->
+    - [x] 在所有 Service 與 Middleware 應用日誌清洗 <!-- id: 157 -->
 - [x] 修復使用者受控防護繞過問題 (CodeQL Alert #399) <!-- id: 152 -->
     - [x] 在 `auth.schema.ts` 建立嚴格的 `token` 正則驗證 <!-- id: 153 -->
     - [x] 重構 `auth.controller.ts` 所有端點改用 Zod 驗證 Query/Body <!-- id: 154 -->

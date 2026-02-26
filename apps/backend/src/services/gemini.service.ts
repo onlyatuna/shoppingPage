@@ -2,6 +2,7 @@ import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import axios from 'axios';
 import { prisma } from '../utils/prisma'; // [FIXED] Use singleton
 import { MonitorService } from './monitor.service';
+import { sanitizeLog } from '../utils/securityUtils';
 
 // const prisma = new PrismaClient(); // [REMOVED]
 
@@ -127,7 +128,7 @@ export class GeminiService {
             return jsonResponse;
 
         } catch (error) {
-            console.error('Gemini 2.5 API Error:', error);
+            console.error('Gemini 2.5 API Error:', sanitizeLog(error));
             // 回退預設值
             return { color: '#f3f4f6', tag: 'general' };
         }
@@ -290,7 +291,7 @@ USER REQUEST: ${prompt}`;
             throw new Error('Gemini 回應中未找到圖片資料');
 
         } catch (error: any) {
-            console.error('Gemini 2.5 Edit Error:', error);
+            console.error('Gemini 2.5 Edit Error:', sanitizeLog(error));
             // 錯誤訊息轉換
             if (error.message?.includes('404')) {
                 throw new Error('找不到 gemini-2.5-flash-image 模型，請確認模型名稱或權限。');
@@ -369,7 +370,7 @@ USER REQUEST: ${prompt}`;
             return JSON.parse(text);
 
         } catch (error) {
-            console.error('Error generating caption:', error);
+            console.error('Error generating caption:', sanitizeLog(error));
             throw new Error('Failed to generate caption');
         }
     }
@@ -441,7 +442,7 @@ USER REQUEST: ${prompt}`;
             return text;
 
         } catch (error: any) {
-            console.error('Generate Custom Style Prompt Error:', error);
+            console.error('Generate Custom Style Prompt Error:', sanitizeLog(error));
 
             if (error.message?.includes('API key')) {
                 throw new Error('Gemini API Key 設定錯誤');
@@ -524,7 +525,7 @@ USER REQUEST: ${prompt}`;
             };
 
         } catch (error) {
-            console.error('Check AI Blend Quota Error:', error);
+            console.error('Check AI Blend Quota Error:', sanitizeLog(error));
             throw error;
         }
     }
@@ -571,7 +572,7 @@ USER REQUEST: ${prompt}`;
             };
 
         } catch (error) {
-            console.error('Get Quota Error:', error);
+            console.error('Get Quota Error:', sanitizeLog(error));
             return { remaining: 0, limit: 10 };
         }
     }

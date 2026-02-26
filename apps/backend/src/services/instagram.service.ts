@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { v2 as cloudinary } from 'cloudinary';
+import { sanitizeLog } from '../utils/securityUtils';
 
 // Configure Cloudinary
 if (process.env.CLOUDINARY_CLOUD_NAME) {
@@ -42,7 +43,7 @@ export class InstagramService {
 
             return response.data.data;
         } catch (error: any) {
-            console.error('Instagram API Error:', error.response?.data || error.message);
+            console.error('Instagram API Error:', sanitizeLog(error.response?.data || error.message));
             throw new Error('Failed to fetch Instagram posts');
         }
     }
@@ -69,7 +70,7 @@ export class InstagramService {
                     folder: 'instagram-publish-temp',
                 });
                 targetUrl = uploadResult.secure_url;
-                console.log('Image uploaded to Cloudinary:', targetUrl);
+                console.log('Image uploaded to Cloudinary:', sanitizeLog(targetUrl));
             }
 
             // Step 1: Create Media Container
@@ -82,7 +83,7 @@ export class InstagramService {
             });
 
             const creationId = containerResponse.data.id;
-            console.log('Container created:', creationId);
+            console.log('Container created:', sanitizeLog(creationId));
 
 
 
@@ -107,7 +108,7 @@ export class InstagramService {
                     });
 
                     const statusCode = statusResponse.data.status_code;
-                    console.log(`Media status(${attempt} / ${maxAttempts}): ${statusCode}`);
+                    console.log(`Media status(${attempt} / ${maxAttempts}): ${sanitizeLog(statusCode)}`);
 
                     if (statusCode === 'FINISHED') {
                         console.log('Media ready! Publishing...');
@@ -120,7 +121,7 @@ export class InstagramService {
                             }
                         });
 
-                        console.log('Successfully published! Media ID:', publishResponse.data.id);
+                        console.log('Successfully published! Media ID:', sanitizeLog(publishResponse.data.id));
                         return publishResponse.data.id;
 
                     } else if (statusCode === 'ERROR' || statusCode === 'EXPIRED') {
@@ -131,7 +132,7 @@ export class InstagramService {
 
                 } catch (error: any) {
                     // Log error but continue trying unless it's the last attempt
-                    console.warn(`Error on attempt ${attempt}:`, error.message);
+                    console.warn(`Error on attempt ${attempt}:`, sanitizeLog(error.message));
 
                     if (attempt >= maxAttempts) {
                         throw new Error('媒體處理超時，請稍後再試或檢查圖片格式');
@@ -142,7 +143,7 @@ export class InstagramService {
             throw new Error('媒體處理超時，請稍後再試或檢查圖片格式');
 
         } catch (error: any) {
-            console.error('Instagram Publish Error:', error.response?.data || error.message);
+            console.error('Instagram Publish Error:', sanitizeLog(error.response?.data || error.message));
             throw new Error('Failed to publish to Instagram: ' + (error.response?.data?.error?.message || error.message));
         }
     }

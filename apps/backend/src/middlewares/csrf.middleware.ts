@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import crypto from 'crypto';
+import { sanitizeLog } from '../utils/securityUtils';
 
 /**
  * CSRF Protection Middleware - Double Submit Cookie Pattern
@@ -33,7 +34,7 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
 
     // In some edge cases (like testing), tokens might be present but mismatch
     if (!xsrfHeader || !xsrfToken || xsrfHeader !== xsrfToken) {
-        console.warn(`⚠️ CSRF Protection: Blocked request. Method: ${req.method}, Path: ${req.path}`);
+        console.warn(`⚠️ CSRF Protection: Blocked request. Method: ${sanitizeLog(req.method)}, Path: ${sanitizeLog(req.path)}`);
         return res.status(StatusCodes.FORBIDDEN).json({
             message: 'CSRF validation failed: Token mismatch or missing'
         });
@@ -67,7 +68,7 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
     }
 
     if (!isValidSource) {
-        console.warn(`⚠️ CSRF Protection: Blocked request from invalid source: ${origin || referer || 'none'}`);
+        console.warn(`⚠️ CSRF Protection: Blocked request from invalid source: ${sanitizeLog(origin || referer || 'none')}`);
         return res.status(StatusCodes.FORBIDDEN).json({
             message: 'CSRF validation failed: Invalid request source'
         });
