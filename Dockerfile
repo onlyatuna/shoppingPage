@@ -28,8 +28,8 @@ RUN npm run build --workspace=packages/shared
 RUN npm run build --workspace=apps/frontend
 RUN npm run build --workspace=apps/backend
 
-# 移除開發用的依賴，只保留 production 需要的模組 (取代已棄用的 --production 參數)
-RUN npm prune --omit=dev
+# 移除開發用的依賴，只保留 production 需要的模組 (取代已棄用的 --production 參數)，並清除 npm 快取
+RUN npm prune --omit=dev && npm cache clean --force
 
 # ==========================================
 # 階段 2: Runner
@@ -52,6 +52,9 @@ COPY apps/backend/package.json ./apps/backend/
 
 # [修正] 只複製根目錄的 node_modules (因為 Monorepo 依賴都在這)
 COPY --from=builder /app/node_modules ./node_modules
+
+# [優化] 手動刪除絕對用不到的資料夾，進一步瘦身
+RUN rm -rf node_modules/typescript && rm -rf node_modules/@types
 
 # ❌ 刪除這行 (這行導致報錯，因為該目錄不存在)
 # COPY --from=builder /app/apps/backend/node_modules ./apps/backend/node_modules
