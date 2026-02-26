@@ -7,7 +7,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import lusca from 'lusca';
 import rateLimit from 'express-rate-limit';
-import { csrfProtection } from './middlewares/csrf.middleware';
+import { csrfProtection as csrf } from './middlewares/csrf.middleware';
 import { prisma } from './utils/prisma';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/auth.routes';
@@ -91,22 +91,18 @@ app.use(cors({
     ],
     credentials: true, // 允許帶 Cookie
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN']
 }));
 
 
 
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser()); // 解析 Cookie
+app.use(csrf);  // [SECURITY] CSRF Protection (Double Submit Cookie Pattern)
 app.use(morgan('dev'));
 
-// [SECURITY] CSRF Protection - Double Submit Cookie Pattern
-// Validates X-XSRF-TOKEN header against XSRF-TOKEN cookie for state-changing requests
-app.use('/api', csrfProtection);
-
-// [SECURITY] Lusca security middleware for additional security headers
-// Note: CSRF protection is handled by Origin validation above (stateless SPA pattern)
-app.use('/api', lusca({
+// [SECURITY] Plus security headers via Lusca for all endpoints
+app.use(lusca({
     xframe: 'SAMEORIGIN',
     hsts: { maxAge: 31536000, includeSubDomains: true },
     xssProtection: true,
