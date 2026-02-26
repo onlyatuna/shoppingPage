@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { TETROMINOS, randomTetromino } from '../constants';
-import { TetrominoType } from '../types';
 
 const ROWS = 20;
 const COLS = 10;
 
 export const useTetris = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   // Game State Refs (Mutable for performance, won't trigger re-renders)
   const grid = useRef(Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
   const piece = useRef<any>(null);
@@ -15,7 +14,7 @@ export const useTetris = () => {
   const lastTimeRef = useRef<number>(0);
   const dropCounter = useRef<number>(0);
   const dropInterval = useRef<number>(1000);
-  
+
   // React State (For UI only)
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(parseInt(localStorage.getItem('tetris-best') || '0'));
@@ -25,7 +24,7 @@ export const useTetris = () => {
   const [paused, setPausedState] = useState(false);
   const [nextQueue, setNextQueue] = useState<any[]>([]);
   const [holdPiece, setHoldPiece] = useState<any>(null);
-  
+
   // Initialize Game
   const initGame = useCallback(() => {
     grid.current = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
@@ -36,7 +35,7 @@ export const useTetris = () => {
     setPausedState(false);
     setHoldPiece(null);
     dropInterval.current = 1000;
-    
+
     // Generate Bag
     const initialQueue = [randomTetromino(), randomTetromino(), randomTetromino(), randomTetromino()];
     setNextQueue(initialQueue);
@@ -96,15 +95,15 @@ export const useTetris = () => {
     if (rowCount > 0) {
       const points = [0, 40, 100, 300, 1200];
       setScore(prev => {
-         const s = prev + points[rowCount] * level;
-         if(s > highScore) {
-             setHighScore(s);
-             localStorage.setItem('tetris-best', s.toString());
-         }
-         return s;
+        const s = prev + points[rowCount] * level;
+        if (s > highScore) {
+          setHighScore(s);
+          localStorage.setItem('tetris-best', s.toString());
+        }
+        return s;
       });
       setLines(l => l + rowCount);
-      setLevel(l => Math.floor((lines + rowCount) / 10) + 1);
+      setLevel(_l => Math.floor((lines + rowCount) / 10) + 1);
       dropInterval.current = Math.max(100, 1000 - (level - 1) * 50);
     }
   };
@@ -130,16 +129,16 @@ export const useTetris = () => {
           if (value !== 0) {
             ctx.fillStyle = ghost ? `${color}40` : (color || value); // value is color string in grid
             ctx.fillRect((x + offset.x) * scale, (y + offset.y) * scale, scale - 1, scale - 1);
-            
+
             // Neon Glow / Border Effect
             if (!ghost) {
-               ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-               ctx.lineWidth = 1;
-               ctx.strokeRect((x + offset.x) * scale, (y + offset.y) * scale, scale - 1, scale - 1);
+              ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+              ctx.lineWidth = 1;
+              ctx.strokeRect((x + offset.x) * scale, (y + offset.y) * scale, scale - 1, scale - 1);
             } else {
-               ctx.strokeStyle = color || '#fff';
-               ctx.lineWidth = 1;
-               ctx.strokeRect((x + offset.x) * scale, (y + offset.y) * scale, scale - 1, scale - 1);
+              ctx.strokeStyle = color || '#fff';
+              ctx.lineWidth = 1;
+              ctx.strokeRect((x + offset.x) * scale, (y + offset.y) * scale, scale - 1, scale - 1);
             }
           }
         });
@@ -151,22 +150,22 @@ export const useTetris = () => {
 
     // Draw Ghost Piece
     if (piece.current) {
-        const ghost = { ...piece.current, pos: { ...piece.current.pos } };
-        while (!collide(grid.current, ghost)) {
-            ghost.pos.y++;
-        }
-        ghost.pos.y--;
-        drawMatrix(ghost.matrix, ghost.pos, piece.current.color, true);
+      const ghost = { ...piece.current, pos: { ...piece.current.pos } };
+      while (!collide(grid.current, ghost)) {
+        ghost.pos.y++;
+      }
+      ghost.pos.y--;
+      drawMatrix(ghost.matrix, ghost.pos, piece.current.color, true);
 
-        // Draw Active Piece
-        drawMatrix(piece.current.matrix, piece.current.pos, piece.current.color);
+      // Draw Active Piece
+      drawMatrix(piece.current.matrix, piece.current.pos, piece.current.color);
     }
   };
 
   // Game Loop
   const update = (time: number) => {
     if (gameOver || paused) return;
-    
+
     const deltaTime = time - lastTimeRef.current;
     lastTimeRef.current = time;
 
@@ -181,7 +180,7 @@ export const useTetris = () => {
 
   // Controls
   const playerDrop = () => {
-    if(!piece.current) return;
+    if (!piece.current) return;
     piece.current.pos.y++;
     if (collide(grid.current, piece.current)) {
       piece.current.pos.y--;
@@ -207,11 +206,11 @@ export const useTetris = () => {
     const pos = piece.current.pos.x;
     let offset = 1;
     const rotateMatrix = (matrix: any[]) => {
-        return matrix[0].map((_: any, index: number) => matrix.map((row: any) => row[index]).reverse());
+      return matrix[0].map((_: any, index: number) => matrix.map((row: any) => row[index]).reverse());
     };
     const originalMatrix = piece.current.matrix;
     piece.current.matrix = rotateMatrix(piece.current.matrix);
-    
+
     // Wall kick (basic)
     while (collide(grid.current, piece.current)) {
       piece.current.pos.x += offset;
@@ -225,76 +224,76 @@ export const useTetris = () => {
   };
 
   const hardDrop = () => {
-     if (!piece.current || paused || gameOver) return;
-     while (!collide(grid.current, piece.current)) {
-         piece.current.pos.y++;
-     }
-     piece.current.pos.y--;
-     merge(grid.current, piece.current);
-     spawnPiece(nextQueue[0]);
-     setNextQueue(prev => prev.slice(1).concat(randomTetromino()));
-     sweep();
-     dropCounter.current = 0;
+    if (!piece.current || paused || gameOver) return;
+    while (!collide(grid.current, piece.current)) {
+      piece.current.pos.y++;
+    }
+    piece.current.pos.y--;
+    merge(grid.current, piece.current);
+    spawnPiece(nextQueue[0]);
+    setNextQueue(prev => prev.slice(1).concat(randomTetromino()));
+    sweep();
+    dropCounter.current = 0;
   };
 
   const hold = () => {
-      if (!piece.current || paused || gameOver) return;
-      if (!holdPiece) {
-          setHoldPiece({ shape: piece.current.matrix, color: piece.current.color, type: piece.current.type });
-          spawnPiece(nextQueue[0]);
-          setNextQueue(prev => prev.slice(1).concat(randomTetromino()));
+    if (!piece.current || paused || gameOver) return;
+    if (!holdPiece) {
+      setHoldPiece({ shape: piece.current.matrix, color: piece.current.color, type: piece.current.type });
+      spawnPiece(nextQueue[0]);
+      setNextQueue(prev => prev.slice(1).concat(randomTetromino()));
+    } else {
+      const temp = { ...holdPiece };
+      setHoldPiece({ shape: piece.current.matrix, color: piece.current.color, type: piece.current.type });
+      // Find original definition to restore standard orientation
+      const type = temp.type as keyof typeof TETROMINOS;
+      const original = TETROMINOS[type];
+      if (original) {
+        spawnPiece({ ...original, type });
       } else {
-          const temp = { ...holdPiece };
-          setHoldPiece({ shape: piece.current.matrix, color: piece.current.color, type: piece.current.type });
-          // Find original definition to restore standard orientation
-          const type = temp.type as keyof typeof TETROMINOS;
-          const original = TETROMINOS[type];
-          if (original) {
-              spawnPiece({ ...original, type });
-          } else {
-              // Fallback if needed
-              spawnPiece(temp);
-          }
+        // Fallback if needed
+        spawnPiece(temp);
       }
+    }
   };
 
   useEffect(() => {
-     if (!gameOver && !paused) {
-         requestRef.current = requestAnimationFrame(update);
-     }
-     return () => {
-         if (requestRef.current) cancelAnimationFrame(requestRef.current);
-     };
+    if (!gameOver && !paused) {
+      requestRef.current = requestAnimationFrame(update);
+    }
+    return () => {
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+    };
   }, [gameOver, paused, nextQueue]); // Dependencies trigger restart of loop logic
 
   // Keyboard Handlers
   const onKeyDown = useCallback((key: string) => {
-      if (key === 'ArrowLeft') playerMove(-1);
-      if (key === 'ArrowRight') playerMove(1);
-      if (key === 'ArrowDown') playerDrop();
-      if (key === 'ArrowUp') playerRotate();
-      if (key === ' ') hardDrop();
-      if (key.toLowerCase() === 'c' || key === 'Shift') hold();
-      // Force a draw after input for responsiveness
-      const canvas = canvasRef.current;
-      if (canvas && !paused && !gameOver) {
-          // Re-trigger draw in next frame or immediately? 
-          // The loop handles it, but immediate draw feels snappier.
-          // draw(); // Can't call closure draw here easily without refactoring, relying on loop is fine for simple implementation.
-      }
-  }, [paused, gameOver, nextQueue, holdPiece]); 
+    if (key === 'ArrowLeft') playerMove(-1);
+    if (key === 'ArrowRight') playerMove(1);
+    if (key === 'ArrowDown') playerDrop();
+    if (key === 'ArrowUp') playerRotate();
+    if (key === ' ') hardDrop();
+    if (key.toLowerCase() === 'c' || key === 'Shift') hold();
+    // Force a draw after input for responsiveness
+    const canvas = canvasRef.current;
+    if (canvas && !paused && !gameOver) {
+      // Re-trigger draw in next frame or immediately? 
+      // The loop handles it, but immediate draw feels snappier.
+      // draw(); // Can't call closure draw here easily without refactoring, relying on loop is fine for simple implementation.
+    }
+  }, [paused, gameOver, nextQueue, holdPiece]);
 
-  const onKeyUp = useCallback((key: string) => {}, []);
+  const onKeyUp = useCallback((_key: string) => { }, []);
 
   useEffect(() => {
-      initGame();
+    initGame();
   }, [initGame]);
 
   return {
     score, highScore, level, lines, nextQueue, holdPiece, gameOver, paused,
     setPaused: () => setPausedState(prev => !prev),
     startGame: initGame,
-    move: (x: number, y: number) => playerMove(x),
+    move: (x: number, _y: number) => playerMove(x),
     rotate: playerRotate,
     hardDrop,
     hold,
