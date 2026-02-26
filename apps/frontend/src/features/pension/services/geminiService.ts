@@ -73,7 +73,7 @@ export const generateActionableAdvice = async (
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        const modelId = "gemini-1.0-pro";
+        const modelId = "gemini-2.5-flash";
 
         console.log(`🔌 Connecting to Google AI... (Model: ${modelId})`);
 
