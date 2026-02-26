@@ -1,4 +1,4 @@
-import { Grid, GridCell, TetrominoType } from '../types';
+import { Grid } from '../types';
 import { BOARD_WIDTH, BOARD_HEIGHT } from '../constants';
 import { Piece } from './Piece';
 
