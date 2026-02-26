@@ -23,7 +23,7 @@ const TrustVaultModal: React.FC<TrustVaultModalProps> = ({ isOpen, onClose, onVe
     if (!isOpen) return null;
 
     const handleConnect = () => {
-        // 統一存入 AIConfigContext (目前已實作為 SessionStorage + 動態鹽值)
+        // 統一存入 AIConfigContext (目前已實作為純記憶體模式，重新整理即失效)
         setApiKey(localKey);
         // 透過 onVerify 將 Key 傳回給當前頁面的 State (高優先級主動記憶體狀態)
         onVerify?.(localKey);
