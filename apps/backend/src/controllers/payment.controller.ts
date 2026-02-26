@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import { PaymentService } from '../services/payment.service';
 import { StatusCodes } from 'http-status-codes';
+import { logger } from '../utils/logger';
 
 export const requestLinePay = async (req: Request, res: Response) => {
     try {
@@ -16,7 +17,7 @@ export const requestLinePay = async (req: Request, res: Response) => {
 
 export const confirmLinePay = async (req: Request, res: Response) => {
     try {
-        console.log('💰 [Confirm Payment] Body:', String(JSON.stringify(req.body)).replace(/\n|\r/g, ' '));
+        logger.info({ action: 'payment_confirm_init', body: req.body });
         const { transactionId, orderId } = req.body;
         const userId = req.user!.userId; // 從 JWT Token 取得使用者 ID
 
@@ -29,7 +30,7 @@ export const confirmLinePay = async (req: Request, res: Response) => {
         await PaymentService.confirmLinePay(orderId, transactionId, userId);
         res.json({ status: 'success', message: '付款成功' });
     } catch (error: any) {
-        console.error('❌ [Confirm Error]:', String(error.message).replace(/\n|\r/g, ' '));
+        logger.error({ action: 'payment_confirm_error', err: error });
         res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
     }
 };
@@ -81,8 +82,7 @@ export const getLinePayDetails = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         const detail = error.response?.data;
-        console.error('❌ [getLinePayDetails Error Body]:', String(JSON.stringify(detail)).replace(/\n|\r/g, ' '));
-        console.error('❌ [getLinePayDetails Error Message]:', String(error.message).replace(/\n|\r/g, ' '));
+        logger.error({ action: 'payment_details_error', err: error, details: detail });
         res.status(StatusCodes.BAD_REQUEST).json({
             message: error.message,
             details: detail
