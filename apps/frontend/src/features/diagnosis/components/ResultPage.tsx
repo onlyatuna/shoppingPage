@@ -383,17 +383,17 @@ export const ResultPage: React.FC<ResultPageProps> = ({ onRetake, result }) => {
               </div>
             </div>
 
-            <div className="flex-grow flex flex-col items-center justify-center gap-6">
-              <div className="relative w-48 h-48 flex-shrink-0">
+            <div className="flex-grow flex flex-col items-center justify-start gap-8 pt-4">
+              <div className="relative w-40 h-40 flex-shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={content.allocation}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={70}
-                      paddingAngle={5}
+                      innerRadius={55}
+                      outerRadius={75}
+                      paddingAngle={4}
                       dataKey="value"
                     >
                       {content.allocation.map((entry, index) => (
@@ -404,7 +404,8 @@ export const ResultPage: React.FC<ResultPageProps> = ({ onRetake, result }) => {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-extrabold text-[#111417] dark:text-white">100%</span>
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter">Total</span>
+                  <span className="text-xl font-black text-[#111417] dark:text-white">100%</span>
                 </div>
               </div>
 
