@@ -65,6 +65,7 @@ app.use(helmet({
                 "https://raw.githack.com",                    // Three.js HDRI assets
                 "https://raw.githubusercontent.com",          // Three.js HDRI assets (alternate CDN)
                 "https://generativelanguage.googleapis.com",  // Gemini AI API
+                "https://cdn.jsdelivr.net",                   // MediaPipe WASM assets
                 "wss:", "ws:",
             ],
             workerSrc: ["'self'", "blob:"],     // Service Worker & Web Workers
