@@ -1481,7 +1481,6 @@ Action: Add realistic contact shadows and environmental lighting interactions to
         if (mobileStep === 'edit') return !!(uploadedImage || editedImage); // Need image
         if (mobileStep === 'caption') return true; // Can skip caption
         return false;
-        return false;
     };
 
 
