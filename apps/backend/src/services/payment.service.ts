@@ -100,16 +100,25 @@ export class PaymentService {
 
         // 4. 打 LINE Pay API
         try {
+            // [Security] Validate redirect URLs
+            if (!process.env.LINE_PAY_RETURN_HOST) {
+                throw new Error('系統設定錯誤：缺少 LINE_PAY_RETURN_HOST');
+            }
+
             console.log(`[LINE Pay] Initiating request for Order ${orderId}, Amount: ${calculatedAmount}`);
 
-            // 建議 Request API 也加入 10~20s 超時設定 (文件建議至少10s)
             const res = await linePayClient.post('/v3/payments/request', orderBody, {
                 timeout: 20000
             });
 
             if (res.data.returnCode !== '0000') {
-                console.error('[LINE Pay Error]', res.data);
-                throw new Error(`LINE Pay Refused: ${res.data.returnMessage}`);
+                console.error('[LINE Pay Error Details]', {
+                    orderId,
+                    returnCode: res.data.returnCode,
+                    returnMessage: res.data.returnMessage,
+                    info: res.data.info
+                });
+                throw new Error(`LINE Pay 拒絕請求 (${res.data.returnCode}): ${res.data.returnMessage}`);
             }
 
             // 5. 更新 DB
@@ -124,8 +133,20 @@ export class PaymentService {
             return { paymentUrl: res.data.info.paymentUrl.web };
 
         } catch (error: any) {
-            console.error('LinePay Request Exception:', error.response?.data || error.message);
-            throw new Error('無法發起 LINE Pay 付款');
+            const errorDetail = error.response?.data || error.message;
+            console.error('LinePay Request Exception:', errorDetail);
+
+            // 如果是 LINE Pay 回傳的錯誤，直接拋出其訊息
+            if (error.response?.data?.returnMessage) {
+                throw new Error(`LINE Pay 錯誤: ${error.response.data.returnMessage}`);
+            }
+
+            // 如果是我們自己丟出的「拒絕請求」錯誤，保持原樣
+            if (error.message.includes('LINE Pay 拒絕請求')) {
+                throw error;
+            }
+
+            throw new Error(`無法發起 LINE Pay 付款: ${error.message}`);
         }
     }
 
@@ -249,11 +270,13 @@ export class PaymentService {
         if (!params.transactionId && !params.orderId) throw new Error('需提供 ID');
         try {
             const queryParams: any = {};
-            // [SECURITY] Sanitize transaction ID if provided
             if (params.transactionId) {
-                queryParams['transactionId[]'] = sanitizeTransactionId(params.transactionId);
+                // [修正] 部分 V3 環境偏好直接使用 transactionId (不加 [])
+                queryParams['transactionId'] = sanitizeTransactionId(params.transactionId);
             }
-            if (params.orderId) queryParams['orderId[]'] = params.orderId;
+            if (params.orderId) {
+                queryParams['orderId'] = params.orderId;
+            }
 
             // 維持 params 傳遞以確保 HMAC 簽章正確
             const res = await linePayClient.get('/v3/payments', {
@@ -261,10 +284,14 @@ export class PaymentService {
                 timeout: 20000
             });
 
-            if (res.data.returnCode !== '0000') throw new Error(res.data.returnMessage);
+            if (res.data.returnCode !== '0000') {
+                console.error('[LINE Pay Details Error Response]', res.data);
+                throw new Error(res.data.returnMessage);
+            }
             return res.data.info;
         } catch (error: any) {
-            console.error('Get Details Error:', error.message);
+            const errorDetail = error.response?.data || error.message;
+            console.error('Get Details Error:', errorDetail);
             throw error;
         }
     }

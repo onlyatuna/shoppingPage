@@ -80,6 +80,12 @@ export const getLinePayDetails = async (req: Request, res: Response) => {
             data: result
         });
     } catch (error: any) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+        const detail = error.response?.data;
+        console.error('❌ [getLinePayDetails Error Body]:', detail);
+        console.error('❌ [getLinePayDetails Error Message]:', error.message);
+        res.status(StatusCodes.BAD_REQUEST).json({
+            message: error.message,
+            details: detail
+        });
     }
 };

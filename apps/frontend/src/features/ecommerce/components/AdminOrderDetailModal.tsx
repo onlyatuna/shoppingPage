@@ -35,18 +35,36 @@ export default function AdminOrderDetailModal({ order, onClose }: Props) {
     const handleCheckLinePay = async () => {
         setIsLoadingLinePay(true);
         try {
-            // 呼叫後端 API 查詢
-            const res = await apiClient.get(`/payment/line-pay/details?orderId=${order.id}`);
+            // [修正] 優先使用 transactionId (也就是 DB 裡的 paymentId) 查詢
+            const paymentId = (order as any).paymentId;
+            const queryParam = paymentId ? `transactionId=${paymentId}` : `orderId=${order.id}`;
+            const res = await apiClient.get(`/payment/line-pay/details?${queryParam}`);
 
             if (res.data.data && res.data.data.length > 0) {
-                setLinePayInfo(res.data.data[0]); // 取第一筆交易紀錄
+                const info = res.data.data[0];
+
+                // [修正] 某些 Sandbox 情況下 top-level amount 為 0，需優先尋找各處可能的金額欄位
+                // 使用 Number() 強制轉型確保型別安全，避免「非數值」警告
+                const realAmount = Number(info.amount || info.orderAmount || info.payInfo?.[0]?.amount || 0);
+
+                setLinePayInfo({
+                    ...info,
+                    amount: realAmount
+                });
                 toast.success('LINE Pay 資料同步成功');
             } else {
                 toast.info('查無 LINE Pay 交易紀錄');
             }
         } catch (error: any) {
-            console.error(error);
-            toast.error(error.response?.data?.message || '查詢失敗');
+            console.error('[AdminDetail Check Error]', error);
+            const resData = error.response?.data;
+            const detail = resData?.details;
+
+            const message = detail?.returnMessage
+                ? `${detail.returnMessage} (${detail.returnCode})`
+                : (resData?.message || error.message || '查詢失敗');
+
+            toast.error(message);
         } finally {
             setIsLoadingLinePay(false);
         }
@@ -185,7 +203,7 @@ export default function AdminOrderDetailModal({ order, onClose }: Props) {
                                         <div className="flex flex-col">
                                             <span className="text-gray-500 text-xs">實際入帳金額</span>
                                             <span className="font-bold text-lg">
-                                                {linePayInfo.currency} ${linePayInfo.amount?.toLocaleString()}
+                                                {linePayInfo.currency} ${Number(linePayInfo.amount || 0).toLocaleString()}
                                             </span>
                                         </div>
                                         <div className="flex flex-col">
@@ -198,11 +216,11 @@ export default function AdminOrderDetailModal({ order, onClose }: Props) {
                                         </div>
                                     </div>
 
-                                    {/* 金額檢核警示：如果 LINE Pay 金額跟訂單金額不符，顯示紅框 */}
-                                    {linePayInfo.amount !== Number(order.totalAmount) && (
+                                    {/* 金額檢核警示：強制轉型為數字後比較 */}
+                                    {Number(linePayInfo.amount || 0) !== Number(order.totalAmount) && (
                                         <div className="mt-3 p-2 bg-red-50 text-red-600 text-xs rounded flex items-center gap-2 font-bold border border-red-100">
                                             <AlertCircle size={14} />
-                                            警告：LINE Pay 實際入帳金額與訂單金額不符！
+                                            警告：LINE Pay 實際入帳 (${Number(linePayInfo.amount || 0).toLocaleString()}) 與訂單金額 (${Number(order.totalAmount).toLocaleString()}) 不符！
                                         </div>
                                     )}
                                 </div>
