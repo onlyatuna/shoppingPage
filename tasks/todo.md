@@ -173,4 +173,5 @@
     - [x] 在 `utils/logger.ts` 建立結構化 JSON 輸出邏輯 <!-- id: 164 -->
     - [x] 將 `csrf.middleware.ts` 內的日誌警告改為傳遞物件 (Object Payload) 的 JSON 結構化日誌 <!-- id: 165 -->
     - [x] 完成第一波(關鍵攔截點)與第二波高價值目標 (Payment, Order, External APIs) 的日誌重構 <!-- id: 166 -->
+    - [x] 將 Prisma 的事件 (query, info, warn, error) 導向 Pino logger <!-- id: 168 -->
     - [x] 驗證日誌系統產出格式並確認無誤 <!-- id: 167 -->
