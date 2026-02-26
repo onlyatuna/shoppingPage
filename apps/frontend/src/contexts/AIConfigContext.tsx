@@ -27,23 +27,28 @@ export const AIConfigProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
 
     const [apiKey, setApiKey] = useState<string>(() => {
-        const stored = sessionStorage.getItem('_cfg_g_');
+        const stored = sessionStorage.getItem('_st_kv_');
         return deobfuscate(stored, envSalt) || '';
     });
 
     useEffect(() => {
-        // Cleanup legacy plain-text or poorly obfuscated key
-        if (sessionStorage.getItem('gemini_api_key')) {
-            sessionStorage.removeItem('gemini_api_key');
-        }
+        // [FORCE CLEANUP] Ensure no legacy keys exist in any storage to prevent accidental persistence
+        const legacyKeys = ['gemini_api_key', 'apiKey', 'google_ai_key'];
+        legacyKeys.forEach(key => {
+            sessionStorage.removeItem(key);
+            localStorage.removeItem(key);
+        });
+
+        // Also cleanup the current key from localStorage just in case it was ever mistakenly saved there
+        localStorage.removeItem('_st_kv_');
     }, []);
 
     useEffect(() => {
         if (apiKey) {
             // Use dynamic salting to bind the key to the environment
-            sessionStorage.setItem('_cfg_g_', obfuscate(apiKey, envSalt));
+            sessionStorage.setItem('_st_kv_', obfuscate(apiKey, envSalt));
         } else {
-            sessionStorage.removeItem('_cfg_g_');
+            sessionStorage.removeItem('_st_kv_');
         }
     }, [apiKey, envSalt]);
 

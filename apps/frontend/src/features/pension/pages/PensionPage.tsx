@@ -1,41 +1,33 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { DEFAULT_INPUTS } from '../utils/constants';
 import { UserInputs, SimulationResult, AdvisorResponse } from '../types';
 import { InputForm } from '../components/InputForm';
 import { ResultsDashboard } from '../components/ResultsDashboard';
 import { calculatePensionGap } from '../services/calculationService';
 import { generateActionableAdvice } from '../services/geminiService';
+import { useAIConfig } from '@/contexts/AIConfigContext';
+import TrustVaultModal from '@/features/portfolio/components/TrustVaultModal';
 import {
     Calculator, ArrowLeft, RefreshCw,
-    Key, Lock, Unlock, CheckCircle2
+    Key, Lock, Unlock
 } from 'lucide-react';
 
 const PensionPage: React.FC = () => {
+    const { apiKey, setApiKey } = useAIConfig();
     const [inputs, setInputs] = useState<UserInputs>(DEFAULT_INPUTS);
     const [results, setResults] = useState<SimulationResult | null>(null);
     const [advisorData, setAdvisorData] = useState<AdvisorResponse | null>(null);
 
-    // 狀態管理：API Key 與 UI 控制
-    const [apiKey, setApiKey] = useState("");
-    const [showKeyInput, setShowKeyInput] = useState(false);
-    const [isLiveMode, setIsLiveMode] = useState(false);
+    // Derive live mode from context
+    const isLiveMode = useMemo(() => apiKey.trim().length > 10, [apiKey]);
+    const [isVaultOpen, setIsVaultOpen] = useState(false);
 
     const [isCalculating, setIsCalculating] = useState(false);
     const [isThinking, setIsThinking] = useState(false);
 
-    // 處理 API Key 輸入
-    const handleKeySubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (apiKey.trim().length > 10) {
-            setIsLiveMode(true);
-            setShowKeyInput(false);
-        }
-    };
-
     const handleDisconnect = () => {
         setApiKey("");
-        setIsLiveMode(false);
-        setAdvisorData(null); // 清除之前的即時建議
+        setAdvisorData(null); // Clear previous advice
     };
 
     const handleInputChange = useCallback(<K extends keyof UserInputs>(name: K, value: UserInputs[K]) => {
@@ -47,18 +39,17 @@ const PensionPage: React.FC = () => {
         setResults(null);
         setAdvisorData(null);
 
-        // 模擬計算延遲
+        // Simulate calculation delay
         setTimeout(async () => {
             try {
-                // 1. 執行數學運算 (Client-side, 永遠是 Live 的)
+                // 1. Math calculation (always live)
                 const calculatedResults = calculatePensionGap(data);
                 setResults(calculatedResults);
                 setIsCalculating(false);
 
-                // 2. 執行 AI 顧問 (根據是否有 Key 決定是 Mock 還是 Real)
+                // 2. AI Advisor (Mock or Real based on Key)
                 setIsThinking(true);
                 try {
-                    // 將 apiKey 傳入 Service，Service 會自行判斷
                     const advice = await generateActionableAdvice(data, calculatedResults, isLiveMode ? apiKey : undefined);
                     setAdvisorData(advice);
                 } catch (e) {
@@ -94,7 +85,7 @@ const PensionPage: React.FC = () => {
                                 <Calculator className="w-5 h-5 text-emerald-600" />
                             </div>
                             <h1 className="text-xl font-bold text-gray-800 hidden md:block">退休金缺口試算器</h1>
-                            {/* 模式標籤 */}
+                            {/* Mode label */}
                             {isLiveMode ? (
                                 <span className="flex items-center gap-1 text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide border border-indigo-200">
                                     <Unlock size={10} /> AI Live Mode
@@ -110,46 +101,24 @@ const PensionPage: React.FC = () => {
                     {/* Right: Actions & Key Input */}
                     <div className="flex items-center gap-3">
 
-                        {/* API Key Input Area */}
+                        {/* Secure Key Access */}
                         <div className="hidden md:flex items-center mr-2">
-                            {showKeyInput ? (
-                                <form onSubmit={handleKeySubmit} className="flex items-center gap-2 animate-in slide-in-from-right-4 duration-300">
-                                    <input
-                                        type="text"
-                                        name="_st_token"
-                                        id="_st_token"
-                                        value={apiKey}
-                                        onChange={(e) => setApiKey(e.target.value)}
-                                        placeholder="Enter Gemini API Key..."
-                                        autoComplete="off"
-                                        className="text-xs bg-gray-50 border border-gray-300 rounded-lg px-3 py-1.5 w-48 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                                        style={{ WebkitTextSecurity: 'disc' } as any}
-                                        autoFocus
-                                    />
-                                    <button type="submit" className="p-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                                        <CheckCircle2 size={14} />
-                                    </button>
-                                </form>
+                            {isLiveMode ? (
+                                <button
+                                    onClick={handleDisconnect}
+                                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors px-2 py-1"
+                                >
+                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                    Connected
+                                </button>
                             ) : (
-                                <>
-                                    {isLiveMode ? (
-                                        <button
-                                            onClick={handleDisconnect}
-                                            className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors px-2 py-1"
-                                        >
-                                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                            Connected
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => setShowKeyInput(true)}
-                                            className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors border border-gray-200"
-                                        >
-                                            <Key size={12} />
-                                            Connect AI
-                                        </button>
-                                    )}
-                                </>
+                                <button
+                                    onClick={() => setIsVaultOpen(true)}
+                                    className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors border border-gray-200"
+                                >
+                                    <Key size={12} />
+                                    Connect AI
+                                </button>
                             )}
                         </div>
 
@@ -202,6 +171,12 @@ const PensionPage: React.FC = () => {
                     )}
                 </div>
             </main>
+
+            {/* Secure Vault Modal */}
+            <TrustVaultModal
+                isOpen={isVaultOpen}
+                onClose={() => setIsVaultOpen(false)}
+            />
         </div>
     );
 };

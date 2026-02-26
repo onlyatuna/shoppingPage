@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Terminal, ArrowDown, ExternalLink, ArrowRight,
@@ -10,25 +10,28 @@ import {
 
 import TrustVaultModal from '@/features/portfolio/components/TrustVaultModal';
 import BehavioralCompassCard from '@/features/portfolio/components/BehavioralCompassCard';
+import { useAIConfig } from '@/contexts/AIConfigContext';
 
 const PortfolioPage = () => {
     const navigate = useNavigate();
-    const [isLiveMode, setIsLiveMode] = useState(false);
+    const { apiKey, setApiKey } = useAIConfig();
+
+    // Derive live mode from global context
+    const isLiveMode = apiKey.trim().length > 10;
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [apiKey, setApiKey] = useState("");
 
     const handleLiveModeToggle = () => {
         if (!isLiveMode) {
             setIsModalOpen(true);
         } else {
-            setIsLiveMode(false);
+            // Disconnect global key
             setApiKey("");
         }
     };
 
-    const handleVerifyKey = (key: string) => {
-        setApiKey(key);
-        setIsLiveMode(true);
+    const handleVerifyKey = () => {
+        // No need for local state, TrustVaultModal calls setApiKey internally
+        console.log("Key verified on Portfolio page");
     };
 
     return (
@@ -135,7 +138,7 @@ const PortfolioPage = () => {
                             <div className="flex items-center gap-4">
                                 <h2 className="text-3xl font-bold text-[#111418] tracking-tight">FinTech & AI Solutions</h2>
                                 <div className="flex items-center bg-gray-100 rounded-full p-1 border border-gray-200">
-                                    <button onClick={() => setIsLiveMode(false)} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${!isLiveMode ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Mock Mode</button>
+                                    <button onClick={() => setApiKey("")} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${!isLiveMode ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Mock Mode</button>
                                     <button onClick={handleLiveModeToggle} className={`group px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all ${isLiveMode ? 'bg-white text-blue-600 shadow-sm ring-1 ring-blue-100' : 'text-gray-500 hover:text-blue-600'}`}>
                                         <span className="relative flex h-2 w-2">
                                             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75 ${!isLiveMode && 'hidden'}`}></span>
