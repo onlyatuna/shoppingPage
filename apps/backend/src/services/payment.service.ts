@@ -166,7 +166,7 @@ export class PaymentService {
 
         // [開發環境容錯]
         if (order.paymentId && order.paymentId !== safeTransactionId) {
-            console.warn(`⚠️ Transaction ID Mismatch: Auto-correcting to ${String(transactionId).replace(/\n|\r/g, ' ')}`);
+            console.warn(`⚠️ Transaction ID Mismatch: Auto-correcting to ${String(safeTransactionId).replace(/\n|\r/g, ' ')}`);
             await prisma.order.update({ where: { id: orderId }, data: { paymentId: safeTransactionId } });
         } else if (!order.paymentId) {
             await prisma.order.update({ where: { id: orderId }, data: { paymentId: safeTransactionId } });
