@@ -468,11 +468,11 @@ export default function AdminProductFormPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold mb-1">價格</label>
-                                    <input type="number" {...register('price', { required: !enableVariants, min: !enableVariants ? 1 : undefined })} className="w-full border p-2 rounded" />
+                                    <input type="number" {...register('price', { required: true, min: 1 })} className="w-full border p-2 rounded" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold mb-1">庫存</label>
-                                    <input type="number" {...register('stock', { required: !enableVariants })} className="w-full border p-2 rounded" />
+                                    <input type="number" {...register('stock', { required: true })} className="w-full border p-2 rounded" />
                                 </div>
                             </div>
                         </div>
