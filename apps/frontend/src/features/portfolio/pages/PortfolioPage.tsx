@@ -69,7 +69,7 @@ const PortfolioPage = () => {
 
                     {/* ... Hero Section (保持不變) ... */}
                     <section className="relative overflow-hidden rounded-3xl bg-[#111621] min-h-[560px] flex items-center p-8 md:p-16 shadow-2xl shadow-gray-200">
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=2832&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay" />
+                        <div className="absolute inset-0 bg-[url('/assets/images/hero_bg.png')] bg-cover bg-center opacity-30 mix-blend-overlay" />
                         <div className="absolute inset-0 bg-gradient-to-r from-[#111621] via-[#111621]/90 to-transparent" />
                         <div className="relative z-10 max-w-2xl flex flex-col gap-8">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 w-fit backdrop-blur-sm">
@@ -371,9 +371,9 @@ const PortfolioPage = () => {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {[
-                                { title: "Hand Gesture Zoom", tag: "TensorFlow.js", color: "purple", desc: "Control UI scale using webcam hand distance.", path: "/hand-gesture", image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=60" },
-                                { title: "BREEZEMASTER 3D", tag: "Three.js", color: "orange", desc: "Interactive 3D fan simulation with real-time audio synthesis & dynamic nature-mode wind logic.", path: "/breeze", image: "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&auto=format&fit=crop&q=60" },
-                                { title: "Retro Arcade", tag: "Canvas API", color: "green", desc: "JS re-creations of Tetris and Pac-Man.", path: "/arcade", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60" }
+                                { title: "Hand Gesture Zoom", tag: "TensorFlow.js", color: "purple", desc: "Control UI scale using webcam hand distance.", path: "/hand-gesture", image: "/assets/images/lab_hand.png" },
+                                { title: "BREEZEMASTER 3D", tag: "Three.js", color: "orange", desc: "Interactive 3D fan simulation with real-time audio synthesis & dynamic nature-mode wind logic.", path: "/breeze", image: "/assets/images/lab_3d.png" },
+                                { title: "Retro Arcade", tag: "Canvas API", color: "green", desc: "JS re-creations of Tetris and Pac-Man.", path: "/arcade", image: "/assets/images/lab_arcade.png" }
                             ].map((item, i) => {
                                 const colorStyles = {
                                     purple: "bg-purple-500/20 text-purple-300 border-purple-500/30",

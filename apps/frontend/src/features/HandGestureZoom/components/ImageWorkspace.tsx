@@ -10,7 +10,7 @@ interface ImageWorkspaceProps {
 }
 
 const ImageWorkspace: React.FC<ImageWorkspaceProps> = ({ zoomLevel }) => {
-  const [imageSrc, setImageSrc] = useState<string>(() => sanitizeUrl("https://picsum.photos/800/600"));
+  const [imageSrc, setImageSrc] = useState<string>(() => sanitizeUrl("/assets/images/placeholder_abstract.png"));
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Track blob URLs created by this component so we only trust our own
   const activeBlobUrlRef = useRef<string | null>(null);

@@ -224,7 +224,7 @@ export default function AuthPage() {
                         {/* 背景圖 */}
                         <div className="absolute inset-0 opacity-50">
                             <img
-                                src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
+                                src="/assets/images/hero_bg.png"
                                 alt="Background"
                                 className="w-full h-full object-cover"
                             />
