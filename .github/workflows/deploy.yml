@@ -101,6 +101,12 @@ jobs:
             echo "IG_USER_ID=${{ secrets.IG_USER_ID }}" >> .env
             echo "DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}" >> .env
             echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
+            
+            # [新增] LINE Pay 完整環境變數
+            echo "LINE_PAY_API_URL=${{ secrets.LINE_PAY_API_URL }}" >> .env
+            echo "LINE_PAY_RETURN_HOST=${{ secrets.LINE_PAY_RETURN_HOST }}" >> .env
+            echo "LINE_PAY_RETURN_CONFIRM_URL=${{ secrets.LINE_PAY_RETURN_CONFIRM_URL }}" >> .env
+            echo "LINE_PAY_RETURN_CANCEL_URL=${{ secrets.LINE_PAY_RETURN_CANCEL_URL }}" >> .env
 
             # 5. 重啟服務
             docker compose up -d --force-recreate
