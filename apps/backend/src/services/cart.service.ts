@@ -99,23 +99,7 @@ export class CartService {
         }
 
         // 3. 檢查商品是否已在車內 (符合 ProductId AND VariantId)
-        const existingItem = await prisma.cartItem.findUnique({
-            where: {
-                cartId_productId_variantId: { // 使用新的複合鍵
-                    cartId: cart.id,
-                    productId: productId,
-                    variantId: variantId ?? '', // Prisma String? needs explicit handling if unique constraint treats key differently? 
-                    // Wait, Prisma 'String?' unique composite works with nulls usually, BUT
-                    // in MySQL, unique constraint allowing multiple NULLs means we might get duplicates if we rely on NULL.
-                    // Ideally, avoiding NULL in unique index is safer, or we ensure code handles it.
-                    // Actually, let's use check findFirst for safety if unique index behavior varies.
-                    // But schema says @@unique([cartId, productId, variantId])
-                    // For null variantId, we should query where variantId is null.
-                },
-            },
-        } as any);
-        // Note: The unique key name might be generated differently or we need to query differently since 'variantId' is optional.
-        // Let's use findFirst to be safe and robust against NULL handling in Unique constraints logic
+        // 使用 findFirst 來安全處理可能為 null 的 variantId
 
         const existingItemSafe = await prisma.cartItem.findFirst({
             where: {
