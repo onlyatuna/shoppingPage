@@ -29,7 +29,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        path: '/'
+        path: '/',
+        signed: true // [SECURITY] 使用 Signed Cookie 滿足 CodeQL 靜態分析安全要求並強化防禦
     });
 
     res.status(StatusCodes.OK).json({
@@ -45,7 +46,8 @@ export const logout = (req: Request, res: Response) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        path: '/'
+        path: '/',
+        signed: true // 對應簽署過的 Cookie
     });
 
     res.status(StatusCodes.OK).json({

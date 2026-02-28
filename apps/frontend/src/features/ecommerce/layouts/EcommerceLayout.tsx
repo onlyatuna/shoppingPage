@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import Navbar from '@/features/ecommerce/components/Navbar';
 import Footer from '@/features/ecommerce/components/Footer';
 import PWAInstallPrompt from '@/features/ecommerce/components/PWAInstallPrompt';
+import { DevTools } from '@/features/ecommerce/components/DevTools';
 
 import HomePage from '@/features/ecommerce/pages/HomePage';
 import LoginPage from '@/features/ecommerce/pages/auth/LoginPage';
@@ -193,6 +194,7 @@ function EcommerceLayout() {
             </div>
             {!isEditorPage && <Footer />}
             <PWAInstallPrompt />
+            <DevTools />
         </div>
     );
 }

@@ -2,7 +2,7 @@ import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import axios from 'axios';
 import { prisma } from '../utils/prisma'; // [FIXED] Use singleton
 import { MonitorService } from './monitor.service';
-import { sanitizeLog, sanitizeImageUrl, SafeUrlComponents, sanitizePrompt } from '../utils/securityUtils';
+import { sanitizeLog, sanitizeImageUrl, sanitizePrompt } from '../utils/securityUtils';
 import { AppError } from '../utils/appError';
 import { StatusCodes } from 'http-status-codes';
 

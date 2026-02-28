@@ -101,7 +101,7 @@ app.use(cors({
 
 app.use(express.json({ limit: '2mb' }));
 
-app.use(cookieParser()); // 解析 Cookie
+app.use(cookieParser(process.env.JWT_SECRET || 'fallback-cookie-secret-at-least-32-chars')); // 解析 Cookie (含簽名支援)
 app.use(csrf);  // [SECURITY] CSRF Protection (Double Submit Cookie Pattern)
 
 // [SECURITY & OBSERVABILITY] Replace morgan with pino-http

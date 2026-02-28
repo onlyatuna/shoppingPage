@@ -35,8 +35,9 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         const authHeader = req.headers['authorization'];
         const tokenFromHeader = authHeader && authHeader.split(' ')[1];
 
-        // 優先從 Cookie 讀取 Token，如果沒有才看 Header
-        const token = req.cookies?.token || tokenFromHeader;
+        // 優先從 Signed Cookie 讀取 Token，如果沒有才看 Header
+        const tokenFromCookie = req.signedCookies?.token;
+        const token = tokenFromCookie || tokenFromHeader;
 
         // 情況 A: 根本沒傳 Token
         if (!token) {

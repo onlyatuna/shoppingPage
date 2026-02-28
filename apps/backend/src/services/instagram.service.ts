@@ -58,7 +58,7 @@ export class InstagramService {
 
         try {
             const safeCaption = sanitizePrompt(caption, 2000); // Instagram limit is ~2200
-            let targetUrl = imageUrl;
+            let targetUrl: string;
 
             // 如果是 Base64 格式，先上傳到 Cloudinary 轉成公開連結
             if (imageUrl.startsWith('data:')) {

@@ -159,6 +159,8 @@ Minor maintenance and depth oversights in observability and health reporting:
     1. `manualChunks` in `vite.config.ts` → split vendor libs (three, react, framer-motion, etc.)
     2. `React.lazy()` + `Suspense` → route-level code splitting
     3. `workbox.maximumFileSizeToCacheInBytes` → increase limit as safety net
+- **Frontend Dependency Splitting**: Even if PWA limits are increased, a single 2.7MB bundle harms UX. Always aim for granular chunks (e.g., separating `@react-three` from main app logic).
+        - *Best Practice*: `manualChunks: { 'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'], 'framer-motion': ['framer-motion'] }`.
 
 ## CSP (Content Security Policy) Management
 - **Every external resource needs CSP whitelisting**. When adding a new library that loads external assets (fonts, scripts, CDN files), always update the `helmet` CSP directives in `apps/backend/src/app.ts`.
@@ -186,7 +188,31 @@ Minor maintenance and depth oversights in observability and health reporting:
 ## Security & Architecture Optimization (Deep Dive)
 
 ### 1. 身份驗證與 Token 安全
-- **時序攻擊防禦 (Timing-Safe Comparison)**：在驗證敏感 Token（尤其是註冊、密碼重設）時，應使用 `crypto.timingSafeEqual` 並搭配 SHA-256 雜湊，確保比對時間恆定，防禦微秒級的時間分析攻擊。
+- **時序攻擊防禦 (Timing-Safe Comparison)**：在驗證敏感 Token（尤其是註冊、密碼重設）時，應使用 `crypto.timingSafeEqual`。對於字串長度不一的情況，應使用 PBKDF2 (如 10,000 疊代) 進行長度規格化，這不僅能防止時序攻擊，還能滿足 CodeQL 等掃描器對於「運算成本 (Computational Effort)」的安全要求 (Alert #437)。
+- **[2026-03-01 Update] Signed Cookies 防禦**:
+    - *Scenario*: CodeQL 經常會標記對於使用者輸入 (Cookies) 直接進行權限或安全性判斷的逻辑 (Alert #443: User-controlled bypass)。
+    - *Solution*: 
+        1. 初始化 `cookieParser(secret)`。
+        2. 在寫入 Cookie 時設定 `signed: true`。
+        3. 在讀取時使用 `req.signedCookies.token`。
+    - *Benefits*: 簽核過的 Cookie 具備 HMAC 安全性。如果使用者嘗試篡改 Cookie，`cookie-parser` 會將其從 `req.signedCookies` 中剔除。這讓該數值被視為「伺服器可信數據」而非純「使用者控制數據」。
+- **日誌注入防範 (Log Injection mitigation - Alert #444)**:
+    - *Scenario*: 在記錄包含使用者輸入的日誌時，若不移除換行符 (`\n` 或 `\r`)，攻擊者可偽造日誌條目。
+    - *Solution*: 始終通過 `sanitizeLog` 工具過濾輸出。
+    - *Implementation Pattern*: 使用 `replace(/[\n\r\t]/g, ' ')` 移除分行符，並加上 `replace(/[^\x20-\x7E\s]/g, '?')` 過濾不可見或潛在危險的非 ASCII 字元。這能徹底打斷主動攻擊者的 Payload。
+- **生產環境開發者工具 (Production-Safe DevTooling)**:
+    - *Scenario*: 在生產環境需要快速測試，但不能讓一般使用者接觸到測試工具。
+    - *Solution*: 
+        1. **Role-Based Rendering**: 組件內部檢查 `user.role === 'DEVELOPER'`.
+        2. **Hidden Toggle**: 使用組合鍵 (如 `Ctrl + Alt + D`) 切換顯示，避免顯眼。
+        3. **Backend Safeguards**: 所有測試 API (如 `reset-test-data`) 必須在後端使用 `requireDeveloper` 中間件，並記錄所有操作日誌 (Audit Log)。
+        4. **Form Automation**: 使用 `nativeInputValueSetter` 模擬真實的使用者輸入事件，確保與 React 狀態同步。 (見 `DevTools.tsx`)
+- **Express 5 / path-to-regexp v7+ 路由路徑問題 (PathError)**:
+    - *Scenario*: 在升級到 Express 5 後，原本的 `/:id(*)` 語法會導致 `PathError: Missing parameter name`。
+    - *Cause*: 新版本的 `path-to-regexp` 對萬用字元 (Wildcards) 語法更嚴格，且在某些環境下 `/:id(.*)` 或 `/:id*` 可能仍會解析失敗。
+    - *Solution*: 
+        1. 優先嘗試 `/:id(.*)` 或 `/:id*`。
+        2. 如果持續失敗，改用 **RegExp 物件** 作為路由路徑，搭配 `req.params[0]` 取得萬用字元內容。 (例如：`router.delete(/\/(.*)/, ...)` )。這能完全繞過字串解析器的限制。
 - **原子化更新 (Atomic Update) 模式**：驗證 Token 時，應將「過期檢查」直接放入資料庫的 `updateMany` -> `where` 條件中。這能解決 Check-then-act 的 Race Condition，確保 Token 在被使用的那一瞬間必須仍具備時序有效性。
 - **Token 綁定原則**：重設密碼不應依賴用戶端傳來的 Email。應優先從 Token 關聯出 User，再進行交叉比對，防止 Cross-user token 使用。
 
@@ -322,6 +348,10 @@ Minor maintenance and depth oversights in observability and health reporting:
 - **[2026-03-01 Update] DoS 防護策略**:
     1. **階層式 `express.json` 限制**: 對一般路由嚴格限制 `2mb`，僅對必要的圖片上傳路由開放較大限制 (如 `10mb`)。避免全域開放 `50mb` 導致記憶體耗盡風險。
     2. **優先選用 `multer` 串流**: 大檔案上傳應優先透過 `multipart/form-data` 搭配 `multer.memoryStorage()` 或 `diskStorage` 串流處理，而非轉為巨大的 Base64 JSON。
+- **[2026-03-01 Update] 安全轉義順序 (Escaping Precedence)**:
+    - *Scenario*: 在手動對字串進行轉義（如 Prompt Sanitization 或 SQL escaping）時，必須先轉義 **反斜線 (`\`)**。
+    - *Bug*: 若先轉義標點符號（如 `` ` `` -> `` \` ``），攻擊者可透過輸入額外的反斜線來轉義我們的轉義符號，導致防禦失效。
+    - *Fix*: 始終確保 `.replace(/\\/g, '\\\\')` 位於轉義鏈條的首位。
 
 ## Docker 容器資安與效能優化 (Production-Ready Docker)
 - **Dockerfile Hardening**: 

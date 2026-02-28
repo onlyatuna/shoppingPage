@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middlewares/auth.middleware';
-import { requireAdmin } from '../middlewares/admin.middleware';
+import { requireAdmin, requireDeveloper } from '../middlewares/admin.middleware';
 import { MonitorService } from '../services/monitor.service';
+import { resetTestData } from '../controllers/admin.controller';
 import { StatusCodes } from 'http-status-codes';
 import rateLimit from 'express-rate-limit';
 
@@ -37,5 +38,12 @@ router.get('/stats', adminRateLimiter, authenticateToken, requireAdmin, async (r
         });
     }
 });
+
+/**
+ * POST /api/v1/admin/reset-test-data
+ * Reset cart and AI quota for a user.
+ * Requires Developer permission
+ */
+router.post('/reset-test-data', adminRateLimiter, authenticateToken, requireDeveloper, resetTestData);
 
 export default router;

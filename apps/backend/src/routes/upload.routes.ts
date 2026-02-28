@@ -125,8 +125,8 @@ router.get('/resources', uploadRateLimiter, authenticateToken, requireAdmin, asy
 // 5. 刪除 Cloudinary 圖片
 import { prisma } from '../utils/prisma';
 
-router.delete('/:publicId(*)', uploadRateLimiter, authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
-    const { publicId } = req.params;
+router.delete(/\/(.*)/, uploadRateLimiter, authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    const publicId = req.params[0];
 
     // [SECURITY] Strict input validation for publicId to prevent SQL wildcard injection in JSON_SEARCH
     // Only allow alphanumeric, underscore, slash, and dash

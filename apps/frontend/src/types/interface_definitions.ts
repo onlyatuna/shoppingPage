@@ -13,6 +13,7 @@ export interface User {
     email: string;
     name: string | null;
     role: 'USER' | 'ADMIN' | 'DEVELOPER';
+    isPremium: boolean;
 }
 
 // ========================================
