@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { requireAdmin, requireDeveloper } from '../middlewares/admin.middleware';
 import { MonitorService } from '../services/monitor.service';
-import { resetTestData, forcePayOrder, triggerCheckLinePay, triggerCleanStaleOrders, developerInstantCheckout } from '../controllers/admin.controller';
+import { resetTestData, forcePayOrder, triggerCheckLinePay, triggerCleanStaleOrders, developerInstantCheckout, getDevLogs } from '../controllers/admin.controller';
 import { StatusCodes } from 'http-status-codes';
 import rateLimit from 'express-rate-limit';
 
@@ -69,5 +69,11 @@ router.post('/cron/clean-stale-orders', adminRateLimiter, authenticateToken, req
  * Atomic instant checkout for faster testing
  */
 router.post('/developer/instant-checkout', adminRateLimiter, authenticateToken, requireDeveloper, developerInstantCheckout);
+
+/**
+ * GET /api/v1/admin/dev-logs
+ * Get recent developer operation logs
+ */
+router.get('/dev-logs', authenticateToken, requireDeveloper, getDevLogs);
 
 export default router;

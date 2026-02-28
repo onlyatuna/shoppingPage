@@ -7,6 +7,7 @@ import { createOrderSchema } from '../schemas/order.schema';
 import { z } from 'zod';
 import { OrderStatus } from '@prisma/client';
 import { logger } from '../utils/logger';
+import { DevLogService } from './devLog.service';
 
 type CreateOrderInput = z.infer<typeof createOrderSchema>;
 
@@ -113,11 +114,12 @@ export class OrderService {
             }
 
             if (deletedOrderIds.length > 0) {
-                logger.info({
-                    action: 'CLEAN_PENDING_ORDERS',
+                DevLogService.log(
+                    'CLEAN_PENDING_ORDERS',
                     userId,
-                    deletedOrderIds
-                }, `開發者繞過：成功刪除 ${deletedOrderIds.length} 筆 PENDING 訂單並返還庫存`);
+                    `開發者繞過：成功刪除 ${deletedOrderIds.length} 筆 PENDING 訂單並返還庫存`,
+                    { deletedOrderIds }
+                );
             }
 
             await tx.order.deleteMany({

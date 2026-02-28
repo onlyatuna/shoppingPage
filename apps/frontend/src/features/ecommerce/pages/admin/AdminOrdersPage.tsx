@@ -146,12 +146,20 @@ export default function AdminOrdersPage() {
                             <tr key={order.id} className="border-b hover:bg-gray-50">
                                 <td className="p-4 font-mono text-gray-500">
                                     <div>#{order.id.slice(0, 8)}...</div>
-                                    {user?.role === 'DEVELOPER' && (order as any).paymentId && (
-                                        <div className="mt-1">
-                                            <a href="https://pay.line.me" target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline break-all">
-                                                LINE Pay: {(order as any).paymentId}
-                                            </a>
-                                        </div>
+                                    {user?.role === 'DEVELOPER' && (
+                                        (order as any).paymentId ? (
+                                            <div className="mt-1">
+                                                <a href="https://pay.line.me" target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline break-all">
+                                                    LINE Pay: {(order as any).paymentId}
+                                                </a>
+                                            </div>
+                                        ) : order.status === 'PAID' ? (
+                                            <div className="mt-1">
+                                                <span className="text-[10px] bg-purple-100 text-purple-600 px-1 py-0.5 rounded border border-purple-200">
+                                                    Dev Bypass
+                                                </span>
+                                            </div>
+                                        ) : null
                                     )}
                                 </td>
                                 <td className="p-4">
@@ -212,10 +220,16 @@ export default function AdminOrdersPage() {
                         <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100">
                             <div>
                                 <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">#{order.id.slice(0, 8)}</span>
-                                {user?.role === 'DEVELOPER' && (order as any).paymentId && (
-                                    <div className="mt-2 text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded inline-block">
-                                        LINE Pay: {(order as any).paymentId}
-                                    </div>
+                                {user?.role === 'DEVELOPER' && (
+                                    (order as any).paymentId ? (
+                                        <div className="mt-2 text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded inline-block">
+                                            LINE Pay: {(order as any).paymentId}
+                                        </div>
+                                    ) : order.status === 'PAID' ? (
+                                        <div className="mt-2 text-[10px] bg-purple-100 text-purple-600 px-2 py-1 rounded inline-block">
+                                            Dev Bypass
+                                        </div>
+                                    ) : null
                                 )}
                                 <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                                     <Calendar size={10} /> {new Date(order.createdAt).toLocaleString()}

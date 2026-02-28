@@ -5,6 +5,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { logger } from '../utils/logger';
 import { OrderService } from '../services/order.service';
 import { CronService } from '../services/cron.service';
+import { DevLogService } from '../services/devLog.service';
 
 /**
  * [DEVELOPER ONLY] Reset test data for a specific user.
@@ -26,11 +27,12 @@ export const resetTestData = asyncHandler(async (req: Request, res: Response) =>
     }
 
     // [SECURITY] Log developer action for audit trail
-    logger.info({
-        action: 'RESET_TEST_DATA',
-        developerId: req.user?.userId,
-        targetUserId: targetUserId
-    }, `Developer ${req.user?.userId} reset test data for user ${targetUserId}`);
+    DevLogService.log(
+        'RESET_TEST_DATA',
+        req.user?.userId,
+        `Developer ${req.user?.userId} reset test data for user ${targetUserId}`,
+        { targetUserId }
+    );
 
     // 2. Perform Atomic Resets
     await prisma.$transaction([
@@ -77,11 +79,12 @@ export const forcePayOrder = asyncHandler(async (req: Request, res: Response) =>
         }
     });
 
-    logger.info({
-        action: 'FORCE_PAY',
-        developerId: userId,
-        orderId: id
-    }, `Developer ${userId} forced payment for order ${id}`);
+    DevLogService.log(
+        'FORCE_PAY',
+        userId,
+        `Developer ${userId} forced payment for order ${id}`,
+        { orderId: id }
+    );
 
     res.status(StatusCodes.OK).json({
         status: 'success',
@@ -119,16 +122,26 @@ export const developerInstantCheckout = asyncHandler(async (req: Request, res: R
 
     const order = await OrderService.developerInstantCheckout(userId, shippingInfo);
 
-    logger.info({
-        action: 'DEVELOPER_INSTANT_CHECKOUT',
-        developerId: userId,
-        orderId: order.id
-    }, `Developer ${userId} performed atomic instant checkout`);
+    DevLogService.log(
+        'DEVELOPER_INSTANT_CHECKOUT',
+        userId,
+        `Developer ${userId} performed atomic instant checkout`,
+        { orderId: order.id }
+    );
 
     res.status(StatusCodes.OK).json({
         status: 'success',
         message: '原子化結帳成功',
         data: order
     });
+});
+
+/**
+ * [DEVELOPER ONLY] Get recent developer logs.
+ */
+export const getDevLogs = asyncHandler(async (req: Request, res: Response) => {
+    const limit = req.query.limit ? Number(req.query.limit) : 10;
+    const logs = DevLogService.getRecentLogs(limit);
+    res.json({ status: 'success', data: logs });
 });
 

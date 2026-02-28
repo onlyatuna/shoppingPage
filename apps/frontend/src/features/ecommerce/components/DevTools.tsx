@@ -14,6 +14,22 @@ export const DevTools: React.FC = () => {
     const params = useParams();
     const [isVisible, setIsVisible] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const [devLogs, setDevLogs] = useState<any[]>([]);
+
+    const fetchLogs = async () => {
+        try {
+            const res = await apiClient.get('/admin/dev-logs?limit=5');
+            setDevLogs(res.data.data);
+        } catch (e) {
+            // ignore
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchLogs();
+        }
+    }, [isOpen]);
 
     // Toggle panel visibility via Ctrl + Alt + D
     useEffect(() => {
@@ -47,7 +63,8 @@ export const DevTools: React.FC = () => {
         try {
             await apiClient.post('/admin/reset-test-data', { userId: user.id });
             toast.success('測試資料已重置 (Cart & AI Quota)');
-            window.location.reload();
+            fetchLogs();
+            setTimeout(() => window.location.reload(), 1000);
         } catch (error) {
             toast.error('重置失敗');
         }
@@ -132,6 +149,7 @@ export const DevTools: React.FC = () => {
             const orderId = res.data.data.id;
 
             toast.success('⚡ 一鍵結帳成功！已模擬付款並跳轉');
+            fetchLogs();
 
             // 3. Navigate to success page
             navigate(`/work/ecommerce/demo/orders/success/${orderId}`);
@@ -145,6 +163,7 @@ export const DevTools: React.FC = () => {
         try {
             await apiClient.post('/admin/cron/clean-stale-orders');
             toast.success('過期訂單清理觸發成功');
+            fetchLogs();
         } catch (err) {
             toast.error('清理失敗');
         }
@@ -284,6 +303,22 @@ export const DevTools: React.FC = () => {
                                         直接買這件 (需實作)
                                     </button>
                                 )}
+                            </div>
+
+                            <div className="pt-2 border-t border-zinc-800">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-[10px] text-zinc-400 font-bold uppercase">Dev Logs</span>
+                                    <button onClick={fetchLogs} className="text-[10px] text-blue-400 hover:text-blue-300">Refresh</button>
+                                </div>
+                                <div className="space-y-1 max-h-32 overflow-y-auto pr-1 select-text">
+                                    {devLogs.map((log: any, idx: number) => (
+                                        <div key={idx} className="text-[9px] bg-zinc-900/50 rounded p-1 border border-zinc-800/50">
+                                            <div className="text-zinc-500 font-mono mb-0.5">[{new Date(log.timestamp).toLocaleTimeString()}] <span className="text-blue-400/70">{log.action}</span></div>
+                                            <div className="text-zinc-300 leading-tight">{log.message}</div>
+                                        </div>
+                                    ))}
+                                    {devLogs.length === 0 && <div className="text-[9px] text-zinc-600">No recent logs</div>}
+                                </div>
                             </div>
 
                             <div className="pt-2 border-t border-zinc-800">
