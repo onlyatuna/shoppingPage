@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import type { NatureFactorRef } from '@/features/breeze3d/types';
 
 interface WaveformMonitorProps {
@@ -28,6 +28,31 @@ export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
     const rpmBuf = useRef<number[]>([]);
     const rafRef = useRef<number | null>(null);
     const lastDrawTime = useRef<number>(0);
+
+    // FPS State
+    const [fps, setFps] = useState<number>(60);
+    const fpsTracker = useRef({ frames: 0, lastTime: 0 });
+
+    useEffect(() => {
+        if (!visible) return;
+        fpsTracker.current = { frames: 0, lastTime: performance.now() };
+        let fpsRaf: number;
+
+        const loop = () => {
+            const now = performance.now();
+            fpsTracker.current.frames++;
+
+            if (now - fpsTracker.current.lastTime >= 500) {
+                setFps(Math.round((fpsTracker.current.frames * 1000) / (now - fpsTracker.current.lastTime)));
+                fpsTracker.current.frames = 0;
+                fpsTracker.current.lastTime = now;
+            }
+            fpsRaf = requestAnimationFrame(loop);
+        };
+
+        fpsRaf = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(fpsRaf);
+    }, [visible]);
 
     // Constants (responsive)
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
@@ -178,6 +203,13 @@ export const WaveformMonitor: React.FC<WaveformMonitorProps> = ({
                         <span className="text-[9px] font-bold text-white/70 tracking-tight uppercase">
                             {modeLabel}
                         </span>
+                    </div>
+                    {/* FPS Monitor */}
+                    <div className={`text-[9px] font-bold tracking-tight px-1.5 py-0.5 rounded ${fps >= 60 ? 'text-green-400 bg-green-400/10' :
+                            fps >= 30 ? 'text-yellow-400 bg-yellow-400/10' :
+                                'text-red-400 bg-red-400/10 animate-pulse'
+                        }`}>
+                        {fps} FPS
                     </div>
                 </div>
 

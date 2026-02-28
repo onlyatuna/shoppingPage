@@ -1,37 +1,47 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import type { NatureFactorRef } from '@/features/breeze3d/types';
+import type { NatureFactorRef, QualityLevel } from '@/features/breeze3d/types';
+import { QUALITY_CONFIGS } from '@/features/breeze3d/types';
 
 interface WindParticlesProps {
     speed: number;
     active: boolean;
     natureFactorRef: NatureFactorRef;
+    quality: QualityLevel;
 }
 
 /**
- * CPU Optimized Wind Particles
- * 1. Reduced count on mobile.
- * 2. Static object allocation (dummy) to prevent GC pressure.
- * 3. Simplified math for particle updates.
+ * CPU 優化的風力粒子效果
+ * 1. 在移動端減少數量。
+ * 2. 靜態對象分配 (dummy) 以防止垃圾回收 (GC) 壓力。
+ * 3. 簡化粒子更新的數學計算。
  */
-const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natureFactorRef }) => {
-    // Optimization: detect mobile to cut CPU load
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    const count = isMobile ? 12 : 30;
+const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natureFactorRef, quality }) => {
+    const config = QUALITY_CONFIGS[quality];
+    const count = config.particles; // 位粒子總數
 
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
 
-    // Resources with cleanup
-    const geometry = useMemo(() => new THREE.SphereGeometry(1, 3, 3), []); // Lower segments
-    const material = useMemo(() => new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        transparent: true,
-        opacity: 0.2,
-        emissive: '#38bdf8',
-        emissiveIntensity: 1.5,
-    }), []);
+    // 資源初始化與清理
+    const geometry = useMemo(() => new THREE.SphereGeometry(1, 3, 3), []); // 低分段幾何體
+    const material = useMemo(() => {
+        if (quality === 'low') {
+            return new THREE.MeshBasicMaterial({
+                color: '#38bdf8',
+                transparent: true,
+                opacity: 0.3,
+            });
+        }
+        return new THREE.MeshStandardMaterial({
+            color: '#ffffff',
+            transparent: true,
+            opacity: quality === 'flagship' ? 0.4 : (quality === 'high' ? 0.5 : 0.3),
+            emissive: '#38bdf8',
+            emissiveIntensity: quality === 'flagship' ? 3 : (quality === 'high' ? 4 : 2),
+        });
+    }, [quality]);
 
     useEffect(() => {
         return () => {
@@ -44,7 +54,7 @@ const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natur
     const hasInitialized = useRef(false);
 
     useEffect(() => {
-        // Force hide all instances on mount
+        // 掛載時強制隱藏所有實例
         if (meshRef.current) {
             dummy.scale.set(0, 0, 0);
             dummy.updateMatrix();
@@ -55,7 +65,7 @@ const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natur
         }
     }, [count, dummy]);
 
-    // Particle pool with pre-calculated static values
+    // 粒子池：預計算隨機靜態值
     const particles = useMemo(() => {
         const temp = [];
         for (let i = 0; i < count; i++) {
@@ -65,7 +75,7 @@ const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natur
                 z: Math.random() * -2,
                 velocity: 0.12 + Math.random() * 0.15,
                 life: Math.random(),
-                offset: Math.random() * 10, // Pre-randomized for noise
+                offset: Math.random() * 10, // 用於雜訊的隨機偏移
             });
         }
         return temp;
@@ -74,7 +84,7 @@ const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natur
     useFrame((state, delta) => {
         if (!meshRef.current) return;
 
-        // Initialize: hide everything on first frame just in case
+        // 初始化：第一幀隱藏所有內容，以防萬一
         if (!hasInitialized.current) {
             dummy.scale.set(0, 0, 0);
             dummy.updateMatrix();
@@ -89,13 +99,13 @@ const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natur
         const natureMod = natureFactorRef.current;
         const targetIntensity = active && speed > 0 ? (speed / 4) * natureMod : 0;
 
-        // Lerp intensity
+        // 漸變強度 (Lerp)
         currentIntensity.current += (targetIntensity - currentIntensity.current) * safeDelta * 4;
 
         if (currentIntensity.current < 0.001) {
             if (currentIntensity.current !== 0) {
                 currentIntensity.current = 0;
-                // Force-hide all particles once
+                // 強制隱藏所有粒子一次
                 dummy.scale.set(0, 0, 0);
                 dummy.updateMatrix();
                 for (let i = 0; i < count; i++) {
@@ -112,7 +122,7 @@ const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natur
         for (let i = 0; i < count; i++) {
             const p = particles[i];
 
-            // Speed & Life update
+            // 速度與生命週期更新
             p.life += safeDelta * (0.3 + intensity * 0.6);
             if (p.life > 1) {
                 p.life = 0;
@@ -121,12 +131,12 @@ const WindParticlesInner: React.FC<WindParticlesProps> = ({ speed, active, natur
 
             p.z -= p.velocity * intensity * 35 * safeDelta;
 
-            // Simplified wobble (one sin instead of two)
+            // 簡化晃動效果
             const wobble = Math.sin(t * 4 + p.offset) * 0.08;
             dummy.position.set(p.x + wobble, p.y + wobble, p.z);
 
-            // Scale based on life phase
-            const s = (1 - p.life) * 0.08 * intensity;
+            // 根據生命週期縮放大小
+            const s = (1 - p.life) * 0.14 * intensity;
             dummy.scale.setScalar(s);
 
             dummy.updateMatrix();
