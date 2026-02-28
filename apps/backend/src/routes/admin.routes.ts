@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { requireAdmin, requireDeveloper } from '../middlewares/admin.middleware';
 import { MonitorService } from '../services/monitor.service';
-import { resetTestData } from '../controllers/admin.controller';
+import { resetTestData, forcePayOrder, triggerCheckLinePay, triggerCleanStaleOrders, developerInstantCheckout } from '../controllers/admin.controller';
 import { StatusCodes } from 'http-status-codes';
 import rateLimit from 'express-rate-limit';
 
@@ -16,6 +16,12 @@ const adminRateLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
+
+/**
+ * PATCH /api/v1/admin/orders/:id/force-pay
+ * Force payment success for an order (Developer Only)
+ */
+router.patch('/orders/:id/force-pay', adminRateLimiter, authenticateToken, requireDeveloper, forcePayOrder);
 
 /**
  * GET /api/v1/admin/stats
@@ -45,5 +51,23 @@ router.get('/stats', adminRateLimiter, authenticateToken, requireAdmin, async (r
  * Requires Developer permission
  */
 router.post('/reset-test-data', adminRateLimiter, authenticateToken, requireDeveloper, resetTestData);
+
+/**
+ * POST /api/v1/admin/cron/check-linepay
+ * Manual trigger to check pending line pay payments
+ */
+router.post('/cron/check-linepay', adminRateLimiter, authenticateToken, requireDeveloper, triggerCheckLinePay);
+
+/**
+ * POST /api/v1/admin/cron/clean-stale-orders
+ * Manual trigger to clean >24h pending orders
+ */
+router.post('/cron/clean-stale-orders', adminRateLimiter, authenticateToken, requireDeveloper, triggerCleanStaleOrders);
+
+/**
+ * POST /api/v1/admin/developer/instant-checkout
+ * Atomic instant checkout for faster testing
+ */
+router.post('/developer/instant-checkout', adminRateLimiter, authenticateToken, requireDeveloper, developerInstantCheckout);
 
 export default router;

@@ -37,14 +37,25 @@ export default function AdminOrdersPage() {
     });
 
     const updateStatusMutation = useMutation({
-        mutationFn: async ({ id, status }: { id: string; status: OrderStatus }) => {
-            return apiClient.patch(`/orders/${id}/status`, { status });
+        mutationFn: async ({ id, status, trackingNumber }: { id: string; status: OrderStatus; trackingNumber?: string }) => {
+            return apiClient.patch(`/orders/${id}/status`, { status, trackingNumber });
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
             toast.success(`訂單狀態已更新為 ${variables.status}`);
         },
         onError: (err: any) => toast.error(err.response?.data?.message || '更新失敗')
+    });
+
+    const refundMutation = useMutation({
+        mutationFn: async ({ orderId }: { orderId: string }) => {
+            return apiClient.post(`/payment/line-pay/refund`, { orderId });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+            toast.success('退款成功');
+        },
+        onError: (err: any) => toast.error(err.response?.data?.message || '退款失敗')
     });
 
     const deleteOrderMutation = useMutation({
@@ -65,6 +76,32 @@ export default function AdminOrdersPage() {
                 label: '確認刪除',
                 onClick: () => deleteOrderMutation.mutate(orderId)
             },
+            cancel: { label: '取消', onClick: () => { } }
+        });
+    };
+
+    const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
+        let trackingNumber: string | undefined = undefined;
+        if (newStatus === 'SHIPPED') {
+            const input = window.prompt('請輸入物流追蹤單號 (選填)：');
+            if (input !== null) {
+                trackingNumber = input.trim();
+            } else {
+                return; // User cancelled
+            }
+        }
+
+        toast('狀態變更', {
+            description: `將訂單狀態改為 ${newStatus}？`,
+            action: { label: '確認', onClick: () => updateStatusMutation.mutate({ id: orderId, status: newStatus, trackingNumber }) },
+            cancel: { label: '取消', onClick: () => { } }
+        });
+    };
+
+    const handleRefund = (orderId: string) => {
+        toast('確認退款', {
+            description: '即將對這筆訂單執行退款，確定嗎？',
+            action: { label: '確認退款', onClick: () => refundMutation.mutate({ orderId }) },
             cancel: { label: '取消', onClick: () => { } }
         });
     };
@@ -107,7 +144,16 @@ export default function AdminOrdersPage() {
                     <tbody>
                         {orders?.map((order) => (
                             <tr key={order.id} className="border-b hover:bg-gray-50">
-                                <td className="p-4 font-mono text-gray-500">#{order.id.slice(0, 8)}...</td>
+                                <td className="p-4 font-mono text-gray-500">
+                                    <div>#{order.id.slice(0, 8)}...</div>
+                                    {user?.role === 'DEVELOPER' && (order as any).paymentId && (
+                                        <div className="mt-1">
+                                            <a href="https://pay.line.me" target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline break-all">
+                                                LINE Pay: {(order as any).paymentId}
+                                            </a>
+                                        </div>
+                                    )}
+                                </td>
                                 <td className="p-4">
                                     <div className="font-medium">{order.user?.name}</div>
                                     <div className="text-xs text-gray-500">{order.user?.email}</div>
@@ -118,23 +164,30 @@ export default function AdminOrdersPage() {
                                     <select
                                         className={`border rounded px-2 py-1 text-xs font-bold cursor-pointer outline-none ${getStatusColor(order.status)}`}
                                         value={order.status}
-                                        onChange={(e) => {
-                                            const newStatus = e.target.value as OrderStatus;
-                                            toast('狀態變更', {
-                                                description: `將訂單狀態改為 ${newStatus}？`,
-                                                action: { label: '確認', onClick: () => updateStatusMutation.mutate({ id: order.id, status: newStatus }) },
-                                                cancel: { label: '取消', onClick: () => { } }
-                                            });
-                                        }}
+                                        onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
                                     >
                                         {STATUS_OPTIONS.map(s => <option key={s} value={s} className="bg-white text-black">{s}</option>)}
                                     </select>
+                                    {order.status === 'SHIPPED' && (order as any).trackingNumber && (
+                                        <div className="text-[10px] text-gray-500 mt-1">
+                                            物流: {(order as any).trackingNumber}
+                                        </div>
+                                    )}
                                 </td>
                                 <td className="p-4">
                                     <div className="flex items-center gap-2">
                                         <button type="button" onClick={() => setSelectedOrder(order)} className="flex items-center gap-1 text-gray-600 hover:bg-gray-100 px-3 py-1 rounded border">
                                             <Eye size={14} /> 詳情
                                         </button>
+                                        {(order.status === 'PAID' || order.status === 'SHIPPED' || order.status === 'COMPLETED') && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRefund(order.id)}
+                                                className="flex items-center gap-1 text-orange-600 hover:bg-orange-50 px-3 py-1 rounded border border-orange-200"
+                                            >
+                                                <DollarSign size={14} /> 退款
+                                            </button>
+                                        )}
                                         {user?.role === 'DEVELOPER' && (
                                             <button
                                                 type="button"
@@ -159,6 +212,11 @@ export default function AdminOrdersPage() {
                         <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100">
                             <div>
                                 <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">#{order.id.slice(0, 8)}</span>
+                                {user?.role === 'DEVELOPER' && (order as any).paymentId && (
+                                    <div className="mt-2 text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded inline-block">
+                                        LINE Pay: {(order as any).paymentId}
+                                    </div>
+                                )}
                                 <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                                     <Calendar size={10} /> {new Date(order.createdAt).toLocaleString()}
                                 </div>
@@ -190,29 +248,37 @@ export default function AdminOrdersPage() {
                             <select
                                 className={`w-full border rounded px-3 py-2 text-sm font-bold outline-none appearance-none text-center ${getStatusColor(order.status)}`}
                                 value={order.status}
-                                onChange={(e) => {
-                                    const newStatus = e.target.value as OrderStatus;
-                                    toast('狀態變更', {
-                                        description: `將訂單狀態改為 ${newStatus}？`,
-                                        action: { label: '確認', onClick: () => updateStatusMutation.mutate({ id: order.id, status: newStatus }) },
-                                        cancel: { label: '取消', onClick: () => { } },
-                                        position: 'top-center'
-                                    });
-                                }}
+                                onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
                             >
                                 {STATUS_OPTIONS.map(s => <option key={s} value={s} className="bg-white text-black">{s}</option>)}
                             </select>
+                            {order.status === 'SHIPPED' && (order as any).trackingNumber && (
+                                <div className="text-[10px] text-gray-500 mt-2 text-center">
+                                    物流: {(order as any).trackingNumber}
+                                </div>
+                            )}
                         </div>
 
-                        {user?.role === 'DEVELOPER' && (
-                            <button
-                                type="button"
-                                onClick={() => handleDeleteOrder(order.id)}
-                                className="mt-3 w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 px-3 py-2 rounded border border-red-200"
-                            >
-                                <Trash2 size={14} /> 刪除訂單
-                            </button>
-                        )}
+                        <div className="mt-3 flex gap-2">
+                            {(order.status === 'PAID' || order.status === 'SHIPPED' || order.status === 'COMPLETED') && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleRefund(order.id)}
+                                    className="flex-1 flex items-center justify-center gap-2 text-orange-600 hover:bg-orange-50 px-3 py-2 rounded border border-orange-200"
+                                >
+                                    <DollarSign size={14} /> 退款
+                                </button>
+                            )}
+                            {user?.role === 'DEVELOPER' && (
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteOrder(order.id)}
+                                    className="flex-1 flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 px-3 py-2 rounded border border-red-200"
+                                >
+                                    <Trash2 size={14} /> 刪除
+                                </button>
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>

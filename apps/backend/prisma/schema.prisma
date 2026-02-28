@@ -167,8 +167,9 @@ model Order {
   userId Int
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  status      OrderStatus @default(PENDING)
-  totalAmount Decimal     @db.Decimal(10, 2)
+  status        OrderStatus @default(PENDING)
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  trackingNumber String?    // [New] 物流追蹤單號
 
   shippingInfo Json
 
@@ -190,6 +191,9 @@ model OrderItem {
 
   productId Int
   product   Product @relation(fields: [productId], references: [id])
+
+  productName String   @default("未知商品") // [New] 快照商品名稱
+  variantName String?  // [New] 快照規格名稱
 
   quantity Int
   price    Decimal @db.Decimal(10, 2)

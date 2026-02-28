@@ -21,4 +21,7 @@ router.post('/line-pay/capture', authenticateToken, requireAdmin, PaymentControl
 // 5. 查詢明細 (Details) - 僅限管理員
 router.get('/line-pay/details', authenticateToken, requireAdmin, PaymentController.getLinePayDetails);
 
+// 6. 退款 (Refund) - 僅限管理員
+router.post('/line-pay/refund', authenticateToken, requireAdmin, PaymentController.refundLinePay);
+
 export default router;

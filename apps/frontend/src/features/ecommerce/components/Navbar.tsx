@@ -7,7 +7,7 @@ import apiClient from '../../../api/client';
 import { Cart, Category } from '@/types/interface_definitions';
 import {
     ShoppingBag, Menu, X, LogOut, Settings,
-    Package, Shield, Users, ChevronDown, Tag, Search, User
+    Package, Shield, Users, ChevronDown, Tag, Search, User, Activity
 } from 'lucide-react';
 import SakuraPetal from './SakuraPetal';
 
@@ -127,6 +127,7 @@ export default function Navbar() {
                                         {user?.role === 'DEVELOPER' && (
                                             <>
                                                 <div className="px-4 py-1 text-[10px] font-bold text-green-600 bg-green-50 uppercase tracking-widest border-t border-gray-50 mt-1">Dev Tools</div>
+                                                <Link to="/work/ecommerce/demo/admin/monitor" className="flex items-center gap-2 px-4 py-2.5 text-sm text-green-700 hover:bg-green-50"><Activity size={16} /> 流量監控</Link>
                                                 <Link to="/work/ecommerce/demo/editor" className="flex items-center gap-2 px-4 py-2.5 text-sm text-green-700 hover:bg-green-50"><Settings size={16} /> 圖片編輯器</Link>
                                                 <Link to="/work/ecommerce/demo/library" className="flex items-center gap-2 px-4 py-2.5 text-sm text-green-700 hover:bg-green-50"><Package size={16} /> 雲端圖庫</Link>
                                                 <Link to="/work/ecommerce/demo/admin/users" className="flex items-center gap-2 px-4 py-2.5 text-sm text-green-700 hover:bg-green-50"><Users size={16} /> 帳號管理</Link>
@@ -314,9 +315,10 @@ export default function Navbar() {
                                         <Link to="/work/ecommerce/demo/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Shield className="mb-1" size={20} /> 訂單</Link>
                                         {user.role === 'DEVELOPER' && (
                                             <>
+                                                <Link to="/work/ecommerce/demo/admin/monitor" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 flex flex-col items-center justify-center p-3 bg-green-50 text-green-800 rounded-lg text-sm font-medium"><Activity className="mb-1" size={20} /> 流量監控</Link>
                                                 <Link to="/work/ecommerce/demo/editor" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-green-50 text-green-800 rounded-lg text-sm font-medium"><Settings className="mb-1" size={20} /> 編輯器</Link>
                                                 <Link to="/work/ecommerce/demo/library" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-green-50 text-green-800 rounded-lg text-sm font-medium"><Package className="mb-1" size={20} /> 圖庫</Link>
-                                                <Link to="/work/ecommerce/demo/admin/users" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-green-50 text-green-800 rounded-lg text-sm font-medium"><Users className="mb-1" size={20} /> 帳號</Link>
+                                                <Link to="/work/ecommerce/demo/admin/users" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 flex flex-col items-center justify-center p-3 bg-green-50 text-green-800 rounded-lg text-sm font-medium"><Users className="mb-1" size={20} /> 帳號管理</Link>
                                             </>
                                         )}
                                     </div>

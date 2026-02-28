@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import apiClient from '@/api/client';
 import { toast } from 'sonner';
-import { useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
 /**
  * [DEVELOPER ONLY] DevTools Panel for production-safe testing.
@@ -10,6 +10,7 @@ import { useLocation, useParams } from 'react-router-dom';
 export const DevTools: React.FC = () => {
     const { user } = useAuthStore();
     const { pathname } = useLocation();
+    const navigate = useNavigate();
     const params = useParams();
     const [isVisible, setIsVisible] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
@@ -116,6 +117,55 @@ export const DevTools: React.FC = () => {
         }
     };
 
+    const handleInstantPaid = async () => {
+        try {
+            const testShippingData = {
+                recipient: "測試員-育瑋",
+                phone: "0912345678",
+                city: "台北市",
+                address: "開發路 3000 號",
+                deliveryMethod: "宅配",
+                paymentMethod: "LINE_PAY"
+            };
+
+            const res = await apiClient.post('/admin/developer/instant-checkout', { shippingInfo: testShippingData });
+            const orderId = res.data.data.id;
+
+            toast.success('⚡ 一鍵結帳成功！已模擬付款並跳轉');
+
+            // 3. Navigate to success page
+            navigate(`/work/ecommerce/demo/orders/success/${orderId}`);
+        } catch (error: any) {
+            const msg = error.response?.data?.message || '一鍵結帳失敗 (可能購物車是空的？)';
+            toast.error(msg);
+        }
+    };
+
+    const cleanStaleOrders = async () => {
+        try {
+            await apiClient.post('/admin/cron/clean-stale-orders');
+            toast.success('過期訂單清理觸發成功');
+        } catch (err) {
+            toast.error('清理失敗');
+        }
+    };
+
+    const deleteCurrentOrder = async () => {
+        const currentOrderId = params.id;
+        if (!currentOrderId) return;
+        try {
+            await apiClient.delete(`/orders/${currentOrderId}`);
+            toast.success('訂單已刪除，頁面即將跳轉');
+            navigate('/work/ecommerce/demo');
+        } catch (e) { toast.error('刪除失敗'); }
+    };
+
+    const buyDirectly = async () => {
+        // [FUTURE] Implement bypass cart checkout
+        toast.info('直接購買功能建議：先打 API 加入購物車後，再執行一鍵結帳。');
+    };
+
+
     const togglePremiumSimulation = () => {
         if (user) {
             useAuthStore.getState().setAuth({
@@ -127,7 +177,8 @@ export const DevTools: React.FC = () => {
     };
 
     const isCheckoutPage = pathname.includes('/checkout/info');
-    const isOrderPage = pathname.includes('/orders/success') || (pathname.includes('/orders/') && !pathname.includes('/admin'));
+    const isOrderPage = pathname.includes('/orders/') && params.id && !pathname.includes('/admin');
+    const isProductPage = pathname.includes('/products/');
 
     return (
         <div className="fixed bottom-24 right-4 z-[9999] animate-in fade-in slide-in-from-bottom-5">
@@ -192,12 +243,47 @@ export const DevTools: React.FC = () => {
                                 </button>
 
                                 <button
+                                    onClick={handleInstantPaid}
+                                    className="flex items-center gap-2 w-full text-left p-2 bg-purple-500/20 hover:bg-purple-500/30 rounded text-purple-300 transition-colors group"
+                                >
+                                    <span className="group-hover:scale-110 transition-transform">⚡</span>
+                                    一鍵結帳並支付
+                                </button>
+
+                                <button
                                     onClick={resetMyData}
                                     className="flex items-center gap-2 w-full text-left p-2 hover:bg-white/10 rounded text-red-400 transition-colors group"
                                 >
                                     <span className="group-hover:scale-110 transition-transform">🧹</span>
                                     重置測試資料
                                 </button>
+
+                                <button
+                                    onClick={cleanStaleOrders}
+                                    className="flex items-center gap-2 w-full text-left p-2 hover:bg-white/10 rounded text-red-500 transition-colors group"
+                                >
+                                    <span className="group-hover:scale-110 transition-transform">🗑️</span>
+                                    清理過期訂單
+                                </button>
+
+                                {isOrderPage && (
+                                    <button
+                                        onClick={deleteCurrentOrder}
+                                        className="flex items-center gap-2 w-full text-left p-2 bg-red-500/20 hover:bg-red-500/30 rounded text-red-400 transition-colors group"
+                                    >
+                                        <span className="group-hover:scale-110 transition-transform">❌</span>
+                                        刪除此筆訂單
+                                    </button>
+                                )}
+                                {isProductPage && (
+                                    <button
+                                        onClick={buyDirectly}
+                                        className="flex items-center gap-2 w-full text-left p-2 bg-pink-500/20 hover:bg-pink-500/30 rounded text-pink-300 transition-colors group"
+                                    >
+                                        <span className="group-hover:scale-110 transition-transform">🛍️</span>
+                                        直接買這件 (需實作)
+                                    </button>
+                                )}
                             </div>
 
                             <div className="pt-2 border-t border-zinc-800">

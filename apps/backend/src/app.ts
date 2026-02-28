@@ -27,6 +27,8 @@ import customStyleRoutes from './routes/customStyle.routes';
 import translateRoutes from './routes/translate.routes';
 import adminRoutes from './routes/admin.routes';
 import path from 'path';
+import cron from 'node-cron';
+import { CronService } from './services/cron.service';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -228,6 +230,21 @@ if (process.env.NODE_ENV === 'production') {
         }
     });
 }
+
+// ------------------------------------------------------------------
+// 排程任務 (Cron Jobs) 初始化
+// ------------------------------------------------------------------
+// 每 10 分鐘檢查一次遺失的 LINE Pay 交易
+cron.schedule('*/10 * * * *', async () => {
+    logger.debug('[Cron] 啟動 LINE Pay 補救排程...');
+    await CronService.checkPendingLinePay();
+}, { timezone: 'Asia/Taipei' });
+
+// 每天凌晨 3 點清理超過 24 小時失效的 PENDING 訂單
+cron.schedule('0 3 * * *', async () => {
+    logger.debug('[Cron] 啟動過期訂單清理排程...');
+    await CronService.cleanStaleOrders();
+}, { timezone: 'Asia/Taipei' });
 
 app.listen(PORT, () => {
     console.log(`🚀 Server is running at http://localhost:${PORT}`);

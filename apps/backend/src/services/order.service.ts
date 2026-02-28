@@ -6,88 +6,141 @@ import { StatusCodes } from 'http-status-codes';
 import { createOrderSchema } from '../schemas/order.schema';
 import { z } from 'zod';
 import { OrderStatus } from '@prisma/client';
+import { logger } from '../utils/logger';
 
 type CreateOrderInput = z.infer<typeof createOrderSchema>;
 
 export class OrderService {
 
+    // --- 內部建立訂單邏輯 (共用) ---
+    private static async createOrderInternal(tx: any, userId: number, shippingInfo: CreateOrderInput) {
+        // 步驟 1: 撈取該使用者的購物車內容
+        const cart = await tx.cart.findUnique({
+            where: { userId },
+            include: {
+                items: { include: { product: true } },
+            },
+        });
+
+        if (!cart || cart.items.length === 0) {
+            throw new AppError('購物車是空的，無法結帳', StatusCodes.BAD_REQUEST);
+        }
+
+        // 步驟 2: 檢查庫存 & 計算總金額
+        let totalAmount = new Prisma.Decimal(0);
+        const orderItemsData = [];
+
+        for (const item of cart.items) {
+            if (item.product.stock < item.quantity) {
+                throw new AppError(`商品 "${item.product.name}" 庫存不足 (剩餘: ${item.product.stock})`, StatusCodes.BAD_REQUEST);
+            }
+
+            if (!item.product.isActive) {
+                throw new AppError(`商品 "${item.product.name}" 已下架`, StatusCodes.BAD_REQUEST);
+            }
+
+            const price = new Prisma.Decimal(item.product.price);
+            totalAmount = totalAmount.plus(price.times(item.quantity));
+
+            orderItemsData.push({
+                productId: item.productId,
+                quantity: item.quantity,
+                price: item.product.price,
+                productName: item.product.name,
+            });
+
+            // 步驟 3: 扣除庫存
+            const updateRes = await tx.product.updateMany({
+                where: {
+                    id: item.productId,
+                    stock: { gte: item.quantity }
+                },
+                data: {
+                    stock: { decrement: item.quantity },
+                },
+            });
+
+            if (updateRes.count === 0) {
+                throw new AppError(`商品 "${item.product.name}" 庫存不足，訂單建立失敗`, StatusCodes.BAD_REQUEST);
+            }
+        }
+
+        // 步驟 4: 建立訂單
+        const order = await tx.order.create({
+            data: {
+                userId,
+                totalAmount,
+                status: 'PENDING',
+                shippingInfo,
+                items: { create: orderItemsData },
+            },
+        });
+
+        // 步驟 5: 清空購物車
+        await tx.cartItem.deleteMany({
+            where: { cartId: cart.id },
+        });
+
+        return order;
+    }
+
     // --- 建立訂單 (結帳) ---
     static async createOrder(userId: number, shippingInfo: CreateOrderInput) {
-
-        // 開啟一個互動式交易 (Interactive Transaction)
         return prisma.$transaction(async (tx) => {
+            return this.createOrderInternal(tx, userId, shippingInfo);
+        });
+    }
 
-            // 步驟 1: 撈取該使用者的購物車內容
-            // 這裡必須在 transaction (tx) 內查詢，確保讀取一致性
-            const cart = await tx.cart.findUnique({
-                where: { userId },
-                include: {
-                    items: {
-                        include: { product: true },
-                    },
-                },
+    // --- [新增] 原子化開發者指令 ---
+    static async developerInstantCheckout(userId: number, shippingInfo: CreateOrderInput) {
+        return prisma.$transaction(async (tx) => {
+            // 1. 自動清除該帳號所有 PENDING 訂單 (釋放開發環境資料庫空間)
+            // 先找出來以返還庫存
+            const pendingOrders = await tx.order.findMany({
+                where: { userId, status: 'PENDING' },
+                include: { items: true }
             });
 
-            if (!cart || cart.items.length === 0) {
-                throw new AppError('購物車是空的，無法結帳', StatusCodes.BAD_REQUEST);
+            const deletedOrderIds: string[] = [];
+            for (const po of pendingOrders) {
+                deletedOrderIds.push(po.id);
+                for (const poItem of po.items) {
+                    await tx.product.updateMany({
+                        where: { id: poItem.productId },
+                        data: { stock: { increment: poItem.quantity } }
+                    });
+                }
             }
 
-            // 步驟 2: 檢查庫存 & 計算總金額
-            let totalAmount = new Prisma.Decimal(0);
-            const orderItemsData = [];
-
-            for (const item of cart.items) {
-                // 再次檢查庫存 (防止加入購物車後被買光)
-                if (item.product.stock < item.quantity) {
-                    throw new AppError(`商品 "${item.product.name}" 庫存不足 (剩餘: ${item.product.stock})`, StatusCodes.BAD_REQUEST);
-                }
-
-                // 檢查商品是否已下架
-                if (!item.product.isActive) {
-                    throw new AppError(`商品 "${item.product.name}" 已下架`, StatusCodes.BAD_REQUEST);
-                }
-
-                // 累加金額 (使用 Prisma.Decimal 確保精準度)
-                const price = new Prisma.Decimal(item.product.price);
-                totalAmount = totalAmount.plus(price.times(item.quantity));
-
-                // 準備寫入 OrderItem 的資料 (這就是價格快照！)
-                orderItemsData.push({
-                    productId: item.productId,
-                    quantity: item.quantity,
-                    price: item.product.price, // 存入當下價格
-                });
-
-                // 步驟 3: 扣除庫存
-                // 這裡直接 update，如果併發量極大，建議使用 decrement 原子操作
-                await tx.product.update({
-                    where: { id: item.productId },
-                    data: {
-                        stock: { decrement: item.quantity },
-                    },
-                });
-            }
-
-            // 步驟 4: 建立訂單
-            const order = await tx.order.create({
-                data: {
+            if (deletedOrderIds.length > 0) {
+                logger.info({
+                    action: 'CLEAN_PENDING_ORDERS',
                     userId,
-                    totalAmount,
-                    status: 'PENDING', // 預設為待付款
-                    shippingInfo,      // 儲存 JSON 格式的收件資訊
-                    items: {
-                        create: orderItemsData,
-                    },
-                },
+                    deletedOrderIds
+                }, `開發者繞過：成功刪除 ${deletedOrderIds.length} 筆 PENDING 訂單並返還庫存`);
+            }
+
+            await tx.order.deleteMany({
+                where: { userId, status: 'PENDING' }
             });
 
-            // 步驟 5: 清空購物車
-            await tx.cartItem.deleteMany({
-                where: { cartId: cart.id },
+            // 2. 執行原有的建立訂單邏輯 (扣庫存、建快照)
+            const order = await this.createOrderInternal(tx, userId, shippingInfo);
+
+            // 3. 直接標記為 PAID 並寫入開發者繞過標記
+            const updatedOrder = await tx.order.update({
+                where: { id: order.id },
+                data: {
+                    status: 'PAID',
+                    paymentData: {
+                        method: 'DEV_INSTANT_CHECKOUT',
+                        forcedBy: userId,
+                        timestamp: new Date().toISOString()
+                    }
+                }
             });
 
-            // 回傳訂單資料
-            return order;
+            return updatedOrder;
         });
     }
 
@@ -100,6 +153,7 @@ export class OrderService {
                 id: true,
                 status: true,
                 totalAmount: true,
+                trackingNumber: true,
                 shippingInfo: true,
                 createdAt: true,
                 updatedAt: true,
@@ -118,6 +172,7 @@ export class OrderService {
                 id: true,
                 status: true,
                 totalAmount: true,
+                trackingNumber: true,
                 shippingInfo: true,
                 paymentId: true, // 使用者可以看 ID
                 // paymentData: false, // 排除敏感原始資料
@@ -150,10 +205,15 @@ export class OrderService {
     }
 
     // [新增] 管理員：修改訂單狀態
-    static async updateStatus(orderId: string, status: OrderStatus) {
+    static async updateStatus(orderId: string, status: OrderStatus, trackingNumber?: string) {
+        const updateData: Prisma.OrderUpdateInput = { status };
+        if (trackingNumber !== undefined) {
+            updateData.trackingNumber = trackingNumber;
+        }
+
         return prisma.order.update({
             where: { id: orderId },
-            data: { status },
+            data: updateData,
         });
     }
 

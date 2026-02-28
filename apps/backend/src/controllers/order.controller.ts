@@ -49,11 +49,12 @@ export const getAllOrders = asyncHandler(async (req: Request, res: Response) => 
 // [新增] 更新狀態 (Admin)
 export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
     const orderId = req.params.id;
-    const { status } = updateOrderStatusSchema.parse(req.body);
+    const { status, trackingNumber } = updateOrderStatusSchema.parse(req.body);
 
-    const order = await OrderService.updateStatus(orderId, status);
+    const order = await OrderService.updateStatus(orderId, status, trackingNumber);
     res.json({ status: 'success', data: order, message: '狀態更新成功' });
 });
+
 
 // [新增] 刪除訂單 (僅限開發者)
 export const deleteOrder = asyncHandler(async (req: Request, res: Response) => {

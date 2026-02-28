@@ -61,3 +61,11 @@ export const getLinePayDetails = asyncHandler(async (req: Request, res: Response
         data: result
     });
 });
+
+export const refundLinePay = asyncHandler(async (req: Request, res: Response) => {
+    const { orderId, refundAmount } = req.body;
+    if (!orderId) throw new Error('缺少 orderId');
+
+    const result = await PaymentService.refundPayment(orderId, refundAmount);
+    res.json({ status: 'success', message: '退款成功', data: result });
+});

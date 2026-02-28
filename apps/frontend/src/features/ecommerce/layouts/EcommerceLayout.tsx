@@ -23,6 +23,7 @@ import AdminProductFormPage from '@/features/ecommerce/pages/admin/AdminProductF
 import AdminPromotionsPage from '@/features/ecommerce/pages/admin/AdminPromotionsPage';
 import AdminCategoriesPage from '@/features/ecommerce/pages/admin/AdminCategoriesPage';
 import AdminOrdersPage from '@/features/ecommerce/pages/admin/AdminOrdersPage';
+import AdminMonitorPage from '@/features/ecommerce/pages/admin/AdminMonitorPage';
 
 import PaymentCallbackPage from '@/features/ecommerce/pages/PaymentCallbackPage';
 import VerifyEmailPage from '@/features/ecommerce/pages/auth/VerifyEmailPage';
@@ -171,6 +172,12 @@ function EcommerceLayout() {
                     <Route path="admin/users" element={
                         <AdminRoute>
                             <AdminUsersPage />
+                        </AdminRoute>} />
+
+                    {/* 後台流量監控路由 */}
+                    <Route path="admin/monitor" element={
+                        <AdminRoute>
+                            <AdminMonitorPage />
                         </AdminRoute>} />
 
                     {/* 專業圖片編輯工作站 */}

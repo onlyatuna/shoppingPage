@@ -12,11 +12,11 @@ export const createOrderSchema = z.object({
     paymentMethod: z.string().min(1, '請選擇付款方式').max(100),
 });
 
-// [新增] 更新訂單狀態 Schema
 export const updateOrderStatusSchema = z.object({
     status: z.enum(Object.values(OrderStatus) as [OrderStatus, ...OrderStatus[]], {
         message: "無效的訂單狀態",
     }),
+    trackingNumber: z.string().optional(),
 });
 
 // [新增] 查詢所有訂單 (Admin)
