@@ -274,7 +274,7 @@ Minor maintenance and depth oversights in observability and health reporting:
 - **預覽環境 vs 生效環境**：修改 `helmet` 配置後，必須確保後端服務重啟/重新部署才能生效。
 - **[2026-03-01] React/Vite Inline Script requirement**: 
     - *Bug*: React (specifically for hot reload injections or certain runtime dynamic setups) requires inline script execution capabilities. Removing `'unsafe-inline'` from `script-src` causes immediate app breakage (e.g. `Executing inline script violates ...`).
-    - *Fix*: Must whitelist `'unsafe-inline'` within both `scriptSrc` and `styleSrc` arrays in `apps/backend/src/app.ts` unless implementing a strict and complex cryptographic Nonce/Hash generation and passing strategy throughout the entire React rendering pipeline.
+    - *Fix (The Professional Way)*: Instead of falling back to `'unsafe-inline'`, copy the specific cryptographic hash (e.g., `'sha256-2Mjg+mXzqYKLSQG2ZpN+1+EBUSimdRH4gZyQD/d7kfI='`) directly from the browser's DevTools console error and whitelist it in `scriptSrc`. This adheres to the Principle of Least Privilege while preserving core application functionality.
 
 ## React Router 導航與參數保留
 - **Navigate 與 Query Parameters**：React Router 的 `<Navigate to="/new-path" />` 預設**會丟棄**當前的 Query String。在進行如 `/payment/callback` -> `/app/payment/callback` 的重導向時，必須手動將 `location.search` 拼接回新路徑，或使用自定義的 `NavigateWithQuery` 組件來保留 `orderId` 等關鍵參數。
