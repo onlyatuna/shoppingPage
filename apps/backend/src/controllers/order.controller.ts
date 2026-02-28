@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 import { OrderService } from '../services/order.service';
 import { createOrderSchema, updateOrderStatusSchema, adminOrdersQuerySchema } from '../schemas/order.schema';
 import { StatusCodes } from 'http-status-codes';
-import { OrderStatus } from '@prisma/client';
 import { asyncHandler } from '../utils/asyncHandler';
 
 // 建立訂單

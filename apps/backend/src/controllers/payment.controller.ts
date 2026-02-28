@@ -1,7 +1,6 @@
 // apps/backend/src/controllers/payment.controller.ts
 import { Request, Response } from 'express';
 import { PaymentService } from '../services/payment.service';
-import { StatusCodes } from 'http-status-codes';
 import { logger } from '../utils/logger';
 import { asyncHandler } from '../utils/asyncHandler';
 

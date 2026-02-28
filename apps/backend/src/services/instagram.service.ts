@@ -71,14 +71,14 @@ export class InstagramService {
                     folder: 'instagram-publish-temp',
                 });
                 targetUrl = uploadResult.secure_url;
-                console.log('Image uploaded to Cloudinary:', sanitizeLog(targetUrl));
+                console.log('Image uploaded to Cloudinary:', String(targetUrl).replace(/[\n\r]/g, ''));
             } else {
                 // [SECURITY] 針對外部 URL 進行 SSRF 驗證
                 const { host, pathname, search, port, isLocal } = sanitizeImageUrl(imageUrl);
                 const protocol = isLocal ? 'http:' : 'https:';
                 // 使用樣板字串重建 URL 以徹底打破 Taint 追蹤 (CodeQL Pattern)
                 targetUrl = `${protocol}//${host}${port}${pathname}${search}`;
-                console.log('Sanitized external URL:', sanitizeLog(targetUrl));
+                console.log('Sanitized external URL:', String(targetUrl).replace(/[\n\r]/g, ''));
             }
 
             // Step 1: Create Media Container
@@ -91,7 +91,7 @@ export class InstagramService {
             });
 
             const creationId = containerResponse.data.id;
-            console.log('Container created:', sanitizeLog(creationId));
+            console.log('Container created:', String(creationId).replace(/[\n\r]/g, ''));
 
             // Step 2: Wait for Media Processing with exponential backoff
             const maxAttempts = 20;
@@ -114,7 +114,7 @@ export class InstagramService {
                     });
 
                     const statusCode = statusResponse.data.status_code;
-                    console.log(`Media status(${attempt} / ${maxAttempts}): ${sanitizeLog(statusCode)}`);
+                    console.log(`Media status(${attempt} / ${maxAttempts}): ${String(statusCode).replace(/[\n\r]/g, '')}`);
 
                     if (statusCode === 'FINISHED') {
                         console.log('Media ready! Publishing...');
@@ -127,7 +127,7 @@ export class InstagramService {
                             }
                         });
 
-                        console.log('Successfully published! Media ID:', sanitizeLog(publishResponse.data.id));
+                        console.log('Successfully published! Media ID:', String(publishResponse.data.id).replace(/[\n\r]/g, ''));
                         return publishResponse.data.id;
 
                     } else if (statusCode === 'ERROR' || statusCode === 'EXPIRED') {

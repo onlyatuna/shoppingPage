@@ -109,7 +109,7 @@ app.use(csrf);  // [SECURITY] CSRF Protection (Double Submit Cookie Pattern)
 // [SECURITY & OBSERVABILITY] Replace morgan with pino-http
 app.use(pinoHttp({
     logger,
-    genReqId: function (req, res) {
+    genReqId: function (req, _res) {
         const existingID = req.id ?? req.headers["x-request-id"];
         if (existingID) return existingID;
         return randomUUID();

@@ -75,7 +75,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
 
         // 放行，進入下一個步驟 (Controller)
         next();
-    } catch (err: any) {
+    } catch (_err: any) {
         // 若 tokenStr 為空，代表並未傳入 Token，回傳 401；否則代表過期或竄改，回傳 403
         const isMissing = !token || (typeof token === 'string' && token.trim().length === 0);
 

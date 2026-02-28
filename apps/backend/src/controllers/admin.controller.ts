@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { StatusCodes } from 'http-status-codes';
 import { asyncHandler } from '../utils/asyncHandler';
-import { logger } from '../utils/logger';
 import { OrderService } from '../services/order.service';
 import { CronService } from '../services/cron.service';
 import { DevLogService } from '../services/devLog.service';

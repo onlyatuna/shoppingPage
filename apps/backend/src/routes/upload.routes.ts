@@ -67,7 +67,7 @@ router.post('/', uploadRateLimiter, authenticateToken, requireAdmin, upload.sing
 
     // Generate Custom Public ID: Filename + Timestamp
     const fileName = path.parse(req.file.originalname).name;
-    const cleanFileName = fileName.replace(/[^a-zA-Z0-9_\-]/g, '_').substring(0, 50);
+    const cleanFileName = fileName.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 50);
     const public_id = `${cleanFileName}_${Date.now()}`;
 
     // Optimization: Use upload_stream to avoid Base64 conversion overhead
@@ -130,7 +130,7 @@ router.delete(/\/(.*)/, uploadRateLimiter, authenticateToken, requireAdmin, asyn
 
     // [SECURITY] Strict input validation for publicId to prevent SQL wildcard injection in JSON_SEARCH
     // Only allow alphanumeric, underscore, slash, and dash
-    if (!publicId || !/^[a-zA-Z0-9_\-\/]+$/.test(publicId)) {
+    if (!publicId || !new RegExp('^[\\\\w/-]+$').test(publicId)) {
         throw new AppError('無效的圖片 ID 格式', StatusCodes.BAD_REQUEST);
     }
 

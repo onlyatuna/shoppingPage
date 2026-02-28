@@ -6,7 +6,6 @@ import { StatusCodes } from 'http-status-codes';
 import { createOrderSchema } from '../schemas/order.schema';
 import { z } from 'zod';
 import { OrderStatus } from '@prisma/client';
-import { logger } from '../utils/logger';
 import { DevLogService } from './devLog.service';
 
 type CreateOrderInput = z.infer<typeof createOrderSchema>;

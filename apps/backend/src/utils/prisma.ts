@@ -65,9 +65,6 @@ export const prisma = basePrisma.$extends({
         // B. [進階建議] 針對原始查詢注入 SQL 註釋 (Query Comments)
         // 讓資料庫本身的 Slow Log 或 General Log 也能看到 reqId
         async $queryRaw({ args, query }) {
-            const store = asyncLocalStorage.getStore();
-            const reqId = store?.get('reqId') || 'INTERNAL';
-
             // 如果 args[0] 是 TemplateStringsArray 或字串，嘗試注入註釋
             // 注意：Prisma 的 $queryRaw 在 Extension 中 args 結構略有不同
             const finalQuery = query(args);

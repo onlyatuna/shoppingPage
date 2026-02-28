@@ -2,7 +2,6 @@
 import { Request, Response } from 'express';
 import { CartService } from '../services/cart.service';
 import { addToCartSchema, updateCartItemSchema } from '../schemas/cart.schema';
-import { StatusCodes } from 'http-status-codes';
 import { asyncHandler } from '../utils/asyncHandler';
 
 // 取得購物車

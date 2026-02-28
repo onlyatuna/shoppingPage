@@ -26,7 +26,7 @@ export const errorHandler = (err: any, req: Request, res: Response, _next: NextF
 
     // 2. 業務邏輯錯誤與 Fallback 處理
     const message = err.message || '系統發生錯誤';
-    let statusCode = err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
+    const statusCode = err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
 
     // HTTP 500 is used for generic Error instances unless they explicitly set statusCode
     // Developers should use AppError to trigger specific UI error boundaries
