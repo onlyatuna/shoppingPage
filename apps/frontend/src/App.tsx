@@ -19,41 +19,22 @@ const NavigateWithQuery = ({ to, replace }: { to: string, replace?: boolean }) =
 // 模組導入區
 // ============================================================================
 
-// === 1. 投資組合模組（Portfolio Module）===
-// 路徑：src/features/portfolio/pages/PortfolioPage.tsx
-// 功能：一頁式整合頁面，包含投資者行為導航儀、風險問卷、投資組合結果展示
-// 特點：使用內部狀態管理（useState）切換不同視圖，不改變瀏覽器網址
+// === 1. 投資組合與共用 Layout ===
+import PortfolioLayout from '@/features/portfolio/layouts/PortfolioLayout';
 import PortfolioPage from '@/features/portfolio/pages/PortfolioPage';
+import LabHubPage from '@/features/portfolio/pages/LabHubPage';
 
-// === 2. 電商後台模組（E-commerce Module）===
-// 路徑：src/features/ecommerce/layouts/EcommerceLayout.tsx
-// 功能：完整的電商管理系統，包含商品管理、訂單處理、購物車、用戶系統等
-// 特點：使用巢狀路由（/app/*），內部包含多個子路由
+// === 2. Case Studies ===
+import EcommerceCaseStudy from '@/features/portfolio/pages/work/EcommerceCaseStudy';
+import PensionCaseStudy from '@/features/portfolio/pages/work/PensionCaseStudy';
+
+// === 3. 各專案 Demo / Pages ===
 import EcommerceLayout from '@/features/ecommerce/layouts/EcommerceLayout';
-
-// === 3. 診斷室模組（Diagnosis Module）===
-// 路徑：src/features/portfolio/pages/DiagnosisPage.tsx
-// 功能：投資者行為診斷與分析工具
-import DiagnosisPage from '@/features/portfolio/pages/DiagnosisPage';
-
-// === 4. 退休金計算模組（Pension Module）===
-// 路徑：src/features/pension/pages/PensionPage.tsx
-// 功能：退休金試算工具，協助用戶規劃退休財務
+import DiagnosisPage from '@/features/portfolio/pages/DiagnosisPage'; // 從這裡重構到 BehavioralPage? 原有還有 DiagnosisPage 也需要移轉嗎? 先保留
+import BehavioralPage from '@/features/behavioral/pages/BehavioralPage';
 import PensionPage from '@/features/pension/pages/PensionPage';
-
-// === 5. 手勢縮放模組（Hand Gesture Zoom Module）===
-// 路徑：src/features/HandGestureZoom/pages/HandGesturePage.tsx
-// 功能：透過相機手勢控制圖片縮放
 import HandGesturePage from '@/features/HandGestureZoom/pages/HandGesturePage';
-
-// === 6. 3D 微風模組（Breeze 3D Module）===
-// 路徑：src/features/breeze3d/pages/BreezePage.tsx
-// 功能：3D 視覺化微風效果展示
 import BreezePage from '@/features/breeze3d/pages/BreezePage';
-
-// === 7. 復古遊戲模組（Arcade Module）===
-// 路徑：src/features/arcade/pages/ArcadePage.tsx
-// 功能：復古遊戲選單，包含 Tetris 與 Pac-Man 兩款經典遊戲
 import ArcadePage from '@/features/arcade/pages/ArcadePage';
 
 // ============================================================================
@@ -63,121 +44,59 @@ import ArcadePage from '@/features/arcade/pages/ArcadePage';
 function App() {
     return (
         <Routes>
-            {/* ================================================================
-                主要功能路由
-                ================================================================ */}
+            {/* 
+              * 全局包覆 PortfolioLayout
+              * Navbar 與 Footer 會自動在這些頁面顯示，包含返回按鈕（若非首頁）
+              */}
+            <Route element={<PortfolioLayout />}>
+                {/* 1. 首頁 `/` */}
+                <Route path="/" element={<PortfolioPage />} />
+
+                {/* 2. 工作案例 (Work) */}
+                <Route path="/work/ecommerce" element={<EcommerceCaseStudy />} />
+                <Route path="/work/pension" element={<PensionCaseStudy />} />
+
+                {/* 3. 實驗室集線器 (Lab) */}
+                <Route path="/lab" element={<LabHubPage />} />
+
+                {/* 4. 原有的專案展示 (轉移到 Route 之下) */}
+                <Route path="/lab/pacman" element={<ArcadePage />} />
+                <Route path="/lab/breeze3d" element={<BreezePage />} />
+                <Route path="/lab/hand-gesture" element={<HandGesturePage />} />
+                <Route path="/lab/behavioral" element={<BehavioralPage />} />
+                {/* Diagnosis 保留在 /lab/diagnosis, 或原路徑，配合 BehavioralPage */}
+                <Route path="/lab/diagnosis" element={<DiagnosisPage />} />
+            </Route>
 
             {/* 
-             * 首頁路由 - 投資組合一頁式整合頁面
-             * 路徑：/
-             * 元件：PortfolioPage
-             * 說明：
-             *   - 這是應用程式的主要入口頁面
-             *   - 整合了投資者行為導航儀、風險問卷、投資組合結果等功能
-             *   - 頁面內部使用 useState 管理視圖切換（Dashboard → Quiz → Result）
-             *   - 不會改變瀏覽器網址，提供流暢的單頁體驗
-             */}
-            <Route path="/" element={<PortfolioPage />} />
+              * ========== 獨立 DEMO 路由 (不包 PortfolioLayout) ========== 
+              * 針對有自己 Layout 或不需要 Portfolio Navbar (例如全螢幕電商、全螢幕 Dashboard)
+              */}
+            <Route path="/work/ecommerce/demo/*" element={<EcommerceLayout />} />
+            <Route path="/work/pension/demo" element={<PensionPage />} />
 
-            {/* 
-             * 診斷室路由
-             * 路徑：/diagnosis
-             * 元件：DiagnosisPage
-             * 說明：提供投資者行為診斷與分析功能
-             */}
-            <Route path="/diagnosis" element={<DiagnosisPage />} />
+            {/* 保留舊版捷徑供相容 */}
+            <Route path="/diagnosis" element={<Navigate to="/lab/diagnosis" replace />} />
+            <Route path="/pension" element={<Navigate to="/work/pension/demo" replace />} />
+            <Route path="/hand-gesture" element={<Navigate to="/lab/hand-gesture" replace />} />
+            <Route path="/breeze" element={<Navigate to="/lab/breeze3d" replace />} />
+            <Route path="/arcade" element={<Navigate to="/lab/pacman" replace />} />
 
-            {/* 
-             * 退休金計算路由
-             * 路徑：/pension
-             * 元件：PensionPage
-             * 說明：提供退休金試算與財務規劃工具
-             */}
-            <Route path="/pension" element={<PensionPage />} />
-
-            {/* 
-             * 手勢縮放路由
-             * 路徑：/hand-gesture
-             * 元件：HandGesturePage
-             * 說明：透過相機手勢控制圖片縮放功能
-             */}
-            <Route path="/hand-gesture" element={<HandGesturePage />} />
-
-            {/* 
-             * 3D 微風路由
-             * 路徑：/breeze
-             * 元件：BreezePage
-             * 說明：3D 視覺化微風效果展示頁面
-             */}
-            <Route path="/breeze" element={<BreezePage />} />
-
-            {/* 
-             * 復古遊戲路由
-             * 路徑：/arcade
-             * 元件：ArcadePage
-             * 說明：復古遊戲選單，包含 Tetris 與 Pac-Man
-             */}
-            <Route path="/arcade" element={<ArcadePage />} />
-
-            {/* 
-             * 電商後台路由（巢狀路由）
-             * 路徑：/app/*
-             * 元件：EcommerceLayout
-             * 說明：
-             *   - 使用萬用字元（*）表示此路徑下包含多個子路由
-             *   - EcommerceLayout 內部會定義更多子路由，例如：
-             *     /app/login - 登入頁面
-             *     /app/cart - 購物車
-             *     /app/orders - 訂單管理
-             *     /app/profile - 用戶資料
-             *     等等...
-             */}
-            <Route path="/app/*" element={<EcommerceLayout />} />
 
             {/* ================================================================
-                舊版路徑重導向（Legacy Redirects）
+                電商舊版路徑重導向（Legacy Redirects）
                 ================================================================ */}
-
-            {/* 
-             * 說明：
-             *   - 為了向下相容舊版應用的連結，將舊路徑重導向至新的電商模組路徑
-             *   - 使用 Navigate 元件的 replace 屬性，避免在瀏覽器歷史記錄中留下重導向前的路徑
-             *   - 這樣用戶點擊「上一頁」時不會回到舊路徑
-             */}
-
-            {/* 登入頁面重導向：/login → /app/login */}
-            <Route path="/login" element={<Navigate to="/app/login" replace />} />
-
-            {/* 註冊頁面重導向：/register → /app/login */}
-            <Route path="/register" element={<Navigate to="/app/login" replace />} />
-
-            {/* 購物車頁面重導向：/cart → /app/cart */}
-            <Route path="/cart" element={<Navigate to="/app/cart" replace />} />
-
-            {/* 訂單頁面重導向：/orders → /app/orders */}
-            <Route path="/orders" element={<Navigate to="/app/orders" replace />} />
-
-            {/* 支付頁面重導向：/payment/callback → /app/payment/callback */}
-            <Route path="/payment/callback" element={<NavigateWithQuery to="/app/payment/callback" replace />} />
-
-            {/* 個人資料頁面重導向：/profile → /app/profile */}
-            <Route path="/profile" element={<NavigateWithQuery to="/app/profile" replace />} />
-
-
+            <Route path="/app/*" element={<Navigate to="/work/ecommerce/demo" replace />} />
+            <Route path="/login" element={<Navigate to="/work/ecommerce/demo/login" replace />} />
+            <Route path="/register" element={<Navigate to="/work/ecommerce/demo/login" replace />} />
+            <Route path="/cart" element={<Navigate to="/work/ecommerce/demo/cart" replace />} />
+            <Route path="/orders" element={<Navigate to="/work/ecommerce/demo/orders" replace />} />
+            <Route path="/payment/callback" element={<NavigateWithQuery to="/work/ecommerce/demo/payment/callback" replace />} />
+            <Route path="/profile" element={<NavigateWithQuery to="/work/ecommerce/demo/profile" replace />} />
 
             {/* ================================================================
                 404 錯誤處理（Catch-All Route）
                 ================================================================ */}
-
-            {/* 
-             * 萬用路由 - 處理所有未定義的路徑
-             * 路徑：*
-             * 行為：重導向至首頁（/）
-             * 說明：
-             *   - 當用戶訪問不存在的路徑時，自動導向首頁
-             *   - 使用 replace 避免在歷史記錄中留下錯誤路徑
-             *   - 必須放在所有路由定義的最後，確保其他路由優先匹配
-             */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
