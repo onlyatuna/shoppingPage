@@ -262,3 +262,38 @@
 ## Zod Schema Validation
 - **Zod v4 record schema:** In Zod v4, the `z.record()` function now requires at least two arguments: the key schema and the value schema. This is a breaking change from Zod v3, which allowed just the value schema (defaulting keys to strings).
   - Use `z.record(z.string(), valueSchema)` for a string-keyed record.
+
+## Error Handling Patterns
+- **Explicit Business Error Mapping**: In `errorHandler.ts`, we now default to `500 Internal Server Error` for unknown errors to improve security posture and prevent sensitive system details from leaking. Specific business error keywords (e.g., '尚有', '無法刪除', '找不到') are explicitly mapped to their corresponding HTTP status codes (400, 404, etc.).
+- **Service-Level Enforcement**: Constraints like 'cannot delete category with products' should be enforced in the Service layer by throwing a clear error message that the `errorHandler` can catch and categorize correctly.
+
+## Advanced Error Handling Architecture
+- **Custom AppError Class**: To avoid brittle string-based matching in the global error handler, we've implemented a custom `AppError` class (`src/utils/appError.ts`). This allows services to explicitly specify HTTP status codes (e.g., 400, 404, 401, 409) alongside meaningful messages.
+- **First-Class Error Handling**: The `errorHandler.ts` now uses `instanceof AppError` checks to prioritize explicit status codes, falling back to keyword matching and ultimately `500 Internal Server Error` for unhandled exceptions. This ensures predictable API behavior and higher security.
+
+## Cloudinary Upload Optimization
+- **Memory Efficiency with Streams**: Instead of converting file buffers to Base64 strings (which increases memory usage by ~33%), use `cloudinary.uploader.upload_stream`. This allows piping the buffer directly to Cloudinary, reducing the server's memory footprint during uploads.
+- **Custom Public ID Naming**: Use `path.parse(req.file.originalname).name` combined with a timestamp for `public_id`. This makes assets in the Cloudinary Media Library much easier to identify and manage compared to default random hashes.
+
+## Primary vs. Fallback Error Handling
+- **Primary Control (Service Layer)**: Proactively throw `AppError` with dynamic messages and explicit status codes (e.g., `StatusCodes.CONFLICT` for data dependencies) at the point of failure. This moves business logic control back to the Service layer where context is richest.
+- **Fallback Mechanism (ErrorHandler)**: The global error handler should only handle keyword-to-status mapping as a secondary 'safety net' for non-AppError exceptions. This prevents the error handler from becoming a monolithic, brittle collection of string checks.
+- **Dynamic Error Messages**: When throwing errors, include relevant data (like entity counts or IDs) to provide the frontend with actionable information for user feedback.
+
+## Intelligent Data Migration (Soft Delete Logic)
+- **Automated Fallback Mapping**: When performing a soft delete on a parent entity (e.g., Category) that still has active children (e.g., Products), implement an automated migration to a 'System Default' entity (like 'Uncategorized').
+- **Resurrection Logic**: Ensure your 'System Default' detection handles soft-deleted records. If the default entity exists but is flagged as deleted, the system should automatically restore it (`deletedAt: null`) to ensure the migration target is valid.
+- **User Experience (UX)**: Instead of blocking the user with errors, transparently handling the reassignment provides a smoother administrative workflow, provided a clear feedback message (e.g., 'X products moved to Uncategorized') is logged or returned.
+
+## Modern Stream Handling in Node.js
+- **Readable.from()**: Instead of manual `new Readable()` and implementing `_read` with `push(null)`, use `Readable.from(data)`. This is a built-in utility (since Node.js 12.3.0+) that correctly handles the iterable-to-stream conversion, making your code cleaner and more robust against stream state issues.
+
+## Financial Precision (Decimal.js)
+- **Calculation Precision**: Always use `Prisma.Decimal` (powered by `decimal.js`) for all monetary calculations until the last moment. Avoid converting to native `Number` types to prevent floating-point precision errors (e.g., `0.1 + 0.2 !== 0.3`).
+- **JSON Serialization**: Polyfill `BigInt.prototype.toJSON` and `Prisma.Decimal.prototype.toJSON` to ensure they are stringified in API responses. This prevents `JSON.stringify` errors and ensures high-precision values are safely transmitted to the frontend.
+
+## Cross-Origin Security (CORS)
+- **Credentials Exchange**: When `credentials: true` is enabled on the backend (e.g., for Cookie-based JWT/CSRF), remind the frontend developer that all `fetch` or `axios` requests **MUST** include `credentials: 'include'`. Failing to do so will cause the browser to strip authentication cookies from the request.
+
+## Transactional Integrity & Rollbacks
+- **Prisma Interactive Transactions**: When performing operations with multiple side effects (e.g., decrementing inventory AND creating an order), ALWAYS wrap them in `prisma.$transaction`. This ensures that if any step fails (like a card decline or server error during record creation), ALL previous database changes within that block are automatically rolled back, preventing orphaned records or incorrect inventory counts (Atomic Data Integrity).

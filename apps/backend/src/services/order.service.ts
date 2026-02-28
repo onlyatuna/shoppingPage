@@ -1,5 +1,8 @@
 //order.service.ts
 import { prisma } from '../utils/prisma';
+import { Prisma } from '@prisma/client';
+import { AppError } from '../utils/appError';
+import { StatusCodes } from 'http-status-codes';
 import { createOrderSchema } from '../schemas/order.schema';
 import { z } from 'zod';
 import { OrderStatus } from '@prisma/client';
@@ -26,28 +29,27 @@ export class OrderService {
             });
 
             if (!cart || cart.items.length === 0) {
-                throw new Error('購物車是空的，無法結帳');
+                throw new AppError('購物車是空的，無法結帳', StatusCodes.BAD_REQUEST);
             }
 
             // 步驟 2: 檢查庫存 & 計算總金額
-            let totalAmount = 0;
+            let totalAmount = new Prisma.Decimal(0);
             const orderItemsData = [];
 
             for (const item of cart.items) {
                 // 再次檢查庫存 (防止加入購物車後被買光)
                 if (item.product.stock < item.quantity) {
-                    throw new Error(`商品 "${item.product.name}" 庫存不足 (剩餘: ${item.product.stock})`);
+                    throw new AppError(`商品 "${item.product.name}" 庫存不足 (剩餘: ${item.product.stock})`, StatusCodes.BAD_REQUEST);
                 }
 
                 // 檢查商品是否已下架
                 if (!item.product.isActive) {
-                    throw new Error(`商品 "${item.product.name}" 已下架`);
+                    throw new AppError(`商品 "${item.product.name}" 已下架`, StatusCodes.BAD_REQUEST);
                 }
 
-                // 累加金額 (Prisma 的 Decimal 轉為 Number 計算，或使用 Decimal 函式庫運算)
-                // 注意: 實際金流建議全程用 Decimal，這裡為了教學簡化轉 Number
-                const price = Number(item.product.price);
-                totalAmount += price * item.quantity;
+                // 累加金額 (使用 Prisma.Decimal 確保精準度)
+                const price = new Prisma.Decimal(item.product.price);
+                totalAmount = totalAmount.plus(price.times(item.quantity));
 
                 // 準備寫入 OrderItem 的資料 (這就是價格快照！)
                 orderItemsData.push({
@@ -128,7 +130,7 @@ export class OrderService {
         });
 
         if (!order) {
-            throw new Error('找不到訂單');
+            throw new AppError('找不到訂單', StatusCodes.NOT_FOUND);
         }
 
         return order;
@@ -180,11 +182,11 @@ export class OrderService {
         });
 
         if (!order) {
-            throw new Error('訂單不存在');
+            throw new AppError('訂單不存在', StatusCodes.NOT_FOUND);
         }
 
         if (order.status !== 'PENDING') {
-            throw new Error('訂單狀態不正確');
+            throw new AppError('訂單狀態不正確', StatusCodes.BAD_REQUEST);
         }
 
         return prisma.order.update({

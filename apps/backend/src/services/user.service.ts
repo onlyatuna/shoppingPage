@@ -2,6 +2,8 @@
 import { prisma } from '../utils/prisma';
 import bcrypt from 'bcryptjs';
 import { Role } from '@prisma/client';
+import { AppError } from '../utils/appError';
+import { StatusCodes } from 'http-status-codes';
 
 export class UserService {
     // --- 1. 取得所有使用者 (Developer) ---
@@ -50,12 +52,12 @@ export class UserService {
                 select: { password: true }
             });
 
-            if (!currentUser) throw new Error('使用者不存在');
-            if (!data.oldPassword) throw new Error('更新密碼必須提供舊密碼');
+            if (!currentUser) throw new AppError('使用者不存在', StatusCodes.NOT_FOUND);
+            if (!data.oldPassword) throw new AppError('更新密碼必須提供舊密碼', StatusCodes.BAD_REQUEST);
 
             // [Security] 比對舊密碼，防止時序攻擊與未授權修改
             const isMatch = await bcrypt.compare(data.oldPassword, currentUser.password);
-            if (!isMatch) throw new Error('舊密碼提供錯誤');
+            if (!isMatch) throw new AppError('舊密碼提供錯誤', StatusCodes.BAD_REQUEST);
 
             // 加密新密碼
             updateData.password = await bcrypt.hash(data.password, 10);
@@ -64,7 +66,7 @@ export class UserService {
         // 如果沒有任何資料要更新，直接回傳當前資料
         if (Object.keys(updateData).length === 0) {
             const user = await this.findById(userId);
-            if (!user) throw new Error('使用者不存在');
+            if (!user) throw new AppError('使用者不存在', StatusCodes.NOT_FOUND);
             return user;
         }
 
@@ -79,7 +81,7 @@ export class UserService {
     static async updateRole(requesterRole: Role, targetUserId: number, newRole: Role) {
         // 1. 先查出目標對象是誰
         const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
-        if (!targetUser) throw new Error('使用者不存在');
+        if (!targetUser) throw new AppError('使用者不存在', StatusCodes.NOT_FOUND);
 
         // 2. 只有 DEVELOPER 才能執行此功能 (在 route 層已檢查)
         // 不需要額外的權限限制，DEVELOPER 可以修改任何人的權限
@@ -96,11 +98,11 @@ export class UserService {
     static async deleteUser(requesterId: number, requesterRole: Role, targetUserId: number) {
         // 防止刪除自己
         if (targetUserId === requesterId) {
-            throw new Error('無法刪除自己的帳號');
+            throw new AppError('無法刪除自己的帳號', StatusCodes.BAD_REQUEST);
         }
 
         const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
-        if (!targetUser) throw new Error('使用者不存在');
+        if (!targetUser) throw new AppError('使用者不存在', StatusCodes.NOT_FOUND);
 
         // 只有 DEVELOPER 才能執行此功能 (在 route 層已檢查)
         // DEVELOPER 可以刪除任何人 (除了自己)
@@ -118,8 +120,8 @@ export class UserService {
             select: { id: true, isVerified: true }
         });
 
-        if (!user) throw new Error('使用者不存在');
-        if (user.isVerified) throw new Error('該使用者電子信箱已驗證');
+        if (!user) throw new AppError('使用者不存在', StatusCodes.NOT_FOUND);
+        if (user.isVerified) throw new AppError('該使用者電子信箱已驗證', StatusCodes.BAD_REQUEST);
 
         return prisma.user.update({
             where: { id: targetUserId },

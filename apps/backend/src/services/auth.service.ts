@@ -6,6 +6,8 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { sanitizeLog, timingSafeCompare } from '../utils/securityUtils';
+import { AppError } from '../utils/appError';
+import { StatusCodes } from 'http-status-codes';
 
 export class AuthService {
 
@@ -15,7 +17,7 @@ export class AuthService {
             where: { email: data.email },
         });
 
-        if (existingUser) throw new Error('Email 已被註冊');
+        if (existingUser) throw new AppError('Email 已被註冊', StatusCodes.CONFLICT);
 
         const hashedPassword = await bcrypt.hash(data.password, 10);
         const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -59,11 +61,11 @@ export class AuthService {
             });
         }
 
-        if (!user || !user.verificationToken) throw new Error('驗證連結無效');
+        if (!user || !user.verificationToken) throw new AppError('驗證連結無效', StatusCodes.BAD_REQUEST);
 
         // [SECURITY] 使用時序安全比對 (Timing-Safe Comparison)
         if (!timingSafeCompare(user.verificationToken, token)) {
-            throw new Error('驗證連結無效');
+            throw new AppError('驗證連結無效', StatusCodes.BAD_REQUEST);
         }
 
         // [原子化更新] 在資料庫層級進行過期與 Token 校驗，防止 Race Condition
@@ -83,7 +85,7 @@ export class AuthService {
         });
 
         if (result.count === 0) {
-            throw new Error('驗證連結已失效或過期，請重新申請驗證信');
+            throw new AppError('驗證連結已失效或過期，請重新申請驗證信', StatusCodes.BAD_REQUEST);
         }
 
         return { message: '信箱驗證成功！您現在可以登入了。' };
@@ -94,8 +96,8 @@ export class AuthService {
     static async resendVerification(email: string) {
         const user = await prisma.user.findUnique({ where: { email } });
 
-        if (!user) throw new Error('找不到此信箱');
-        if (user.isVerified) throw new Error('此帳號已驗證，請直接登入');
+        if (!user) throw new AppError('找不到此信箱', StatusCodes.NOT_FOUND);
+        if (user.isVerified) throw new AppError('此帳號已驗證，請直接登入', StatusCodes.BAD_REQUEST);
 
         // 產生新 Token 與新時間
         const newToken = crypto.randomBytes(32).toString('hex');
@@ -121,12 +123,12 @@ export class AuthService {
             where: { email: data.email },
         });
 
-        if (!user) throw new Error('帳號或密碼錯誤');
+        if (!user) throw new AppError('帳號或密碼錯誤', StatusCodes.UNAUTHORIZED);
 
         const isPasswordValid = await bcrypt.compare(data.password, user.password);
-        if (!isPasswordValid) throw new Error('帳號或密碼錯誤');
+        if (!isPasswordValid) throw new AppError('帳號或密碼錯誤', StatusCodes.UNAUTHORIZED);
 
-        if (!user.isVerified) throw new Error('請先至信箱收取驗證信啟用帳號');
+        if (!user.isVerified) throw new AppError('請先至信箱收取驗證信啟用帳號', StatusCodes.FORBIDDEN);
 
         const token = jwt.sign(
             { userId: user.id, email: user.email, role: user.role },
@@ -184,20 +186,20 @@ export class AuthService {
             where: { resetPasswordToken: token },
         });
 
-        if (!user || !user.resetPasswordToken) throw new Error('重設連結無效');
+        if (!user || !user.resetPasswordToken) throw new AppError('重設連結無效', StatusCodes.BAD_REQUEST);
 
         // [SECURITY] 若有提供 Email，則進行比對（防止 Cross-user token usage）
         if (email && email !== user.email) {
-            throw new Error('重設連結與信箱不符');
+            throw new AppError('重設連結與信箱不符', StatusCodes.BAD_REQUEST);
         }
 
         // [SECURITY] 使用時序安全比對 Token (雖然已經查到了，但增加一層記憶體比對)
         if (!timingSafeCompare(user.resetPasswordToken, token)) {
-            throw new Error('重設連結無效');
+            throw new AppError('重設連結無效', StatusCodes.BAD_REQUEST);
         }
 
         if (user.resetPasswordTokenExpiresAt && user.resetPasswordTokenExpiresAt < new Date()) {
-            throw new Error('重設連結已過期，請重新申請');
+            throw new AppError('重設連結已過期，請重新申請', StatusCodes.BAD_REQUEST);
         }
 
         return { valid: true, email: user.email };
@@ -210,16 +212,16 @@ export class AuthService {
             where: { resetPasswordToken: token },
         });
 
-        if (!user || !user.resetPasswordToken) throw new Error('重設連結無效');
+        if (!user || !user.resetPasswordToken) throw new AppError('重設連結無效', StatusCodes.BAD_REQUEST);
 
         // [SECURITY] 驗證 Email 匹配
         if (email && email !== user.email) {
-            throw new Error('重設連結與信箱不符');
+            throw new AppError('重設連結與信箱不符', StatusCodes.BAD_REQUEST);
         }
 
         // [SECURITY] 時序安全比對
         if (!timingSafeCompare(user.resetPasswordToken, token)) {
-            throw new Error('重設連結無效');
+            throw new AppError('重設連結無效', StatusCodes.BAD_REQUEST);
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -241,7 +243,7 @@ export class AuthService {
         });
 
         if (result.count === 0) {
-            throw new Error('重設連結已過動或失效，請重新申請');
+            throw new AppError('重設連結已過期或失效，請重新申請', StatusCodes.BAD_REQUEST);
         }
 
         return { message: '密碼重設成功，請使用新密碼登入' };

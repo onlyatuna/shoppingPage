@@ -1,6 +1,18 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { logger, asyncLocalStorage } from './logger';
 
+// [POLYPELL] 處理 JSON 序列化遺失精準度或 BigInt 錯誤的問題
+// 1. 處理 BigInt (JavaScript 原生 JSON.stringify 不支援)
+(BigInt.prototype as any).toJSON = function () {
+    return this.toString();
+};
+
+// 2. 處理 Prisma.Decimal (確保序列化時維持字串以防前端精準度遺失)
+// 注意：Prisma.Decimal 內部其實已經有 toJSON，但在某些版本或環境下顯式宣告更保險
+Prisma.Decimal.prototype.toJSON = function () {
+    return this.toString();
+};
+
 // 1. 建立基底 Prisma Client
 const basePrisma = new PrismaClient({
     log: [

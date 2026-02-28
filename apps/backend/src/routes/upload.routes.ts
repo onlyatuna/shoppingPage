@@ -6,6 +6,10 @@ import { authenticateToken } from '../middlewares/auth.middleware';
 import { requireAdmin } from '../middlewares/admin.middleware';
 import { StatusCodes } from 'http-status-codes';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { AppError } from '../utils/appError';
+import { asyncHandler } from '../utils/asyncHandler';
+import { Readable } from 'stream';
 
 const router = Router();
 
@@ -45,129 +49,105 @@ const upload = multer({
 });
 
 // 3. 上傳 API
-// 3. 上傳 API
-router.post('/', uploadRateLimiter, authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
-    // ... (existing upload logic) ...
-    try {
-        if (!req.file) {
-            return res.status(StatusCodes.BAD_REQUEST).json({ message: '未上傳檔案' });
-        }
-
-        const type = req.query.type || req.body.type || 'product';
-        const subfolder = req.query.subfolder || req.body.subfolder;
-        let folder = type === 'canvas' ? 'ecommerce-canvas' : 'ecommerce-product';
-
-        if (subfolder && typeof subfolder === 'string') {
-            // Remove invalid characters to ensure clean folder name
-            const cleanSubfolder = subfolder.replace(/[#%&{}\\<>*?/$!'":@+`|=]/g, '').trim();
-            if (cleanSubfolder) {
-                folder = `${folder}/${cleanSubfolder}`;
-            }
-        }
-
-        // 將 Buffer 轉為 Base64 字串以便上傳
-        const b64 = Buffer.from(req.file.buffer).toString('base64');
-        const dataURI = 'data:' + req.file.mimetype + ';base64,' + b64;
-
-        // 上傳到 Cloudinary
-        const result = await cloudinary.uploader.upload(dataURI, {
-            folder: folder, // 在 Cloudinary 建立的資料夾名稱
-        });
-
-        // 回傳 Cloudinary 給的網址
-        res.json({
-            status: 'success',
-            data: {
-                url: result.secure_url,
-                public_id: result.public_id, // Must return public_id for future deletion
-                folder: folder
-            }
-        });
-    } catch (error: any) {
-        // ... (existing error handling) ...
-        console.error('Upload Error:', error);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: '圖片上傳失敗'
-        });
+router.post('/', uploadRateLimiter, authenticateToken, requireAdmin, upload.single('image'), asyncHandler(async (req, res) => {
+    if (!req.file) {
+        throw new AppError('未上傳檔案', StatusCodes.BAD_REQUEST);
     }
-});
+
+    const type = req.query.type || req.body.type || 'product';
+    const subfolder = req.query.subfolder || req.body.subfolder;
+    let folder = type === 'canvas' ? 'ecommerce-canvas' : 'ecommerce-product';
+
+    if (subfolder && typeof subfolder === 'string') {
+        const cleanSubfolder = subfolder.replace(/[#%&{}\\<>*?/$!'":@+`|=]/g, '').trim();
+        if (cleanSubfolder) {
+            folder = `${folder}/${cleanSubfolder}`;
+        }
+    }
+
+    // Generate Custom Public ID: Filename + Timestamp
+    const fileName = path.parse(req.file.originalname).name;
+    const cleanFileName = fileName.replace(/[^a-zA-Z0-9_\-]/g, '_').substring(0, 50);
+    const public_id = `${cleanFileName}_${Date.now()}`;
+
+    // Optimization: Use upload_stream to avoid Base64 conversion overhead
+    const uploadFromBuffer = (buffer: Buffer) => {
+        return new Promise((resolve, reject) => {
+            const cld_upload_stream = cloudinary.uploader.upload_stream(
+                {
+                    folder: folder,
+                    public_id: public_id,
+                },
+                (error, result) => {
+                    if (result) resolve(result);
+                    else reject(error);
+                }
+            );
+            // Modern, concise way to pipe buffer to stream
+            Readable.from(buffer).pipe(cld_upload_stream);
+        });
+    };
+
+    const result: any = await uploadFromBuffer(req.file.buffer);
+
+    res.json({
+        status: 'success',
+        data: {
+            url: result.secure_url,
+            public_id: result.public_id,
+            folder: folder
+        }
+    });
+}));
 
 // 4. 取得 Cloudinary 圖片列表 (支援分頁)
-router.get('/resources', uploadRateLimiter, authenticateToken, requireAdmin, async (req, res) => {
-    try {
-        const { next_cursor, type } = req.query;
-        const prefix = type === 'canvas' ? 'ecommerce-canvas' : 'ecommerce-product';
+router.get('/resources', uploadRateLimiter, authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    const { next_cursor, type } = req.query;
+    const prefix = type === 'canvas' ? 'ecommerce-canvas' : 'ecommerce-product';
 
-        // 使用 Admin API 取得資源列表
-        // 注意：這需要 API Key 有足夠權限 (通常預設都有)
-        const result = await cloudinary.api.resources({
-            type: 'upload',
-            prefix: prefix, // 只撈取此專案的圖片
-            max_results: 50, // 每頁顯示數量 (Increased from 9)
-            next_cursor: next_cursor as string
-        });
+    // 使用 Admin API 取得資源列表
+    const result = await cloudinary.api.resources({
+        type: 'upload',
+        prefix: prefix, // 只撈取此專案的圖片
+        max_results: 50,
+        next_cursor: next_cursor as string
+    });
 
-        res.json({
-            status: 'success',
-            data: {
-                resources: result.resources,
-                next_cursor: result.next_cursor
-            }
-        });
-    } catch (error: any) {
-        // ... err
-        console.error('Cloudinary List Error:', error);
-        // ...
-
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: '無法取得雲端圖庫',
-            error: error.message,
-            hint: 'Please check Cloudinary API credentials and configuration'
-        });
-    }
-});
+    res.json({
+        status: 'success',
+        data: {
+            resources: result.resources,
+            next_cursor: result.next_cursor
+        }
+    });
+}));
 
 // 5. 刪除 Cloudinary 圖片
 import { prisma } from '../utils/prisma';
 
-router.delete('/:publicId', uploadRateLimiter, authenticateToken, requireAdmin, async (req, res) => {
-    try {
-        const { publicId } = req.params;
+router.delete('/:publicId', uploadRateLimiter, authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    const { publicId } = req.params;
 
-        // 1. Check if image is used by any product
-        // images column is JSON array of strings (URLs). 
-        // We match against the publicId. URLs typically contain the publicId.
-        // Using raw query for JSON search in MySQL
-        const productsUsingImage: any[] = await prisma.$queryRaw`
-            SELECT id, name FROM products 
-            WHERE JSON_SEARCH(images, 'one', ${'%' + publicId + '%'}) IS NOT NULL
-            AND deletedAt IS NULL
-            LIMIT 1
-        `;
+    // 1. Check if image is used by any product
+    const productsUsingImage: any[] = await prisma.$queryRaw`
+        SELECT id, name FROM products 
+        WHERE JSON_SEARCH(images, 'one', ${'%' + publicId + '%'}) IS NOT NULL
+        AND deletedAt IS NULL
+        LIMIT 1
+    `;
 
-        if (productsUsingImage.length > 0) {
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                status: 'error',
-                message: `此圖片正被商品 "${productsUsingImage[0].name}" 使用中，無法直接刪除。請先至商品管理頁面移除。`,
-                code: 'IMAGE_IN_USE'
-            });
-        }
-
-        // 2. Delete from Cloudinary
-        const result = await cloudinary.uploader.destroy(publicId);
-
-        if (result.result === 'ok') {
-            res.json({ status: 'success', message: '圖片刪除成功' });
-        } else {
-            res.status(StatusCodes.BAD_REQUEST).json({ status: 'error', message: '刪除失敗或找不到圖片' });
-        }
-    } catch (error: any) {
-        console.error('Cloudinary Delete Error:', error);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: '刪除失敗',
-            error: error.message
-        });
+    if (productsUsingImage.length > 0) {
+        throw new AppError(`此圖片正被商品 "${productsUsingImage[0].name}" 使用中，無法直接刪除。請先至商品管理頁面移除。`, StatusCodes.BAD_REQUEST);
     }
-});
+
+    // 2. Delete from Cloudinary
+    const result = await cloudinary.uploader.destroy(publicId);
+
+    if (result.result === 'ok') {
+        res.json({ status: 'success', message: '圖片刪除成功' });
+    } else {
+        throw new AppError('刪除失敗或找不到圖片', StatusCodes.BAD_REQUEST);
+    }
+}));
 
 export default router;

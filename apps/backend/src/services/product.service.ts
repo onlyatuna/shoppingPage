@@ -4,6 +4,8 @@ import { createProductSchema, queryProductSchema } from '../schemas/product.sche
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import slugify from 'slugify';
+import { AppError } from '../utils/appError';
+import { StatusCodes } from 'http-status-codes';
 
 type CreateProductInput = z.infer<typeof createProductSchema>;
 type QueryProductInput = z.infer<typeof queryProductSchema>;
@@ -58,7 +60,7 @@ export class ProductService {
                 category: true,
             },
         });
-        if (!product || product.deletedAt) throw new Error('找不到該商品'); // [新增] 檢查是否已刪除
+        if (!product || product.deletedAt) throw new AppError('找不到該商品', StatusCodes.NOT_FOUND); // [新增] 檢查是否已刪除
         return product;
     }
 
@@ -70,7 +72,7 @@ export class ProductService {
                 category: true,
             },
         });
-        if (!product || product.deletedAt) throw new Error('找不到該商品');
+        if (!product || product.deletedAt) throw new AppError('找不到該商品', StatusCodes.NOT_FOUND);
         return product;
     }
 
@@ -95,7 +97,7 @@ export class ProductService {
             where: { id: data.categoryId },
         });
         if (!category || category.deletedAt) {
-            throw new Error('分類不存在或已被刪除');
+            throw new AppError('分類不存在或已被刪除', StatusCodes.NOT_FOUND);
         }
 
         // 生成 Slug
@@ -123,7 +125,7 @@ export class ProductService {
                 where: { id: data.categoryId },
             });
             if (!category || category.deletedAt) {
-                throw new Error('分類不存在或已被刪除');
+                throw new AppError('分類不存在或已被刪除', StatusCodes.NOT_FOUND);
             }
         }
 
@@ -150,7 +152,7 @@ export class ProductService {
     static async delete(id: number) {
         // 先找出該商品以獲取原始 slug
         const product = await prisma.product.findUnique({ where: { id } });
-        if (!product) throw new Error('找不到該商品');
+        if (!product) throw new AppError('找不到該商品', StatusCodes.NOT_FOUND);
 
         return prisma.product.update({
             where: { id },
