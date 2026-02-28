@@ -10,6 +10,7 @@ import helmet from 'helmet';
 import lusca from 'lusca';
 import rateLimit from 'express-rate-limit';
 import { csrfProtection as csrf } from './middlewares/csrf.middleware';
+import { StatusCodes } from 'http-status-codes';
 import { prisma } from './utils/prisma';
 import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/auth.routes';
@@ -142,18 +143,28 @@ app.use('/api', (req, res, next) => {
     next();
 });
 
-// 測試路由
-app.get('/api/health', (req: Request, res: Response) => {
-    res.send('✅ Shopping Mall API is Running!');
-});
-
-app.get('/api/test-db', async (req: Request, res: Response) => {
+// [SECURITY & OBSERVABILITY] Health Check API
+// Used by Docker Compose healthcheck to ensure service availability.
+app.get('/api/health', async (req: Request, res: Response) => {
     try {
-        const userCount = await prisma.user.count();
-        res.json({ status: 'success', message: 'Database connected', userCount });
+        // 1. 檢查資料庫連線 (Prisma $queryRaw 執行最輕量查詢)
+        await prisma.$queryRaw`SELECT 1`;
+
+        res.status(StatusCodes.OK).json({
+            status: 'healthy',
+            service: 'Shopping Mall API',
+            timestamp: new Date().toISOString(),
+            database: 'connected'
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ status: 'error', message: 'Database connection failed' });
+        logger.error({ action: 'health_check_failed', error }, 'Database connection unhealthy');
+        res.status(StatusCodes.SERVICE_UNAVAILABLE).json({
+            status: 'unhealthy',
+            service: 'Shopping Mall API',
+            timestamp: new Date().toISOString(),
+            database: 'disconnected',
+            error: process.env.NODE_ENV === 'development' ? (error as any).message : undefined
+        });
     }
 });
 

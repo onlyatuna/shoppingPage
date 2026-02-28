@@ -3,68 +3,44 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { registerSchema, loginSchema, verificationSchema, resetPasswordSchema, requestPasswordResetSchema } from '../schemas/auth.schema';
 import { StatusCodes } from 'http-status-codes';
-import { ZodError } from 'zod';
+import { asyncHandler } from '../utils/asyncHandler';
 
-export const register = async (req: Request, res: Response) => {
-    try {
-        // 1. 驗證資料格式
-        const validatedData = registerSchema.parse(req.body);
+export const register = asyncHandler(async (req: Request, res: Response) => {
+    // 1. 驗證資料格式
+    const validatedData = registerSchema.parse(req.body);
 
-        // 2. 呼叫 Service
-        const result = await AuthService.register(validatedData);
+    // 2. 呼叫 Service
+    const result = await AuthService.register(validatedData);
 
-        // 3. 回傳成功
-        res.status(StatusCodes.CREATED).json({
-            status: 'success',
-            data: result,
-        });
-    } catch (error) {
-        if (error instanceof ZodError) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
-        } else if (error instanceof Error) {
-            // 處理業務邏輯錯誤 (如: Email 重複)
-            const status = error.message.includes('已被註冊') ? StatusCodes.CONFLICT : StatusCodes.BAD_REQUEST;
-            res.status(status).json({ message: error.message });
-        } else {
-            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '系統錯誤' });
-        }
-    }
-};
+    // 3. 回傳成功
+    res.status(StatusCodes.CREATED).json({
+        status: 'success',
+        data: result,
+    });
+});
 
-export const login = async (req: Request, res: Response) => {
-    try {
-        const validatedData = loginSchema.parse(req.body);
-        const result = await AuthService.login(validatedData);
+export const login = asyncHandler(async (req: Request, res: Response) => {
+    const validatedData = loginSchema.parse(req.body);
+    const result = await AuthService.login(validatedData);
 
-        // 設定 HTTP-only Cookie
-        res.cookie('token', result.token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            path: '/'
-        });
+    // 設定 HTTP-only Cookie
+    res.cookie('token', result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/'
+    });
 
-        res.status(StatusCodes.OK).json({
-            status: 'success',
-            data: {
-                user: result.user
-            },
-        });
-    } catch (error: any) {
-        if (error instanceof ZodError) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
-        } else if (error.message === '請先至信箱收取驗證信啟用帳號') {
-            res.status(StatusCodes.FORBIDDEN).json({ message: error.message });
-        } else {
-            res.status(StatusCodes.UNAUTHORIZED).json({
-                message: error.message || '帳號或密碼錯誤'
-            });
-        }
-    }
-};
+    res.status(StatusCodes.OK).json({
+        status: 'success',
+        data: {
+            user: result.user
+        },
+    });
+});
 
-export const logout = async (req: Request, res: Response) => {
+export const logout = (req: Request, res: Response) => {
     res.clearCookie('token', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -78,85 +54,47 @@ export const logout = async (req: Request, res: Response) => {
     });
 };
 
-export const verifyEmail = async (req: Request, res: Response) => {
-    try {
-        // 1. 驗證 Token 格式 (從 Query String)
-        const { token, email } = verificationSchema.parse(req.query);
+export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+    // 從 Query String 取得資料，並使用 Zod 驗證格式
+    const { token, email } = verificationSchema.parse(req.query);
 
-        const result = await AuthService.verifyEmail(token, email);
+    const result = await AuthService.verifyEmail(token, email);
 
-        res.status(StatusCodes.OK).json({
-            status: 'success',
-            message: result.message
-        });
-    } catch (error: any) {
-        if (error instanceof ZodError) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
-        } else {
-            res.status(StatusCodes.BAD_REQUEST).json({
-                message: error.message || '驗證失敗'
-            });
-        }
-    }
-};
+    res.status(StatusCodes.OK).json({
+        status: 'success',
+        message: result.message
+    });
+});
 
-export const resendVerification = async (req: Request, res: Response) => {
-    try {
-        const { email } = requestPasswordResetSchema.parse(req.body);
+export const resendVerification = asyncHandler(async (req: Request, res: Response) => {
+    const { email } = requestPasswordResetSchema.parse(req.body);
 
-        const result = await AuthService.resendVerification(email);
-        res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
-    } catch (error: any) {
-        if (error instanceof ZodError) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
-        } else {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
-        }
-    }
-};
+    const result = await AuthService.resendVerification(email);
+    res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
+});
 
-export const requestPasswordReset = async (req: Request, res: Response) => {
-    try {
-        const { email } = requestPasswordResetSchema.parse(req.body);
+export const requestPasswordReset = asyncHandler(async (req: Request, res: Response) => {
+    const { email } = requestPasswordResetSchema.parse(req.body);
 
-        const result = await AuthService.requestPasswordReset(email);
-        res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
-    } catch (error: any) {
-        if (error instanceof ZodError) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
-        } else {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
-        }
-    }
-};
+    const result = await AuthService.requestPasswordReset(email);
+    res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
+});
 
-export const verifyResetToken = async (req: Request, res: Response) => {
-    try {
-        const { token, email } = verificationSchema.parse(req.query);
+export const verifyResetToken = asyncHandler(async (req: Request, res: Response) => {
+    const { token, email } = verificationSchema.parse(req.query);
 
-        const result = await AuthService.verifyResetToken(token, email);
-        res.status(StatusCodes.OK).json({ status: 'success', data: result });
-    } catch (error: any) {
-        if (error instanceof ZodError) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
-        } else {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
-        }
-    }
-};
+    const result = await AuthService.verifyResetToken(token, email);
+    res.status(StatusCodes.OK).json({ status: 'success', data: result });
+});
 
-export const resetPassword = async (req: Request, res: Response) => {
-    try {
-        const { token, password } = resetPasswordSchema.parse(req.body);
-        const email = req.body.email; // Optional email from body if provided
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+    // [SECURITY] 這裡優先從 Body 取得 Token 與 密碼
+    const { token, password } = resetPasswordSchema.parse(req.body);
 
-        const result = await AuthService.resetPassword(token, password, email);
-        res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
-    } catch (error: any) {
-        if (error instanceof ZodError) {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.issues });
-        } else {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
-        }
-    }
-};
+    // [SECURITY補強] 用戶可能會從 URL Query 傳入 Email，或是我們從 Token 內部/資料庫中查找
+    // 這裡我們維持 Service 的介面，但讓 Controller 也能同時處理 Query 參數作為輔助（用於時序安全比對）
+    const email = (req.body.email || req.query.email) as string | undefined;
+
+    const result = await AuthService.resetPassword(token, password, email);
+    res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
+});

@@ -121,6 +121,25 @@
     - *Strategy*: Prefer Chromium/Firefox for WebGPU; fallback to WebGL for Safari/Mobile to ensure 100% stability.
     - *Auto-Optimization*: Link engine detection to quality presets (e.g., WebGPU -> High-Optimized) to leverage modern API performance headroom.
 
+## Security & Architecture Optimization (Deep Dive)
+
+### 1. 身份驗證與 Token 安全
+- **時序攻擊防禦 (Timing-Safe Comparison)**：在驗證敏感 Token（尤其是註冊、密碼重設）時，應使用 `crypto.timingSafeEqual` 並搭配 SHA-256 雜湊，確保比對時間恆定，防禦微秒級的時間分析攻擊。
+- **原子化更新 (Atomic Update) 模式**：驗證 Token 時，應將「過期檢查」直接放入資料庫的 `updateMany` -> `where` 條件中。這能解決 Check-then-act 的 Race Condition，確保 Token 在被使用的那一瞬間必須仍具備時序有效性。
+- **Token 綁定原則**：重設密碼不應依賴用戶端傳來的 Email。應優先從 Token 關聯出 User，再進行交叉比對，防止 Cross-user token 使用。
+
+### 2. 日誌與可觀測性 (Observability)
+- **PII 脫敏準則**：在記錄資料庫日誌 (Prisma) 時，應避免紀錄 `args` 或 `e.params`，因為這些陣列結構難以透過 `pino` 的 redact 進行有效脫敏。應僅紀錄 `model`, `operation`, `durationMs` 與 `query` 模板。
+- **上下文遺失防禦 (Async Context Safety)**：Prisma 的底層事件 (`$on('query')`) 是非同步觸發的，在高併發下 `AsyncLocalStorage` 上下文可能已丟失。應在 Prisma Extension 的 `$allOperations` 閉包內擷取 `reqId` 並注入日誌，確保 Traceability 的完整性。
+
+### 3. 部署與硬體資源優化
+- **極簡生產環境 (Runner - Hardened Container)**：生產環境映像檔應移除 `npm`, `npx` 與全球 `node_modules`。啟動腳本應改用 `node ./node_modules/prisma/build/index.js` 直接執行 CLI。這能減少 80MB+ 體積並顯著降低駭客入侵後的橫向移動面。
+- **彈性啟動與偵測機制 (Fail-Fast Entrypoint)**：
+    - 容器啟動時應先執行 `DATABASE_URL` 環境變數檢查。
+    - 利用極輕量、無依賴的 Node 腳本 (`net.createConnection`) 偵測資料庫埠號開放，確認聯通後再執行 `Prisma Migrate`。
+- **資料庫資源節流**：在資源有限的 EC2 (t2.micro) 下，必須在連線字串中手動限制 `connection_limit`，防止併發連線爆表。
+- **Log Rotation**: 在 `docker-compose.yml` 中強制設定 `max-size: "10m"` 與 `max-file: "3"`，防止日誌撐爆硬碟。
+
 ## Security Alert Remediation (CodeQL / SSRF)
 - **Taint Flow Analysis**: CodeQL tracks variables from "Source" (user input) to "Sink" (axios.get). Even with sanitization functions, the "bloodline" of the string variable may persist in the analyzer's view.
 - **Remediation Pattern: Pure Literal Selection**: Instead of sanitizing the input string and returning it, use the input to *choose* from a predefined list of hardcoded string literals.
@@ -195,19 +214,6 @@
       export const obfuscate = (t) => t ? `_as_${btoa(Array.from(t).map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ key[i % key.length])).join(''))}` : '';
       ```
     - *Session Binding (Extreme Defense)*: Combining `userAgent` with a `sessionStorage`-based UUID ensures cross-tab isolation. Use `window.crypto.randomUUID()` for cryptographic entropy in session ID generation.
-    - *Fail-safe Mechanism*: If an environmental variable (like `userAgent`) changes, the `deobfuscate` function will return an empty string by design. This acts as a security fail-safe, forcing a reset rather than leaking potentially corrupted or hijacked data.
-    - *Storage Hardening*:
-        1. **Key Rotation**: Change storage key names (e.g., from `gemini_api_key` to `_st_kv_`) to invalidate any existing persistent data from older, less secure versions of the app.
-        2. **Aggressive Cleanup**: Forcefully remove known legacy keys from `localStorage` in the application's root provider.
-        3. **Cryptographic Binding**: Use `window.crypto.randomUUID()` for maximum entropy in session salt generation.
-    - *Example (v6 - Final Security Stack)*:
-      ```typescript
-      const [salt] = useState(() => {
-          let sid = sessionStorage.getItem('_s_id_') || window.crypto.randomUUID();
-          sessionStorage.setItem('_s_id_', sid);
-          return `${navigator.userAgent}-${sid}`;
-      });
-      ```
 - **Limitation**: This is *obfuscation*, not true encryption. Any script on the page (including malicious ones) can still call your `deobfuscate` function if they know the salt source. For high-security requirements, sensitive keys should ideally never touch the frontend or should be handled via a Backend-for-Frontend (BFF) pattern.
 
 ## Stateless CSRF Protection (Double Submit Cookie)
@@ -217,101 +223,38 @@
     2. Frontend reads this cookie (via `document.cookie` or Axios config) and sends it back in a custom header (e.g., `X-XSRF-TOKEN`).
     3. Backend compares the cookie value with the header value for all state-changing requests (POST, PUT, DELETE, etc.).
 - **Why it works**: Under the Same-Origin Policy (SOP), a malicious cross-origin site can trigger a request with credentials (cookies) but CANNOT read cookies from your domain or set custom headers for your domain. 
-- **Implementation (Axios)**:
-  ```typescript
-  const client = axios.create({
-    xsrfCookieName: 'XSRF-TOKEN',
-    xsrfHeaderName: 'X-XSRF-TOKEN',
-    withCredentials: true
-  });
-  ```
-- **Security Bonus**: Combine with `SameSite: Strict/Lax` and `Origin/Referer` validation for defense-in-depth and protection against older browsers/niche bypasses.
 
 ## Defense against Security Logic Bypasses (CWE-807)
 - **Problem**: CodeQL alert `js/user-controlled-bypass` flags conditions where user input (like a raw query string) directly guards a sensitive action.
 - **Remediation**: Use **Strict Schema Validation** (e.g., Zod) before any logic check.
     - *Pattern*: Instead of `if (!req.query.token)`, use `schema.parse(req.query)`.
     - *Regex Enforcement*: For tokens, use strict regex (e.g., `^[a-f0-9]{64}$`) to ensure the input cannot be a type that causes unexpected logic flow (like an array or a massive string).
-- **Why it works**: By parsing input into a known-good structure, you move the "decision" from raw, untrusted data to validated, typed data, which breaks the taint tracking for "uncontrolled" bypasses.
 
 ## Defense against Log Injection (CWE-117)
-- **Problem**: CodeQL alerts like `js/log-injection` (#400, #401, #406, #418, #419, etc.) occur when user-provided values are logged without sanitization.
+- **Problem**: CodeQL alerts like `js/log-injection` occur when user-provided values are logged without sanitization.
 - **Remediation**: Create a `sanitizeLog` utility that removes or replaces newline characters (`\n`, `\r`) from any data before it is passed to `console.log` or a logging library.
-    - *Utility*:
-      ```typescript
-      export const sanitizeLog = (val) => String(val).replace(/\n|\r/g, ' ');
-      ```
-    - *Advanced*: For objects, use `JSON.stringify` before sanitization to ensure the entire structure is linearized.
-    - **Pro-tip: Static Analysis Trust**: Static analysis tools (like CodeQL) frequently distrust cross-file utility functions for security-sensitive operations. For persistent "Log Injection" alerts, perform the `replace(/\n|\r/g, ' ')` **inline** right at the `console` call site. This provides a clear, locally-verifiable proof to the scanner that the data is sanitized.
-- **Why it works**: Forcing data onto a single line prevents "Log Forging" attacks where an attacker simulates new log lines (e.g., `user=Guest\n[INFO] Login Successful for Admin`). Avoid storing sanitization results in intermediate variables (e.g., `const safeVal = val.replace(...)`) before logging, as some analyzers may still consider the variable "tainted" by its source origin.
+    - **Pro-tip: Static Analysis Trust**: Static analysis tools (like CodeQL) frequently distrust cross-file utility functions for security-sensitive operations. For persistent "Log Injection" alerts, perform the `replace(/\n|\r/g, ' ')` **inline** right at the `console` call site.
 
 ## Code Quality & Logic Optimization (CodeQL Alerts #407, #408, #415, #417)
 - **Pattern: Avoiding Redundant Guards (#415)**
-    - *Scenario*: Checking `if (!condition)` inside a block already wrapped in `{!condition && (...)}`.
-    - *Fix*: Remove the redundant check. If an input is inside a "simple product" block, just set `required: true` directly instead of `required: !enableVariants`.
 - **Pattern: Eliminating Dead Stores (#407)**
-    - *Scenario*: Initializing a variable with a default value that is *always* overwritten before being read.
-    - *Fix*: Declare the variable without an initial value (`let x: Type;`) if the subsequent logic (e.g., a full quadrant check) covers all branches.
 - **Pattern: Explicit Semicolons vs. ASI (#417)**
-    - *Scenario*: Assigning a function to a variable (`const f = () => {};`).
-    - *Fix*: Always append a semicolon. Relying on Automatic Semicolon Insertion (ASI) is dangerous as it can lead to misinterpretation of subsequent lines (e.g., a line starting with `[` or `(` being treated as part of the previous statement).
 - **Pattern: Prismal Unique Constraint & Optional Fields (#408)**
-    - *Scenario*: Querying a unique composite key where one field is optional/null.
-    - *Trap*: `findUnique` with a partial/null key in a composite index can fail or behave unexpectedly across different database engines (e.g., MySQL handles multiple NULLs differently).
-    - *Fix*: Use `findFirst` with explicit `{ field: val || null }` filters for robust matching when the unique identity depends on potentially null values (like a `variantId`).
+- **Pattern: 3D Engine Detection Whitelist**: Link engine detection to quality presets (e.g., WebGPU -> High-Optimized) to leverage modern API performance headroom while maintaining 100% stability via WebGL fallback.
 
-## AI Integration & Frontend Security (Gemini API 2026 Path)
-- **Model Versioning Transition**: Models like `gemini-1.5` and `gemini-2.0` can be deprecated or disabled abruptly. 
-    - **2026 Active Model Whitelist (Use these only)**:
-        - `gemini-3.1-pro-preview` (Advanced reasoning)
-        - `gemini-3-flash-preview` (Next-gen speed)
-        - `gemini-2.5-pro` (Detailed analysis)
-        - `gemini-2.5-flash` (Optimal default for speed/cost)
-    - *Action*: When stable versions fail, immediately cross-reference this list instead of guessing.
-- **Critical API Key Sanitization (Header Protection)**:
-    - *Scenario*: User pastes API keys containing hidden unicode characters or trailing newlines.
-    - *Error*: `TypeError: Failed to execute 'append' on 'Headers': String contains non ISO-8859-1 code point`.
-    - *Solution*: Forcefully strip all non-ASCII characters and whitespace before SDK initialization.
-    - *Pattern*: `const cleanKey = rawKey.replace(/[^\x20-\x7E]/g, '').trim();`
-- **Chromium Password Standards (UX & DevTools Warnings)**:
-    - *Warning*: `[DOM] Password field is not contained in a form`.
-    - *Fix*: Every `type="password"` input (including API Key fields) must be nested inside a `<form>` tag.
-    - *Warning*: `[DOM] Input elements should have autocomplete attributes`.
-    - *Fix*: Explicitly set `autoComplete="new-password"` for sensitive key fields to satisfy Chrome's security auditor.
-- **Resource Locality (Connection Lost Prevention)**:
-    - *Problem*: External 3D assets (e.g., `.hdr` environment maps) failing due to CSP or remote server downtime.
-    - *Solution*: Download critical external assets to `public/` and serve them locally. This bypasses `connect-src` complexity and ensures 100% reliability of the 3D scene.
 ## Fan Dashboard & Control Logic (Breeze3D)
-- **Pattern: Centralized Gear State**: When multiple buttons (Speed, Natural) influence the same display but are mutually exclusive in focus, use a `natureMode` boolean paired with a base `speed` to maintain the actual motor state while overriding the HUD display with "NAT".
-- **Pattern: Digital HUD Implementation**: 
-    - Use specialized fonts like `Orbitron` for a premium digital look.
-    - Implement a `displayOverride` state with a temporary timeout (e.g., 2s) to flash specific info like Timer settings or Mode changes without losing the underlying persistent state.
-- **Speed Mapping (User Defined)**: Always follow specific RPM percentages if provided (e.g., Low 35%, Mid 55%, High 75%, Turbo 100%). Industrial mode should scale these proportionally (e.g., 1.5x) but maintain the same relative gear ratios.
-- **Visual Feedback**: Use SVG `stroke-dasharray` for circular progress indicators in circular dashboards to provide immediate visual feedback of power/speed levels.
+- **Pattern: Centralized Gear State**: Use a `natureMode` boolean paired with a base `speed` to maintain actual motor state while overriding HUD display with "NAT".
+- **Pattern: Digital HUD Implementation**: Specialized fonts + `displayOverride` state with timeout for feedback.
 
 ## Portfolio Refactoring (UI/UX Transformation)
-- **Pattern: New Tab Navigation for Case Studies**
-    - *Scenario*: Users want to explore multiple case studies without losing their scroll position on the main portfolio list.
-    - *Solution*: Use `window.open(url, '_blank')` for case study links. This ensures the "reading state" starts from the top in the new tab and preserves the list state in the original tab.
-- **Pattern: Business-Grade Aesthetic (Light Mode Focus)**
-    - *Preference*: Use clean, light grey-blue gradients (e.g., `from-white via-[#f0f4f8] to-[#e6eaf0]`) for Hero sections.
-    - *Icons*: **NEVER use Emojis** for professional portfolio sections. Always use stylized `Lucide` icons with subtle background containers (e.g., `bg-blue-50 text-blue-600`) to maintain a premium "Full-Stack Engineer" persona.
-- **Pattern: Language Unification (Traditional Chinese)**
-    - *Requirement*: The entire portfolio must be unified in **Traditional Chinese (繁體中文)**. Avoid mixing English descriptions in detail pages.
-- **Pattern: System Architecture Visualization**
-    - *Approach*: Use native Tailwind/CSS components for architecture diagrams instead of static images where possible to ensure high-fidelity and responsiveness. High-contrast dark backgrounds (e.g., `bg-[#111621]`) work well for technical diagrams even in light-mode pages.
-- **Nested Feature Routing**: When moving a feature to a nested path (e.g., `/app` -> `/work/ecommerce/demo`), the main level must use a wildcard (`/path/*`) and the inner `Routes` must use relative paths (no leading `/`).
-- **3rd-Party Callback Sync**: Critical to update `.env` variables (e.g., `LINE_PAY_RETURN_CONFIRM_URL`) when base paths change, as these are processed server-side or by external providers and won't be caught by SPA route changes alone.
-- **Legacy Redirect Guards**: Root-level catch-all routes like `<Route path="/app/*" element={<Navigate to="/work/ecommerce/demo" />} />` are essential for backward compatibility during large-scale URL restructurings.
-- **Query Parameter Preservation**: Use a `NavigateWithQuery` helper to ensure that redirects (like from LINE Pay) do not lose their essential `?orderId=...` or `?transactionId=...` parameters.
-- **IDOR 防護下沉至資料庫層 (Prisma/SQL Layer)**: 
-  驗證資料擁有權 (Ownership) 時，應優先將 `userId` 直接放入資料庫查詢的 `where` 子句中（例如使用 `findFirst({ where: { id, userId } })`），而非在查詢後於記憶體中用 `if` 判斷。這能帶來更好的效能，並防止因邏輯決策被使用者輸入惡意規避的風險。
-- **Docker 容器資安與效能優化 (Production-Ready Docker)**:
-    1. **權限最小化 (Least Privilege)**: 永遠避免以 `root` 身分執行容器。應使用 `USER node` 並配合 `chown` 將必要的 `/app` 目錄權限轉移。
-    2. **解耦 Migration 與啟動流程**: 避免在 `CMD` 中執行 `prisma migrate deploy`。在分散式或 Auto-scaling 環境下，這會導致併發衝突。正確做法是將 Migration 移至 CI/CD 流程或獨立的 Init Container。
-    3. **Prisma Client 路徑明確化**: 在 Monorepo 或多階段構建中，確保 `node_modules/.prisma` 被正確複製。
-    4. **Image 瘦身**: 刪除 `node_modules` 中的 `typescript` 與 `@types` 等開發專用依賴，並清理 npm 快取，能顯著減小最終映像檔體積。
-    5. **優化快取層次 (Layer Caching)**: 將鮮少變動但耗時的指令（如 `prisma generate`）所需的特定檔案（如 `prisma/schema.prisma`）優先 `COPY` 並執行，放在 `COPY . .` 之前。這樣當你只修改前端 CSS 或後端邏輯時，Docker 能跳過重複生成 Client 的步驟，大幅縮短構建時間。
-    6. **完善 .dockerignore (Build Performance)**: 必須排除 `**/node_modules` 與 `**/dist`。如果不排除，Docker Build 會將幾百 MB 的本地資料拷貝到 Docker Daemon，嚴重拖慢 Build 速度。
-    7. **環境變數安全 (Secret Management)**: 永遠不要將 `.env` 包進 Image 中。在生產環境應透過部署平台（如 Cloud Run, Railway）的 Secrets 管理介面注入環境變數，以確保金鑰（Database URL, API Keys）不外洩。
-    8. **內部網路隔離 (Networking Isolation)**: 在生產環境中，應移除 `app` 與 `db` 的公共 `ports` 對應，改用 `expose` 僅開發內部網路存取。所有流量應統一由反向代理（如 Caddy 或 Nginx）轉送，這能有效防止攻擊者直接掃描並嘗試破解後端或資料庫埠口。
+- **Pattern: New Tab Case Studies**: User `window.open` to preserve list scroll state.
+- **Pattern: Business-Grade Aesthetic**: Light grey-blue gradients + Specialized icons (No Emojis).
+- **Pattern: IDOR 防護下沉至資料庫層 (Prisma/SQL Layer)**: 
+  驗證權限時，優先使用 `findFirst({ where: { id, userId } })`。這能帶來更好的效能，並防止因邏輯決策被使用者輸入惡意規避的風險。
+
+## Docker 容器資安與效能優化 (Production-Ready Docker)
+- **Dockerfile Hardening**: 
+    1. **權限最小化**: `USER node` 並配合 `chown`。
+    2. **解耦 Migration**: 避免在 `CMD` 中執行 `prisma migrate deploy`。
+    3. **Image 瘦身**: 刪除 `typescript` / `@types` 並清理 npm 快取。
+    4. **完善 .dockerignore**: 排除 `node_modules` 與 `dist`。

@@ -39,11 +39,13 @@ RUN npm prune --omit=dev && npm cache clean --force
 FROM node:22-slim AS runner
 
 # 安裝 runtime 必要套件 (openssl 是 Prisma 二進位檔需要的)
+# 並移除 npm 與 npx 以縮減體積並降低資安風險 (Production 不應有套件管理器)
 RUN apt-get update && \
     apt-get install -y openssl ca-certificates && \
-    npm install -g npm@latest && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    rm -f /usr/local/bin/npm /usr/local/bin/npx && \
+    rm -rf /usr/local/lib/node_modules/npm
 
 WORKDIR /app
 
@@ -63,14 +65,17 @@ RUN rm -rf node_modules/typescript node_modules/@types
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
 COPY --from=builder /app/apps/frontend/dist ./apps/backend/public
 COPY --from=builder /app/apps/backend/prisma ./apps/backend/prisma
+# 複製 entrypoint 腳本
+COPY --from=builder /app/apps/backend/scripts/entrypoint.sh ./apps/backend/scripts/entrypoint.sh
 
-# [SECURITY] 權限最小化：將檔案擁有者轉給內建的 node 使用者
-# 並切換使用者，避免使用 root 執行容器
-RUN chown -R node:node /app
+# [SECURITY] 權限與啟動設定
+USER root
+RUN chmod +x /app/apps/backend/scripts/entrypoint.sh && \
+    chown -R node:node /app
 USER node
 
 EXPOSE 3000
 
-# 啟動指令
-# [SECURITY] 移除 prisma migrate deploy，建議將其移至獨立的 Init Container 或 CI/CD 流程
+# 啟動指令 (ENTRYPOINT 會先執行 entrypoint.sh，再執行 CMD)
+ENTRYPOINT ["/app/apps/backend/scripts/entrypoint.sh"]
 CMD ["node", "apps/backend/dist/app.js"]

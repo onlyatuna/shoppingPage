@@ -26,6 +26,11 @@
 - [x] Implement `safeJsonStringify` as defensive utility.
 - [x] Add guardrails/comments for future SSR implementation.
 
-## 6. Verification
+## 6. Audit & Fix Token Verification (Timing Attacks)
+- [x] Implement `timingSafeCompare` utility using Node.js `crypto`.
+- [x] Update `EmailService` to include `email` in verification/reset links.
+- [x] Update `AuthService` to use email-based lookup + timing-safe comparison.
+
+## 7. Verification
 - [x] Verify changes via existing logic and manual code review.
 - [x] Ensure `npm run build` still passes.

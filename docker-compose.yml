@@ -14,6 +14,11 @@ services:
       - caddy_config:/config
     depends_on:
       - app
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
   app:
     # 1. [修正] 改用 GHCR Image (全小寫)
     # 讓 EC2 直接下載編譯好的檔案，不要自己 Build
@@ -48,6 +53,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   db:
     image: mysql:8.0
@@ -63,6 +73,11 @@ services:
       - mysql_data:/var/lib/mysql
       # 加入這個設定以優化 MySQL 記憶體使用 (對小機器很重要)
     command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   mysql_data:

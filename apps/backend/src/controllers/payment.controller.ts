@@ -1,91 +1,61 @@
-//payment.controller.ts
+// apps/backend/src/controllers/payment.controller.ts
 import { Request, Response } from 'express';
 import { PaymentService } from '../services/payment.service';
 import { StatusCodes } from 'http-status-codes';
 import { logger } from '../utils/logger';
+import { asyncHandler } from '../utils/asyncHandler';
 
-export const requestLinePay = async (req: Request, res: Response) => {
-    try {
-        const userId = req.user!.userId;
-        const { orderId } = req.body; // 前端傳來要付哪張單
-        const result = await PaymentService.initiateLinePay(orderId, userId);
-        res.json({ status: 'success', data: result });
-    } catch (error: any) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+export const requestLinePay = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const { orderId } = req.body;
+    const result = await PaymentService.initiateLinePay(orderId, userId);
+    res.json({ status: 'success', data: result });
+});
+
+export const confirmLinePay = asyncHandler(async (req: Request, res: Response) => {
+    logger.info({ action: 'payment_confirm_init', body: req.body });
+    const { transactionId, orderId } = req.body;
+    const userId = req.user!.userId;
+
+    if (!transactionId || !orderId) {
+        throw new Error(`缺少參數: transactionId=${transactionId}, orderId=${orderId}`);
     }
-};
 
-export const confirmLinePay = async (req: Request, res: Response) => {
-    try {
-        logger.info({ action: 'payment_confirm_init', body: req.body });
-        const { transactionId, orderId } = req.body;
-        const userId = req.user!.userId; // 從 JWT Token 取得使用者 ID
+    await PaymentService.confirmLinePay(orderId, transactionId, userId);
+    res.json({ status: 'success', message: '付款成功' });
+});
 
-        // 簡單防呆
-        if (!transactionId || !orderId) {
-            throw new Error(`缺少參數: transactionId=${transactionId}, orderId=${orderId}`);
-        }
+export const checkLinePayStatus = asyncHandler(async (req: Request, res: Response) => {
+    const { transactionId } = req.params;
 
-        // 驗證使用者權限並確認付款
-        await PaymentService.confirmLinePay(orderId, transactionId, userId);
-        res.json({ status: 'success', message: '付款成功' });
-    } catch (error: any) {
-        logger.error({ action: 'payment_confirm_error', err: error });
-        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
+    if (!transactionId) {
+        throw new Error('缺少 transactionId');
     }
-};
 
-export const checkLinePayStatus = async (req: Request, res: Response) => {
-    try {
-        const { transactionId } = req.params;
+    const result = await PaymentService.checkPaymentStatus(transactionId);
 
-        if (!transactionId) {
-            throw new Error('缺少 transactionId');
-        }
+    res.json({
+        status: 'success',
+        data: result
+    });
+});
 
-        const result = await PaymentService.checkPaymentStatus(transactionId);
+export const captureLinePay = asyncHandler(async (req: Request, res: Response) => {
+    const { orderId } = req.body;
+    if (!orderId) throw new Error('缺少 orderId');
 
-        res.json({
-            status: 'success',
-            data: result
-        });
-    } catch (error: any) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
-    }
-};
+    const result = await PaymentService.capturePayment(orderId);
+    res.json({ status: 'success', message: '請款成功', data: result });
+});
 
-export const captureLinePay = async (req: Request, res: Response) => {
-    try {
-        const { orderId } = req.body;
-        if (!orderId) throw new Error('缺少 orderId');
+export const getLinePayDetails = asyncHandler(async (req: Request, res: Response) => {
+    const transactionId = req.query.transactionId as string;
+    const orderId = req.query.orderId as string;
 
-        const result = await PaymentService.capturePayment(orderId);
-        res.json({ status: 'success', message: '請款成功', data: result });
-    } catch (error: any) {
-        res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
-    }
-};
+    const result = await PaymentService.getPaymentDetails({ transactionId, orderId });
 
-// --- [新增] 查詢付款明細 ---
-export const getLinePayDetails = async (req: Request, res: Response) => {
-    try {
-        // 從 Query String 取得參數
-        // 例如: /api/v1/payment/line-pay/details?orderId=uuid...
-        const transactionId = req.query.transactionId as string;
-        const orderId = req.query.orderId as string;
-
-        const result = await PaymentService.getPaymentDetails({ transactionId, orderId });
-
-        res.json({
-            status: 'success',
-            data: result
-        });
-    } catch (error: any) {
-        const detail = error.response?.data;
-        logger.error({ action: 'payment_details_error', err: error, details: detail });
-        res.status(StatusCodes.BAD_REQUEST).json({
-            message: error.message,
-            details: detail
-        });
-    }
-};
+    res.json({
+        status: 'success',
+        data: result
+    });
+});

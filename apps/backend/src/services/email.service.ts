@@ -1,6 +1,6 @@
 // apps/backend/src/services/email.service.ts
 import nodemailer from 'nodemailer';
-import { sanitizeLog } from '../utils/securityUtils';
+import { sanitizeLog, escapeHTML } from '../utils/securityUtils';
 
 export class EmailService {
   private static transporter = nodemailer.createTransport({
@@ -33,8 +33,8 @@ export class EmailService {
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h2>歡迎加入！</h2>
           <p>請點擊下方按鈕以啟用您的帳號：</p>
-          <a href="${verificationUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">驗證信箱</a>
-          <p>或複製此連結：<br>${verificationUrl}</p>
+          <a href="${escapeHTML(verificationUrl)}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">驗證信箱</a>
+          <p>或複製此連結：<br>${escapeHTML(verificationUrl)}</p>
           <p>此連結將在 24 小時後失效。</p>
         </div>
       `,
@@ -69,13 +69,13 @@ export class EmailService {
           <p>您好，</p>
           <p>我們收到了您的密碼重設請求。請點擊下方按鈕以重設您的密碼：</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" 
+            <a href="${escapeHTML(resetUrl)}" 
                style="background-color: #000; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
               重設密碼
             </a>
           </div>
           <p>或複製此連結到瀏覽器：<br>
-          <a href="${resetUrl}" style="color: #007bff; word-break: break-all;">${resetUrl}</a></p>
+          <a href="${escapeHTML(resetUrl)}" style="color: #007bff; word-break: break-all;">${escapeHTML(resetUrl)}</a></p>
           <p style="color: #666; font-size: 14px;">⚠️ 此連結將在 1 小時後失效。</p>
           <p style="color: #666; font-size: 14px;">如果您沒有提出此請求，請忽略此郵件。</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">

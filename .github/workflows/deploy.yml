@@ -97,8 +97,11 @@ jobs:
             cd ~/shop-app || exit 1
             
             # 4. 產生 .env (使用 cat << 'EOF' 確保安全，避免 Secrets 在 ps aux 中洩漏)
-            cat << 'EOF' > .env
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            # 4. Generate .env safely
+            DB_BASE_URL="${{ secrets.DATABASE_URL }}"
+            DB_URL_POOL="${DB_BASE_URL}$([[ "$DB_BASE_URL" == *\?* ]] && echo "&" || echo "?")connection_limit=5&pool_timeout=15"
+            echo "DATABASE_URL=$DB_URL_POOL" > .env
+            cat << 'EOF' >> .env
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             LINE_PAY_CHANNEL_ID=${{ secrets.LINE_PAY_CHANNEL_ID }}
             LINE_PAY_CHANNEL_SECRET=${{ secrets.LINE_PAY_CHANNEL_SECRET }}
@@ -123,8 +126,3 @@ jobs:
             # 5. 重啟服務
             # [優化] 使用 --remove-orphans 清理過期容器，使用 --wait 確保容器啟動成功 (需對應 healthcheck)
             docker compose up -d --force-recreate --remove-orphans
-            
-            # 6. 資料庫遷移 (確保在應用啟動後執行)
-            # 等待應用程式就緒
-            sleep 15
-            docker compose exec -T app npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma

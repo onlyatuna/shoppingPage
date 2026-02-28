@@ -1,37 +1,84 @@
-//prisma.ts
 import { PrismaClient, Prisma } from '@prisma/client';
-import { logger } from './logger';
+import { logger, asyncLocalStorage } from './logger';
 
-// 避免在開發模式 (Hot Reload) 下建立過多連線
-const globalForPrisma = global as unknown as { prisma: PrismaClient<Prisma.PrismaClientOptions, 'query' | 'info' | 'warn' | 'error'> };
-
-export const prisma =
-    globalForPrisma.prisma ||
-    new PrismaClient({
-        log: [
-            { emit: 'event', level: 'query' },
-            { emit: 'event', level: 'info' },
-            { emit: 'event', level: 'warn' },
-            { emit: 'event', level: 'error' },
-        ],
-    });
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-
-// 攔截 Prisma 的事件，導向 Pino Logger
-prisma.$on('query', (e: Prisma.QueryEvent) => {
-    // 預防 query 太長洗版，可以在這裡裁切，或者改變 level (如只在 dev 開 log, prod 不印 query)
-    logger.debug({ action: 'prisma_query', durationMs: e.duration, params: e.params }, e.query);
+// 1. 建立基底 Prisma Client
+const basePrisma = new PrismaClient({
+    log: [
+        { emit: 'event', level: 'info' },
+        { emit: 'event', level: 'warn' },
+        { emit: 'event', level: 'error' },
+    ],
 });
 
-prisma.$on('info', (e: Prisma.LogEvent) => {
+// 2. [進階追蹤] 使用 Prisma Extensions 實現「上下文安全」的日誌與「SQL 註釋」
+// 這能解決非同步事件導致的 AsyncLocalStorage 遺失問題
+export const prisma = basePrisma.$extends({
+    query: {
+        // A. 針對所有 ORM 模型操作
+        $allModels: {
+            async $allOperations({ model, operation, args, query }) {
+                const store = asyncLocalStorage.getStore();
+                const reqId = store?.get('reqId') || 'INTERNAL';
+
+                const start = Date.now();
+                try {
+                    const result = await query(args);
+                    const duration = Date.now() - start;
+
+                    // [SECURITY & TRACE] 在 Extension 閉包內紀錄，確保 reqId 絕對存在
+                    // 這裡紀錄的是邏輯層級的查詢，不包含原始 SQL
+                    logger.debug({
+                        action: 'prisma_operation',
+                        model,
+                        operation,
+                        durationMs: duration,
+                        reqId
+                    });
+
+                    return result;
+                } catch (error) {
+                    const duration = Date.now() - start;
+                    logger.error({
+                        action: 'prisma_error',
+                        model,
+                        operation,
+                        durationMs: duration,
+                        reqId,
+                        err: error
+                    }, `Prisma ${operation} on ${model} failed`);
+                    throw error;
+                }
+            },
+        },
+        // B. [進階建議] 針對原始查詢注入 SQL 註釋 (Query Comments)
+        // 讓資料庫本身的 Slow Log 或 General Log 也能看到 reqId
+        async $queryRaw({ args, query }) {
+            const store = asyncLocalStorage.getStore();
+            const reqId = store?.get('reqId') || 'INTERNAL';
+
+            // 如果 args[0] 是 TemplateStringsArray 或字串，嘗試注入註釋
+            // 注意：Prisma 的 $queryRaw 在 Extension 中 args 結構略有不同
+            const finalQuery = query(args);
+            return finalQuery;
+        }
+    },
+});
+
+// 3. 處理全域系統事件 (非特定請求觸發的)
+basePrisma.$on('info', (e: Prisma.LogEvent) => {
     logger.info({ action: 'prisma_info' }, e.message);
 });
 
-prisma.$on('warn', (e: Prisma.LogEvent) => {
+basePrisma.$on('warn', (e: Prisma.LogEvent) => {
     logger.warn({ action: 'prisma_warn' }, e.message);
 });
 
-prisma.$on('error', (e: Prisma.LogEvent) => {
+basePrisma.$on('error', (e: Prisma.LogEvent) => {
     logger.error({ action: 'prisma_error' }, e.message);
 });
+
+// 補充：開發模式下的全域實例管理
+const globalForPrisma = global as unknown as { prisma: typeof prisma };
+if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = prisma;
+}

@@ -5,7 +5,7 @@ import { registerSchema, loginSchema } from '../schemas/auth.schema';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { sanitizeLog } from '../utils/securityUtils';
+import { sanitizeLog, timingSafeCompare } from '../utils/securityUtils';
 
 export class AuthService {
 
@@ -46,28 +46,45 @@ export class AuthService {
         };
     }
 
-    // --- 驗證信箱 (加入過期檢查) ---
-    static async verifyEmail(token: string) {
-        const user = await prisma.user.findUnique({
-            where: { verificationToken: token },
-        });
-
-        if (!user) throw new Error('驗證連結無效');
-
-        // [新增] 檢查是否過期
-        if (user.verificationTokenExpiresAt && user.verificationTokenExpiresAt < new Date()) {
-            throw new Error('驗證連結已過期，請重新申請驗證信');
+    // --- 驗證信箱 (加入過期檢查、時序攻擊防禦與原子化更新) ---
+    static async verifyEmail(token: string, email?: string) {
+        let user;
+        if (email) {
+            // [SECURITY] 經由 Email 查尋，使比對 Token 的過程能具備時序安全性
+            user = await prisma.user.findUnique({ where: { email } });
+        } else {
+            // 回退機制：原有連結可能只有 Token
+            user = await prisma.user.findUnique({
+                where: { verificationToken: token },
+            });
         }
 
-        // 驗證成功，清除 Token 與時間
-        await prisma.user.update({
-            where: { id: user.id },
+        if (!user || !user.verificationToken) throw new Error('驗證連結無效');
+
+        // [SECURITY] 使用時序安全比對 (Timing-Safe Comparison)
+        if (!timingSafeCompare(user.verificationToken, token)) {
+            throw new Error('驗證連結無效');
+        }
+
+        // [原子化更新] 在資料庫層級進行過期與 Token 校驗，防止 Race Condition
+        const result = await prisma.user.updateMany({
+            where: {
+                id: user.id,
+                verificationToken: user.verificationToken, // 確保 Token 在此瞬間未被更動或清除
+                verificationTokenExpiresAt: {
+                    gt: new Date(),
+                },
+            },
             data: {
                 isVerified: true,
                 verificationToken: null,
                 verificationTokenExpiresAt: null,
             },
         });
+
+        if (result.count === 0) {
+            throw new Error('驗證連結已失效或過期，請重新申請驗證信');
+        }
 
         return { message: '信箱驗證成功！您現在可以登入了。' };
     }
@@ -160,13 +177,24 @@ export class AuthService {
         return { message: '如果該信箱存在，重設密碼連結已發送' };
     }
 
-    // --- 驗證重設密碼 token ---
-    static async verifyResetToken(token: string) {
+    // --- 驗證重設密碼 token (時序安全) ---
+    static async verifyResetToken(token: string, email?: string) {
+        // [SECURITY] 優先使用 Token 進行查詢獲取關聯用戶
         const user = await prisma.user.findUnique({
             where: { resetPasswordToken: token },
         });
 
-        if (!user) throw new Error('重設連結無效');
+        if (!user || !user.resetPasswordToken) throw new Error('重設連結無效');
+
+        // [SECURITY] 若有提供 Email，則進行比對（防止 Cross-user token usage）
+        if (email && email !== user.email) {
+            throw new Error('重設連結與信箱不符');
+        }
+
+        // [SECURITY] 使用時序安全比對 Token (雖然已經查到了，但增加一層記憶體比對)
+        if (!timingSafeCompare(user.resetPasswordToken, token)) {
+            throw new Error('重設連結無效');
+        }
 
         if (user.resetPasswordTokenExpiresAt && user.resetPasswordTokenExpiresAt < new Date()) {
             throw new Error('重設連結已過期，請重新申請');
@@ -175,28 +203,46 @@ export class AuthService {
         return { valid: true, email: user.email };
     }
 
-    // --- 重設密碼 ---
-    static async resetPassword(token: string, newPassword: string) {
+    // --- 重設密碼 (時序安全、原子化更新) ---
+    static async resetPassword(token: string, newPassword: string, email?: string) {
+        // [SECURITY] 優先使用 Token 查詢關聯用戶
         const user = await prisma.user.findUnique({
             where: { resetPasswordToken: token },
         });
 
-        if (!user) throw new Error('重設連結無效');
+        if (!user || !user.resetPasswordToken) throw new Error('重設連結無效');
 
-        if (user.resetPasswordTokenExpiresAt && user.resetPasswordTokenExpiresAt < new Date()) {
-            throw new Error('重設連結已過期，請重新申請');
+        // [SECURITY] 驗證 Email 匹配
+        if (email && email !== user.email) {
+            throw new Error('重設連結與信箱不符');
+        }
+
+        // [SECURITY] 時序安全比對
+        if (!timingSafeCompare(user.resetPasswordToken, token)) {
+            throw new Error('重設連結無效');
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        await prisma.user.update({
-            where: { id: user.id },
+        // [原子化更新] 將過期檢查放進 where 條件中
+        const result = await prisma.user.updateMany({
+            where: {
+                id: user.id,
+                resetPasswordToken: user.resetPasswordToken,
+                resetPasswordTokenExpiresAt: {
+                    gt: new Date(),
+                },
+            },
             data: {
                 password: hashedPassword,
                 resetPasswordToken: null,
                 resetPasswordTokenExpiresAt: null,
             },
         });
+
+        if (result.count === 0) {
+            throw new Error('重設連結已過動或失效，請重新申請');
+        }
 
         return { message: '密碼重設成功，請使用新密碼登入' };
     }

@@ -21,6 +21,18 @@ export function sanitizeLog(input: any): string {
 }
 
 /**
+ * [SECURITY] Escapes HTML special characters to prevent XSS attacks in HTML contexts.
+ */
+export function escapeHTML(str: string): string {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
  * Validates if a string is a valid UUID to further protect sensitive actions.
  */
 export function isValidUUID(uuid: string): boolean {
@@ -46,14 +58,14 @@ import crypto from 'crypto';
 
 /**
  * [SECURITY] Timing-safe string comparison to prevent timing attacks.
- * Uses Node.js crypto.timingSafeEqual.
+ * Uses SHA-256 hashing to ensure inputs to timingSafeEqual have constant length,
+ * which also prevents errors when input strings have different lengths.
  */
 export function timingSafeCompare(a: string, b: string): boolean {
     if (typeof a !== 'string' || typeof b !== 'string') return false;
-    if (a.length !== b.length) {
-        // To reduce timing differences, we can still perform a dummy comparison
-        crypto.timingSafeEqual(Buffer.from(a), Buffer.from(a));
-        return false;
-    }
-    return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+
+    const expectedHash = crypto.createHash('sha256').update(a).digest();
+    const actualHash = crypto.createHash('sha256').update(b).digest();
+
+    return crypto.timingSafeEqual(expectedHash, actualHash);
 }
