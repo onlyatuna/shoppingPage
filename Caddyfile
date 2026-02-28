@@ -1,0 +1,36 @@
+evanchen316.com {
+    # 1. 反向代理到後端容器 (port 3000)
+    # Caddy 會自動處理 X-Forwarded-For 等標頭，配合 app.ts 的 trust proxy 使用
+    reverse_proxy app:3000 {
+        # 確保後端能拿到正確的原始 Host
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+    }
+
+    # 2. TLS 設定 (使用 Cloudflare Origin 憑證)
+    tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+
+    # 3. 效能優化：啟用壓縮
+    encode zstd gzip
+
+    # 4. 基礎安全標頭 (不與後端 Helmet/Lusca 衝突的部分)
+    header {
+        # 移除 Caddy 的 CSP，由後端 Helmet 統一輸出
+        # 僅保留傳輸層安全相關標頭
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        
+        # 讓瀏覽器決定 Referer，增強隱私
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # 停用快取 API 回應 (與 app.ts 雙重保險)
+        Cache-Control "no-store, no-cache, must-revalidate"
+        
+        # 移除敏感伺服器資訊
+        -Server
+    }
+
+    # 5. 日誌紀錄
+    log {
+        output file /data/caddy_access.log
+    }
+}

@@ -146,7 +146,8 @@ app.get('/api/health', async (req: Request, res: Response) => {
             status: 'healthy',
             service: 'Shopping Mall API',
             timestamp: new Date().toISOString(),
-            database: 'connected'
+            database: 'connected',
+            // [FUTURE] Add more dependency checks here (e.g., Redis, Cloudinary API)
         });
     } catch (error) {
         logger.error({ action: 'health_check_failed', error }, 'Database connection unhealthy');

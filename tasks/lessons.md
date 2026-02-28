@@ -51,6 +51,16 @@ A fourth deeper analysis surfaced further edge cases primarily around internal s
 ### 🛠️ Solution:
 Generated a true random 64-byte (128 char) Hex string via `crypto.randomBytes(64).toString('hex')` directly inside Node.js and injected it directly into `.env`, guaranteeing immense cryptographic entropy for HMAC-SHA256 operations against offline brute-forcing.
 
+## [Security Audit] Sixth Wave Final Polishing (March 2026)
+### 🐛 Bug:
+Minor maintenance and depth oversights in observability and health reporting:
+1. **PII Exposure - Phone Numbers**: While passwords and card numbers were redacted, user phone numbers (e.g., from shipping info) remained plain in logs if objects were dumped.
+2. **Shallow Health Checks**: The health check endpoint only verified DB connectivity, ignoring third-party integration health or future service scaling (e.g., Redis).
+
+### 🛠️ Solution:
+1. **Redaction Expansion**: Appended `phone`, `*.phone`, and `body.phone` to the `pino` redaction paths in `logger.ts`.
+2. **Health Check Extensible Interface**: Instrumented `/api/health` with future-proofing placeholders for additional dependency monitoring (Redis/Cloudinary), ensuring the observability layer can scale alongside the infrastructure.
+
 
 ## Project Architecture (Monorepo Logic)
 
