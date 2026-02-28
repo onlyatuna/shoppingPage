@@ -80,7 +80,7 @@ model Address {
   isDefault Boolean @default(false)
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("addresses")
 }
@@ -219,7 +219,7 @@ model CustomStyle {
 model AiUsageLog {
   id        Int      @id @default(autoincrement())
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   action    String   // e.g., "BLEND", "EDIT", "CAPTION"
   model     String   // e.g., "gemini-2.5-flash-lite"

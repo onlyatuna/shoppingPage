@@ -5,55 +5,114 @@ import { createCategorySchema } from '../schemas/category.schema';
 type CategoryInput = z.infer<typeof createCategorySchema>;
 
 export class CategoryService {
+    // [Optimization] Memory Cache for categories - cleared on mutations.
+    private static cache: any = null;
+    private static cacheTime: number = 0;
+    private static CACHE_TTL = 60000; // 60 seconds
 
-    // --- [修改] 支援查看所有商品數量 ---
-    // includeInactive: true (後台用，算全部), false (前台用，只算上架)
+    // --- 取得所有分類 (含緩存與商品計數) ---
     static async findAll(includeInactive: boolean = false) {
-        // 設定計數的過濾條件
+        // Simple Memory Cache Implementation
+        const now = Date.now();
+        if (this.cache && !includeInactive && (now - this.cacheTime < this.CACHE_TTL)) {
+            return this.cache;
+        }
+
         const countCondition = includeInactive ? {} : { isActive: true };
 
-        return prisma.category.findMany({
+        const categories = await prisma.category.findMany({
             where: { deletedAt: null } as any,
             include: {
                 _count: {
                     select: {
                         products: {
-                            where: countCondition
+                            where: {
+                                deletedAt: null,
+                                ...countCondition
+                            }
                         }
                     }
                 }
-            }
+            },
+            orderBy: { name: 'asc' }
         });
+
+        // Store in cache for requester only (front-end view)
+        if (!includeInactive) {
+            this.cache = categories;
+            this.cacheTime = now;
+        }
+
+        return categories;
     }
+
+    private static clearCache() {
+        this.cache = null;
+        this.cacheTime = 0;
+    }
+
     static async create(data: CategoryInput) {
         // 檢查 Slug 是否重複
         const exists = await prisma.category.findUnique({ where: { slug: data.slug } });
         if (exists) throw new Error('Slug 已存在');
 
+        this.clearCache();
         return prisma.category.create({ data });
     }
 
     static async update(id: number, data: Partial<CategoryInput>) {
+        this.clearCache();
         return prisma.category.update({ where: { id }, data });
     }
 
-    // --- [修改] 智慧刪除邏輯 ---
-    static async delete(id: number) {
-        // 1. 檢查是否有「上架中 (Active)」的商品
-        // 我們只保護上架中的商品不被誤刪
-        const activeProductsCount = await prisma.product.count({
-            where: { categoryId: id, isActive: true, deletedAt: null }
+    // --- [智慧處理] 獲取或建立「未分類」項目的 ID ---
+    private static async ensureUncategorized(): Promise<number> {
+        const UNC_SLUG = 'uncategorized';
+        const uncategorized = await prisma.category.findUnique({
+            where: { slug: UNC_SLUG }
         });
 
-        if (activeProductsCount > 0) {
-            throw new Error(`該分類下還有 ${activeProductsCount} 個上架商品，請先轉移或下架`);
-        }
+        if (uncategorized) return uncategorized.id;
 
-        // 2. 執行軟刪除
-        // 改名 slug 釋放空間，並設定 deletedAt
+        // 建立一個隱形的或系統用的預設分類
+        const created = await prisma.category.create({
+            data: {
+                name: '未分類',
+                slug: UNC_SLUG,
+            }
+        });
+        return created.id;
+    }
+
+    // --- [修改] 智慧刪除邏輯：防止孤兒商品 (Orphaned Products) ---
+    static async delete(id: number) {
         const category = await prisma.category.findUnique({ where: { id } });
         if (!category) throw new Error('分類不存在');
 
+        // [Security] 禁止刪除「未分類」預設分組
+        if (category.slug === 'uncategorized') {
+            throw new Error('無法刪除預設的「未分類」項目');
+        }
+
+        // 1. 檢查是否有「尚未刪除」的商品
+        const orphanedProductsCount = await prisma.product.count({
+            where: { categoryId: id, deletedAt: null }
+        });
+
+        if (orphanedProductsCount > 0) {
+            // [UX Improvement] 自動將商品移往「未分類」
+            const uncategorizedId = await this.ensureUncategorized();
+
+            await prisma.product.updateMany({
+                where: { categoryId: id, deletedAt: null },
+                data: { categoryId: uncategorizedId }
+            });
+
+            console.log(`已將 ${orphanedProductsCount} 個商品移至未分類項目。`);
+        }
+
+        // 2. 執行軟刪除
+        this.clearCache();
         const updateData: any = {
             deletedAt: new Date(),
             slug: `${category.slug}-deleted-${Date.now()}`

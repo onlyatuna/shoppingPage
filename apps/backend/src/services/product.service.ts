@@ -3,6 +3,7 @@ import { prisma } from '../utils/prisma';
 import { createProductSchema, queryProductSchema } from '../schemas/product.schema';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
+import slugify from 'slugify';
 
 type CreateProductInput = z.infer<typeof createProductSchema>;
 type QueryProductInput = z.infer<typeof queryProductSchema>;
@@ -89,14 +90,21 @@ export class ProductService {
 
     // --- 新增商品 (Admin) ---
     static async create(data: CreateProductInput) {
-        // 檢查分類是否存在
-        const categoryExists = await prisma.category.findUnique({
+        // [Security Enhancement] 檢查分類是否存在且未被刪除
+        const category = await prisma.category.findUnique({
             where: { id: data.categoryId },
         });
-        if (!categoryExists) throw new Error('分類不存在');
+        if (!category || category.deletedAt) {
+            throw new Error('分類不存在或已被刪除');
+        }
+
+        // 生成 Slug
+        const baseSlug = slugify(data.name, { lower: true, strict: true });
+        const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
         const createData: any = {
             ...data,
+            slug,
             images: data.images ?? [],
             options: data.options ?? [],
             variants: data.variants ?? [],
@@ -109,12 +117,28 @@ export class ProductService {
 
     // --- 更新商品 (Admin) ---
     static async update(id: number, data: Partial<CreateProductInput>) {
+        // [Security Enhancement] 如果有提供 categoryId，檢查分類是否存在且未被刪除
+        if (data.categoryId) {
+            const category = await prisma.category.findUnique({
+                where: { id: data.categoryId },
+            });
+            if (!category || category.deletedAt) {
+                throw new Error('分類不存在或已被刪除');
+            }
+        }
+
         const updateData: any = {
             ...data,
             images: data.images ?? undefined,
             options: data.options ?? undefined,
             variants: data.variants ?? undefined,
         };
+
+        // 如果名稱有變動，同步更新 Slug
+        if (data.name) {
+            const baseSlug = slugify(data.name, { lower: true, strict: true });
+            updateData.slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
+        }
 
         return prisma.product.update({
             where: { id },

@@ -13,6 +13,7 @@ router.patch('/profile', authenticateToken, UserController.updateProfile);
 // --- 開發者功能 (需 Developer 權限) ---
 router.get('/', authenticateToken, requireDeveloper, UserController.getAllUsers);
 router.patch('/:id/role', authenticateToken, requireDeveloper, UserController.updateUserRole);
+router.post('/:id/verify', authenticateToken, requireDeveloper, UserController.manualVerifyEmail);
 router.delete('/:id', authenticateToken, requireDeveloper, UserController.deleteUser);
 
 export default router;

@@ -258,3 +258,7 @@
     2. **解耦 Migration**: 避免在 `CMD` 中執行 `prisma migrate deploy`。
     3. **Image 瘦身**: 刪除 `typescript` / `@types` 並清理 npm 快取。
     4. **完善 .dockerignore**: 排除 `node_modules` 與 `dist`。
+
+## Zod Schema Validation
+- **Zod v4 record schema:** In Zod v4, the `z.record()` function now requires at least two arguments: the key schema and the value schema. This is a breaking change from Zod v3, which allowed just the value schema (defaulting keys to strings).
+  - Use `z.record(z.string(), valueSchema)` for a string-keyed record.
