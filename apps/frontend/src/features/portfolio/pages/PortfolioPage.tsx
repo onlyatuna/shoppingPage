@@ -1,6 +1,6 @@
 import CaseStudyCard from '@/features/portfolio/components/CaseStudyCard';
 import LabCard from '@/features/portfolio/components/LabCard';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, Monitor, Database, Cpu } from 'lucide-react';
 
 export default function PortfolioPage() {
     return (
@@ -8,38 +8,62 @@ export default function PortfolioPage() {
             <div className="w-full max-w-7xl px-4 lg:px-8 py-12 flex flex-col gap-24">
 
                 {/* Hero Section */}
-                <section className="relative overflow-hidden rounded-3xl bg-[#111621] min-h-[560px] flex items-center justify-center p-8 md:p-16 shadow-2xl shadow-gray-200 text-center md:text-left md:justify-start">
-                    <div className="absolute inset-0 bg-[url('/assets/images/hero_bg.png')] bg-cover bg-center opacity-30 mix-blend-overlay" />
-                    <div className="absolute md:inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#111621] via-[#111621]/90 to-transparent inset-0" />
+                <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-[#f0f4f8] to-[#e6eaf0] min-h-[560px] flex items-center justify-center p-8 md:p-16 shadow-xl shadow-gray-200/50 text-center md:text-left md:justify-start border border-gray-100">
+                    <div className="absolute inset-0 bg-[url('/assets/images/hero_bg.png')] bg-cover bg-center opacity-5 mix-blend-overlay" />
                     <div className="relative z-10 max-w-3xl flex flex-col gap-8 md:items-start items-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 w-fit backdrop-blur-sm">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 w-fit">
                             <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                             </span>
-                            <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">Open for Work</span>
+                            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">開放新機會</span>
                         </div>
-                        <h1 className="text-white text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-center md:text-left">
-                            打造高轉換率的商務體驗，與探索前衛互動技術的產品設計師 / 前端工程師。
+                        <h1 className="text-[#111418] text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-center md:text-left">
+                            專注於 AI 應用整合與複雜系統架構的全端工程師。
                         </h1>
-                        <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed max-w-xl text-center md:text-left">
-                            Bridging the gap between <span className="text-gray-200">Financial Intelligence</span> and <span className="text-gray-200">Interactive Frontend Experiences</span>.
+                        <p className="text-gray-600 text-lg md:text-xl font-medium leading-relaxed max-w-xl text-center md:text-left">
+                            結合生成式 AI 與全端技術，打造次世代金融與電商自動化系統。
                         </p>
                         <div className="flex gap-4">
-                            <button onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })} className="h-12 px-8 rounded-xl bg-white text-[#111621] font-bold text-sm hover:bg-gray-100 transition-all flex items-center justify-center gap-2 shadow-lg shadow-white/10 w-full sm:w-auto">
-                                View Work <ArrowDown size={18} />
+                            <button onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })} className="h-12 px-8 rounded-xl bg-[#2463eb] text-white font-bold text-sm hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 w-full sm:w-auto hover:-translate-y-0.5">
+                                查看作品 <ArrowDown size={18} />
                             </button>
-                            <button className="h-12 px-8 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all backdrop-blur-sm hidden sm:flex items-center">
-                                Resume / CV
+                            <button className="h-12 px-8 rounded-xl bg-white border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-all hidden sm:flex items-center hover:-translate-y-0.5 shadow-sm">
+                                個人履歷
                             </button>
                         </div>
+                    </div>
+                </section>
+
+                {/* Tech Stack Section */}
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                    <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Monitor size={20} /></div>
+                            <h3 className="text-xl font-bold text-[#111418]">前端開發 (Frontend)</h3>
+                        </div>
+                        <p className="text-gray-600 font-medium">React 19, TypeScript, Tailwind CSS, Vite, Zustand, Three.js</p>
+                    </div>
+                    <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><Database size={20} /></div>
+                            <h3 className="text-xl font-bold text-[#111418]">後端與 API (Backend)</h3>
+                        </div>
+                        <p className="text-gray-600 font-medium">Node.js, Express, MySQL, RESTful APIs, Docker</p>
+                    </div>
+                    <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-purple-50 text-purple-600 rounded-lg"><Cpu size={20} /></div>
+                            <h3 className="text-xl font-bold text-[#111418]">AI 與系統整合 (Integrations)</h3>
+                        </div>
+                        <p className="text-gray-600 font-medium">Gemini / OpenAI API, Instagram Graph API, Stripe Payments</p>
                     </div>
                 </section>
 
                 {/* Core Work Section */}
                 <section id="work" className="flex flex-col gap-8 scroll-mt-24">
                     <div className="flex items-center gap-4">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">Featured Flagships</h3>
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">精選專案 (Featured Work)</h3>
                         <span className="h-px flex-1 bg-gray-200"></span>
                     </div>
 
@@ -47,8 +71,11 @@ export default function PortfolioPage() {
                         {/* E-commerce Case Study */}
                         <CaseStudyCard
                             title="AI ShopMaster"
-                            description="An intelligent e-commerce dashboard that automates product descriptions using Generative AI and provides a seamless checkout experience."
-                            tags={['React 19', 'Gemini AI', 'Tailwind', 'Stripe']}
+                            description="結合生成式 AI 自動撰寫商品文案的智慧型電商儀表板，並提供無縫結帳體驗。"
+                            tags={['Instagram API', 'Gemini AI', 'Node.js', 'React 19', 'Stripe']}
+                            keyFeatures="串接 Gemini AI 進行商品文案生成與自動化發文排程"
+                            techStack="Node.js, MySQL, OpenAI/Gemini API, Instagram Graph API, React 19"
+                            impact="減少 80% 商家上架文案時間，自動化社群行銷流程"
                             imagePath="/preview.png"
                             linkTo="/work/ecommerce"
                             demoLink="/work/ecommerce/demo"
@@ -56,9 +83,12 @@ export default function PortfolioPage() {
 
                         {/* Pension Case Study */}
                         <CaseStudyCard
-                            title="Pension Gap Calculator"
-                            description="A comprehensive financial tool designed to help users visualize their retirement trajectory and understand potential savings gaps through an interactive, multi-pillar visualization system."
+                            title="退休金缺口試算器 (Pension Gap Calculator)"
+                            description="全方位的金融工具，協助使用者透過互動式多層次視覺化系統，預見退休軌跡並了解潛在的儲蓄缺口。"
                             tags={['FinTech', 'Data Viz', 'React', 'TypeScript']}
+                            keyFeatures="互動式多層次退休軌跡視覺化系統"
+                            techStack="React, TypeScript, 金融數據視覺化, RESTful APIs"
+                            impact="提供數據驅動的洞察，幫助使用者掌握退休金缺口"
                             imagePath="/assets/images/pension_preview.png"
                             linkTo="/work/pension"
                             demoLink="/work/pension/demo"
@@ -70,8 +100,8 @@ export default function PortfolioPage() {
                 <section id="lab" className="flex flex-col gap-8 scroll-mt-24 mb-16">
                     <div className="flex items-end justify-between border-b border-gray-200 pb-6">
                         <div>
-                            <h2 className="text-3xl font-black text-[#111418] tracking-tight">Creative Lab <span className="text-blue-600">.</span></h2>
-                            <p className="text-gray-500 mt-2 font-medium">Experimental frontend & interactive prototypes.</p>
+                            <h2 className="text-3xl font-black text-[#111418] tracking-tight">工程實驗室與概念驗證 (PoCs) <span className="text-blue-600">.</span></h2>
+                            <p className="text-gray-500 mt-2 font-medium">實驗性前端介面、自動化腳本與 AI 金融原型。</p>
                         </div>
                     </div>
 
@@ -80,7 +110,7 @@ export default function PortfolioPage() {
                             title="Hand Gesture Zoom"
                             tag="TensorFlow.js"
                             color="purple"
-                            description="Control UI scale utilizing webcam hand distance tracking logic."
+                            description="利用視訊鏡頭追蹤手部距離邏輯來控制 UI 縮放。"
                             linkTo="/lab/hand-gesture"
                             imagePath="/assets/images/lab_hand.png"
                         />
@@ -88,7 +118,7 @@ export default function PortfolioPage() {
                             title="BREEZEMASTER 3D"
                             tag="Three.js"
                             color="orange"
-                            description="Interactive 3D fan simulation with dynamic nature-mode wind logic."
+                            description="具有動態自然風邏輯的互動式 3D 風扇模擬。"
                             linkTo="/lab/breeze3d"
                             imagePath="/assets/images/lab_3d.png"
                         />
@@ -96,7 +126,7 @@ export default function PortfolioPage() {
                             title="Retro Arcade"
                             tag="Canvas API"
                             color="green"
-                            description="JavaScript re-creations of classic Tetris and Pac-Man mechanics."
+                            description="使用 JavaScript 重現經典俄羅斯方塊與小精靈遊戲機制。"
                             linkTo="/lab/pacman"
                             imagePath="/assets/images/lab_arcade.png"
                         />
@@ -104,7 +134,7 @@ export default function PortfolioPage() {
                             title="Behavioral Engine"
                             tag="FinTech UI"
                             color="blue"
-                            description="AI-driven investment persona diagnosis and market risk visualization."
+                            description="AI 驅動的投資人設診斷與市場風險視覺化。"
                             linkTo="/lab/behavioral"
                             imagePath="/assets/images/hero_bg.png"
                         />
