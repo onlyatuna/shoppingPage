@@ -5,7 +5,7 @@ import { updateProfileSchema, adminUpdateUserSchema } from '../schemas/user.sche
 import { StatusCodes } from 'http-status-codes';
 import { Role } from '@prisma/client';
 import { asyncHandler } from '../utils/asyncHandler';
-import { logger } from '../utils/logger';
+import { DevLogService } from '../services/devLog.service';
 
 // [Developer] 取得所有使用者
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
@@ -84,12 +84,10 @@ export const manualVerifyEmail = asyncHandler(async (req: Request, res: Response
     const updatedUser = await UserService.manualVerifyEmail(targetUserId);
 
     // [Security] 稽核日誌
-    logger.info({
-        action: 'manual_verification',
-        developerId,
+    DevLogService.log('MANUAL_VERIFY_USER', developerId, '手動驗證使用者', {
         targetUserId,
         targetEmail: updatedUser.email
-    }, 'Developer manually verified a user');
+    });
 
     res.json({
         status: 'success',

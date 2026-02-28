@@ -49,7 +49,18 @@ export default function Navbar() {
         }
     });
 
+    const { data: myOrders } = useQuery({
+        queryKey: ['myOrders'],
+        queryFn: async () => {
+            const res = await apiClient.get<{ data: any[] }>('/orders');
+            return res.data.data;
+        },
+        enabled: !!user,
+    });
+
     const cartCount = cart?.items.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
+    const unpaidOrdersCount = myOrders?.filter(o => o.status === 'PENDING').length || 0;
+
     const isStaff = user?.role === 'ADMIN' || user?.role === 'DEVELOPER';
 
     const handleLogout = async () => {
@@ -152,6 +163,11 @@ export default function Navbar() {
                         {user && (
                             <Link to="/work/ecommerce/demo/orders" className="relative p-2 text-white hover:text-[#1A2B42] transition-colors" title="我的訂單">
                                 <Package size={26} />
+                                {unpaidOrdersCount > 0 && (
+                                    <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-[#1A2B42] bg-[#F5A623] rounded-full flex items-center justify-center border-2 border-[#1A2B42]">
+                                        {unpaidOrdersCount}
+                                    </span>
+                                )}
                             </Link>
                         )}
 

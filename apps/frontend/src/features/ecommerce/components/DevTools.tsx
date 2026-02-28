@@ -15,6 +15,7 @@ export const DevTools: React.FC = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [devLogs, setDevLogs] = useState<any[]>([]);
+    const [verifyEmail, setVerifyEmail] = useState('');
 
     const fetchLogs = async () => {
         try {
@@ -199,6 +200,44 @@ export const DevTools: React.FC = () => {
     const isOrderPage = pathname.includes('/orders/') && params.id && !pathname.includes('/admin');
     const isProductPage = pathname.includes('/products/');
 
+    const verifyTargetUser = async (targetEmail?: string) => {
+        try {
+            const emailToVerify = targetEmail || user?.email;
+            if (!emailToVerify) {
+                toast.error('找不到要驗證的 Email');
+                return;
+            }
+
+            // 1. Search for user ID using email
+            const searchRes = await apiClient.get(`/users?search=${encodeURIComponent(emailToVerify)}`);
+            const users = searchRes.data.data;
+            const targetUserObj = users.find((u: any) => u.email === emailToVerify);
+
+            if (!targetUserObj) {
+                toast.error(`找不到 Email 為 ${emailToVerify} 的使用者`);
+                return;
+            }
+
+            if (targetUserObj.isVerified) {
+                toast.info(`${emailToVerify} 已是驗證狀態`);
+                return;
+            }
+
+            // 2. Perform verification
+            await apiClient.post(`/users/${targetUserObj.id}/verify`);
+            toast.success(`手動驗證成功：${emailToVerify}`);
+            fetchLogs();
+            setVerifyEmail('');
+
+            // If verifing self, reload page to sync global store context
+            if (emailToVerify === user?.email) {
+                setTimeout(() => window.location.reload(), 1500);
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || '手動驗證失敗');
+        }
+    };
+
     return (
         <div className="fixed bottom-24 right-4 z-[9999] animate-in fade-in slide-in-from-bottom-5">
             <div className={`transition-all duration-300 ${isOpen ? 'w-64' : 'w-auto'}`}>
@@ -284,6 +323,37 @@ export const DevTools: React.FC = () => {
                                     <span className="group-hover:scale-110 transition-transform">🗑️</span>
                                     清理過期訂單
                                 </button>
+
+                                {/* User Management Section */}
+                                <div className="mt-4 pt-4 border-t border-zinc-800 space-y-2">
+                                    <div className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider mb-2">User Management</div>
+                                    <button
+                                        onClick={() => verifyTargetUser()}
+                                        className="flex items-center gap-2 w-full text-left p-2 bg-gray-500/20 hover:bg-gray-500/30 rounded text-gray-300 transition-colors group"
+                                    >
+                                        <span className="group-hover:scale-110 transition-transform">✅</span>
+                                        一鍵驗證當前帳號
+                                    </button>
+                                    <div className="flex items-center gap-2 relative">
+                                        <input
+                                            type="email"
+                                            value={verifyEmail}
+                                            onChange={(e) => setVerifyEmail(e.target.value)}
+                                            placeholder="輸入 Email 確認驗證..."
+                                            className="w-full bg-black/50 border border-zinc-800 rounded p-2 text-xs text-white focus:outline-none focus:border-red-500"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') verifyTargetUser(verifyEmail);
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => verifyTargetUser(verifyEmail)}
+                                            disabled={!verifyEmail}
+                                            className="absolute right-1 top-1 bottom-1 px-3 bg-red-500/20 hover:bg-red-500/40 text-red-400 rounded transition-colors disabled:opacity-50 text-xs"
+                                        >
+                                            驗證
+                                        </button>
+                                    </div>
+                                </div>
 
                                 {isOrderPage && (
                                     <button
