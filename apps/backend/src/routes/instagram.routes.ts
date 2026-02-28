@@ -1,14 +1,32 @@
 import { Router, Request, Response } from 'express';
 import { InstagramService } from '../services/instagram.service';
 import { StatusCodes } from 'http-status-codes';
+import { authenticateToken } from '../middlewares/auth.middleware';
+import { requireAdmin } from '../middlewares/admin.middleware';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
+
+// [SECURITY] 限制發佈貼文頻率，防止 API 濫用
+const publishLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 分鐘
+    max: 5, // 最多 5 次發佈請求
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+        res.status(StatusCodes.TOO_MANY_REQUESTS).json({
+            status: 'error',
+            message: '發佈請求過於頻繁，請 15 分鐘後再試'
+        });
+    }
+});
 
 /**
  * GET /api/v1/instagram/posts
  * 取得 Instagram 貼文列表
+ * [SECURITY] 應受到身份驗證保護，避免資訊洩漏
  */
-router.get('/posts', async (req: Request, res: Response) => {
+router.get('/posts', authenticateToken, async (req: Request, res: Response) => {
     try {
         const posts = await InstagramService.getPosts();
         res.json({
@@ -34,8 +52,9 @@ router.get('/posts', async (req: Request, res: Response) => {
 /**
  * POST /api/v1/instagram/publish
  * 發佈貼文到 Instagram
+ * [SECURITY] 嚴格限制僅管理員可執行
  */
-router.post('/publish', async (req: Request, res: Response) => {
+router.post('/publish', authenticateToken, requireAdmin, publishLimiter, async (req: Request, res: Response) => {
     try {
         const { imageUrl, caption } = req.body;
 

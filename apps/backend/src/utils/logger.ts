@@ -17,6 +17,7 @@ export const logger = pino({
             'resetPasswordToken', '*.resetPasswordToken', 'body.resetPasswordToken',
             'creditCardNumber', '*.creditCardNumber', 'body.creditCardNumber',
             'cvv', '*.cvv', 'body.cvv',
+            'phone', '*.phone', 'body.phone',
             'req.headers.authorization', 'req.headers.cookie'
         ],
         censor: '[REDACTED]'

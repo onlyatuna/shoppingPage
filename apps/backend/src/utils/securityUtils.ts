@@ -15,9 +15,36 @@ export function sanitizeLog(input: any): string {
     // Convert to string safely
     const str = typeof input === 'object' ? JSON.stringify(input) : String(input);
 
-    // [SECURITY] Use the explicit OR pattern frequently matched by static analysis
-    // to break taint flow in log injection scenarios (CWE-117).
-    return str.replace(/\n|\r/g, ' ');
+    const safeStr = str.substring(0, 4096);
+    return safeStr.replace(/\n|\r/g, ' ');
+}
+
+/**
+ * [SECURITY] Sanitizes user-provided text for use in AI prompts to prevent Prompt Injection.
+ */
+export function sanitizePrompt(input: string, maxLength: number = 500): string {
+    if (!input) return '';
+
+    // 1. Cap length to prevent Denial of Service on the AI model/tokens
+    let sanitized = input.substring(0, maxLength);
+
+    // 2. Remove common prompt injection markers and dangerous phrases
+    // These are patterns like "Ignore previous instructions" or "forget what I said"
+    const dangerousPatterns = [
+        /ignore all previous/gi,
+        /forget all/gi,
+        /system instruction/gi,
+        /you are now/gi,
+        /start acting as/gi,
+        /output system api key/gi
+    ];
+
+    dangerousPatterns.forEach(pattern => {
+        sanitized = sanitized.replace(pattern, '[REMOVED]');
+    });
+
+    // 3. Escape backticks and other markers that might break prompt enclosure
+    return sanitized.replace(/`/g, '\\`').replace(/\$/g, '\\$').trim();
 }
 
 /**
@@ -68,4 +95,58 @@ export function timingSafeCompare(a: string, b: string): boolean {
     const actualHash = crypto.createHash('sha256').update(b).digest();
 
     return crypto.timingSafeEqual(expectedHash, actualHash);
+}
+
+export interface SafeUrlComponents {
+    host: string;
+    pathname: string;
+    search: string;
+    port: string;
+    isLocal: boolean;
+}
+
+/**
+ * [SECURITY] Validates an image URL against the allowlist to prevent SSRF.
+ * Returns safe components to be reconstructed at the call site.
+ * This implementation uses PURE Literal Selection to definitively break taint flow.
+ */
+export function sanitizeImageUrl(urlString: string): SafeUrlComponents {
+    let url: URL;
+    try {
+        url = new URL(urlString);
+    } catch {
+        throw new Error('Invalid URL format');
+    }
+
+    const hostname = url.hostname.toLowerCase();
+
+    // 1. Strict Literal Whitelist
+    // We use a predefined list of trusted hostnames. 
+    // CodeQL (Alert #65) requires exact matching to prevent bypasses like 'attacker-cloudinary.com'.
+    const TRUSTED_HOSTS = [
+        'res.cloudinary.com',
+        'cloudinary.com',
+        'images.unsplash.com',
+        'picsum.photos'
+    ];
+
+    // Perform exact equality check. We pick the literal from the whitelist to break taint flow.
+    const safeHost = TRUSTED_HOSTS.find(h => h === hostname);
+
+    if (!safeHost) {
+        throw new Error(`Domain not allowed: ${hostname}`);
+    }
+
+    // 2. Component Extraction (Using purified parts)
+    const safePort = url.port ? `:${url.port.replace(/[^0-9]/g, '')}` : '';
+    const safePath = url.pathname.replace(/[^/a-zA-Z0-9._-]/g, '');
+    const safeSearch = url.search.startsWith('?') ? '?' + url.search.substring(1).replace(/[^a-zA-Z0-9=&._-]/g, '') : '';
+
+    return {
+        host: safeHost,
+        port: safePort,
+        pathname: safePath,
+        search: safeSearch,
+        isLocal: false // Explicitly disable local access to prevent SSRF
+    };
 }

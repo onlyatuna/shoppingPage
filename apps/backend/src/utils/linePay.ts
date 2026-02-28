@@ -55,7 +55,8 @@ linePayClient.interceptors.request.use((config) => {
     const signature = createLinePaySignature(uriForSignature, bodyStr, nonce);
 
     // [Debug Log] 協助診斷 400/401 錯誤
-    if (process.env.DEBUG_LINE_PAY === 'true') {
+    // [SECURITY - 4th Audit] Ensure sensitive signature bases and details are NEVER output in production
+    if (process.env.DEBUG_LINE_PAY === 'true' && process.env.NODE_ENV !== 'production') {
         const signatureBase = `${uriForSignature}${bodyStr}${nonce}`;
         console.log(`📡 [LINE Pay Request] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}${config.params ? '?' + serializeParams(config.params) : ''}`);
         console.log(`   Headers: X-LINE-ChannelId=${channelId}, Nonce=${nonce}`);

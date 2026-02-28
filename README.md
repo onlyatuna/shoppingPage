@@ -78,6 +78,21 @@
 - **反向代理**: Caddy (自動 HTTPS)
 - **CI/CD**: GitHub Actions (Linting & Build Checks)
 
+## 🛡️ 安全性亮點 (Security Highlights)
+
+本專案不僅關注功能達成，更在架構層面實作了多項生產等級的安全防禦措施：
+
+- **🎭 進階權限體系 (RBAC Hierarchy)**：實作數值化角色等級機制（DEVELOPER > ADMIN > USER），嚴格限制高階權限的異動只能由更高等級者執行，有效封殺越權攻擊與權限提升漏洞。
+- **🤖 AI 生態系安全 (AI-Native Security)**：
+    - **Prompt Injection 隔離**：將 AI 系統指令 (System Instruction) 鎖定於服務端常數，禁止客戶端直接傳入，從根本防止惡意 Prompt 操控模型行為。
+    - **SSRF 阻斷與硬路徑驗證**：針對圖片處理服務實作「字面值白名單 (Literal Whitelisting)」，禁止任何內網 IP (127.0.0.1/Localhost) 的探測請求。
+- **💎 財務級資料精度 (Financial Integrity)**：全面採用 `Prisma.Decimal` (Decimal.js) 處理所有金額運算，配合資料庫 Transaction 交易機制，杜絕 JavaScript 浮點數誤差導致的金額不符或超賣問題。
+- **🛡️ 深層注入防護 (Deep Injection Defense)**：除了標準參數化查詢外，額外針對 `JSON_SEARCH` 等複雜 SQL 函數實作自定義 Pattern Sanitization，防止萬用字元注入引發的邏輯繞過。
+- **🔒 防禦性傳輸架構**：
+    - **CSRF 雙重驗證**：實作 Double Submit Cookie Pattern，配合前端 credentials 策略確保請求來源合法。
+    - **自定義 AppError 封裝**：全域攔截底層 SQL 錯誤，僅對用戶回傳標準化商業錯誤訊息，隱藏內部資料結構。
+    - **生產級 CSP 策略**：嚴化 Content Security Policy 指令，移除 `unsafe-*` 授權，最大程度緩解 XSS 風險。
+
 ## 🚀 快速開始 (Quick Start)
 
 ### 環境要求

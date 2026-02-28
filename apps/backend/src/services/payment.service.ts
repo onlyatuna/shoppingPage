@@ -1,6 +1,8 @@
 import { prisma } from '../utils/prisma';
 import { linePayClient } from '../utils/linePay';
 import Decimal from 'decimal.js';
+import { AppError } from '../utils/appError';
+import { StatusCodes } from 'http-status-codes';
 
 /**
  * [SECURITY] Sanitizes and validates LINE Pay transaction ID to prevent SSRF
@@ -12,7 +14,7 @@ import Decimal from 'decimal.js';
 function sanitizeTransactionId(transactionId: string): string {
     // LINE Pay transaction IDs are 19-20 digit numeric strings
     if (!transactionId || typeof transactionId !== 'string') {
-        throw new Error('Transaction ID is required');
+        throw new AppError('Transaction ID is required', StatusCodes.BAD_REQUEST);
     }
 
     // Remove any whitespace
@@ -20,7 +22,7 @@ function sanitizeTransactionId(transactionId: string): string {
 
     // Validate format: only digits, 15-25 characters (flexible for future changes)
     if (!/^\d{15,25}$/.test(cleaned)) {
-        throw new Error('Invalid transaction ID format');
+        throw new AppError('Invalid transaction ID format', StatusCodes.BAD_REQUEST);
     }
 
     return cleaned;
@@ -50,8 +52,8 @@ export class PaymentService {
             include: { items: { include: { product: true } } }
         });
 
-        if (!order) throw new Error('訂單不存在或無權限訪問');
-        if (order.status !== 'PENDING') throw new Error(`訂單狀態無效: ${order.status}`);
+        if (!order) throw new AppError('訂單不存在或無權限訪問', StatusCodes.NOT_FOUND);
+        if (order.status !== 'PENDING') throw new AppError(`訂單狀態無效: ${order.status}`, StatusCodes.BAD_REQUEST);
 
         // 2. 建構 Products 列表 (安全性清洗與型別修正)
         const linePayProducts = order.items.map(item => {
@@ -75,20 +77,25 @@ export class PaymentService {
         // 3. [關鍵優化] 重算總金額
         const calculatedAmount = this.calculateTotal(linePayProducts);
 
-        // [Security Log] 檢查金額是否一致
+        // [Security Fix: Order Amount Freeze]
+        // Prices might have changed between Cart creation and Payment initiation.
+        // We MUST rely ONLY on the initial DB snapshot (`order.totalAmount`) for payment processing,
+        // rather than recalculating current product prices which could lead to inconsistencies.
         const dbAmount = new Decimal(order.totalAmount.toString()).toNumber();
+
         if (calculatedAmount !== dbAmount) {
-            console.warn(`⚠️ [Security Alert] 訂單 ${String(order.id).replace(/\n|\r/g, ' ')} 金額不一致! DB: ${dbAmount}, Calc: ${calculatedAmount}`);
+            console.error(`🚨 [Security Alert] Order ${String(order.id).replace(/\n|\r/g, ' ')} amount discrepancy! Snapshot: ${dbAmount}, Current Calc: ${calculatedAmount}. Halting payment.`);
+            throw new AppError(`訂單金額發生變動，請重新建立訂單`, StatusCodes.CONFLICT);
         }
 
         const packages = [{
             id: order.id,
-            amount: calculatedAmount,
+            amount: dbAmount,
             products: linePayProducts
         }];
 
         const orderBody = {
-            amount: calculatedAmount,
+            amount: dbAmount,
             currency: 'TWD',
             orderId: order.id,
             packages,
@@ -102,10 +109,10 @@ export class PaymentService {
         try {
             // [Security] Validate redirect URLs
             if (!process.env.LINE_PAY_RETURN_HOST) {
-                throw new Error('系統設定錯誤：缺少 LINE_PAY_RETURN_HOST');
+                throw new AppError('系統設定錯誤：缺少 LINE_PAY_RETURN_HOST', StatusCodes.INTERNAL_SERVER_ERROR);
             }
 
-            console.log(`[LINE Pay] Initiating request for Order ${String(order.id).replace(/\n|\r/g, ' ')}, Amount: ${calculatedAmount}`);
+            console.log(`[LINE Pay] Initiating request for Order ${String(order.id).replace(/\n|\r/g, ' ')}, Amount: ${dbAmount}`);
 
             const res = await linePayClient.post('/v3/payments/request', orderBody, {
                 timeout: 20000
@@ -118,7 +125,7 @@ export class PaymentService {
                     returnMessage: res.data.returnMessage,
                     info: res.data.info
                 });
-                throw new Error(`LINE Pay 拒絕請求 (${res.data.returnCode}): ${res.data.returnMessage}`);
+                throw new AppError(`LINE Pay 拒絕請求 (${res.data.returnCode}, StatusCodes.INTERNAL_SERVER_ERROR): ${res.data.returnMessage}`);
             }
 
             // 5. 更新 DB
@@ -138,7 +145,7 @@ export class PaymentService {
 
             // 如果是 LINE Pay 回傳的錯誤，直接拋出其訊息
             if (error.response?.data?.returnMessage) {
-                throw new Error(`LINE Pay 錯誤: ${error.response.data.returnMessage}`);
+                throw new AppError(`LINE Pay 錯誤: ${error.response.data.returnMessage}`, StatusCodes.INTERNAL_SERVER_ERROR);
             }
 
             // 如果是我們自己丟出的「拒絕請求」錯誤，保持原樣
@@ -146,24 +153,24 @@ export class PaymentService {
                 throw error;
             }
 
-            throw new Error(`無法發起 LINE Pay 付款: ${error.message}`);
+            throw new AppError(`無法發起 LINE Pay 付款: ${error.message}`, StatusCodes.INTERNAL_SERVER_ERROR);
         }
     }
 
     // --- 步驟 2: 確認付款 (Confirm) ---
-    static async confirmLinePay(orderId: string, transactionId: string, userId?: number) {
+    static async confirmLinePay(orderId: string, transactionId: string, userId: number) {
         // [SECURITY] Sanitize transaction ID to prevent SSRF
         const safeTransactionId = sanitizeTransactionId(transactionId);
 
-        // 1. 找訂單 (結合 userId 確保擁有權)
+        // 1. 找訂單 (強制結合 userId 確保擁有權 - 防止 IDOR)
         const order = await prisma.order.findFirst({
             where: {
                 id: orderId,
-                ...(userId !== undefined ? { userId } : {})
+                userId: userId
             }
         });
 
-        if (!order) throw new Error('訂單不存在或無權限訪問');
+        if (!order) throw new AppError('訂單不存在或無權限訪問', StatusCodes.NOT_FOUND);
 
         // [開發環境容錯]
         if (order.paymentId && order.paymentId !== safeTransactionId) {
@@ -194,7 +201,7 @@ export class PaymentService {
                     console.log('⚠️ [Idempotency] LINE Pay returned 1172. Treating as success.');
                 } else {
                     console.error('LINE Pay Confirm Failed:', String(JSON.stringify(res.data)).replace(/\n|\r/g, ' '));
-                    throw new Error(`LINE Pay Confirm Error: ${res.data.returnMessage}`);
+                    throw new AppError(`LINE Pay Confirm Error: ${res.data.returnMessage}`, StatusCodes.INTERNAL_SERVER_ERROR);
                 }
             }
 
@@ -213,15 +220,15 @@ export class PaymentService {
             if (error.message.includes('LINE Pay Confirm Error')) {
                 throw error;
             }
-            throw new Error('LINE Pay 確認失敗');
+            throw new AppError('LINE Pay 確認失敗', StatusCodes.INTERNAL_SERVER_ERROR);
         }
     }
 
     // --- 步驟 3: 請款 (Capture) ---
     static async capturePayment(orderId: string) {
         const order = await prisma.order.findUnique({ where: { id: orderId } });
-        if (!order || !order.paymentId) throw new Error('訂單無效');
-        if (order.status !== 'AUTHORIZED') throw new Error('狀態非 AUTHORIZED');
+        if (!order || !order.paymentId) throw new AppError('訂單無效', StatusCodes.BAD_REQUEST);
+        if (order.status !== 'AUTHORIZED') throw new AppError('狀態非 AUTHORIZED', StatusCodes.BAD_REQUEST);
 
         const amount = new Decimal(order.totalAmount.toString()).toNumber();
 
@@ -237,7 +244,7 @@ export class PaymentService {
                 if (res.data.returnCode === '1172') {
                     console.log(`⚠️ Capture 1172 (Duplicate). Treating as success.`);
                 } else {
-                    throw new Error(`Capture Error: ${res.data.returnMessage}`);
+                    throw new AppError(`Capture Error: ${res.data.returnMessage}`, StatusCodes.INTERNAL_SERVER_ERROR);
                 }
             }
 
@@ -248,14 +255,22 @@ export class PaymentService {
 
         } catch (error: any) {
             console.error('LinePay Capture Exception:', String(error.response?.data || error.message).replace(/\n|\r/g, ' '));
-            throw new Error('請款失敗');
+            throw new AppError('請款失敗', StatusCodes.INTERNAL_SERVER_ERROR);
         }
     }
 
     // --- 查詢狀態與明細 ---
-    static async checkPaymentStatus(transactionId: string) {
+    static async checkPaymentStatus(transactionId: string, userId: number) {
         // [SECURITY] Sanitize transaction ID to prevent SSRF
         const safeTransactionId = sanitizeTransactionId(transactionId);
+
+        // [SECURITY] Verify ownership before querying Line Pay (IDOR Protection)
+        const orderInfo = await prisma.order.findFirst({
+            where: { paymentId: safeTransactionId, userId }
+        });
+        if (!orderInfo) {
+            throw new AppError('交易不存在或無權限存取', StatusCodes.FORBIDDEN);
+        }
 
         try {
             const res = await linePayClient.get(`/v3/payments/requests/${safeTransactionId}/check`, {
@@ -264,16 +279,27 @@ export class PaymentService {
             return res.data;
         } catch (error: any) {
             console.error('Check Status Error:', String(error.message).replace(/\n|\r/g, ' '));
-            throw new Error('無法查詢付款狀態');
+            throw new AppError('無法查詢付款狀態', StatusCodes.INTERNAL_SERVER_ERROR);
         }
     }
 
-    static async getPaymentDetails(params: { transactionId?: string; orderId?: string }) {
-        if (!params.transactionId && !params.orderId) throw new Error('需提供 ID');
+    static async getPaymentDetails(params: { transactionId?: string; orderId?: string }, userId: number) {
+        if (!params.transactionId && !params.orderId) throw new AppError('需提供 ID', StatusCodes.BAD_REQUEST);
+
+        // [SECURITY] Verify ownership before querying Line Pay (IDOR Protection)
+        const ownedOrder = await prisma.order.findFirst({
+            where: {
+                userId,
+                ...(params.orderId ? { id: params.orderId } : {}),
+                ...(params.transactionId ? { paymentId: params.transactionId } : {})
+            }
+        });
+
+        if (!ownedOrder) throw new AppError('訂單不存在或無權限訪問', StatusCodes.NOT_FOUND);
+
         try {
             const queryParams: any = {};
             if (params.transactionId) {
-                // [修正] 部分 V3 環境偏好直接使用 transactionId (不加 [])
                 queryParams['transactionId'] = sanitizeTransactionId(params.transactionId);
             }
             if (params.orderId) {
@@ -288,7 +314,7 @@ export class PaymentService {
 
             if (res.data.returnCode !== '0000') {
                 console.error('[LINE Pay Details Error Response]', String(JSON.stringify(res.data)).replace(/\n|\r/g, ' '));
-                throw new Error(res.data.returnMessage);
+                throw new AppError(res.data.returnMessage, StatusCodes.INTERNAL_SERVER_ERROR);
             }
             return res.data.info;
         } catch (error: any) {
@@ -303,11 +329,11 @@ export class PaymentService {
     static async refundPayment(orderId: string, refundAmount?: number) {
         // 1. 驗證訂單
         const order = await prisma.order.findUnique({ where: { id: orderId } });
-        if (!order || !order.paymentId) throw new Error('訂單不存在或無交易編號');
+        if (!order || !order.paymentId) throw new AppError('訂單不存在或無交易編號', StatusCodes.NOT_FOUND);
 
         // 只有已付款的訂單才能退款
         if (order.status !== 'PAID') {
-            throw new Error(`無法退款：訂單狀態為 ${order.status}`);
+            throw new AppError(`無法退款：訂單狀態為 ${order.status}`, StatusCodes.BAD_REQUEST);
         }
 
         // 2. 處理金額 (Decimal.js)
@@ -318,7 +344,7 @@ export class PaymentService {
 
         // 防呆：退款金額不可大於訂單總額
         if (amount && amount > new Decimal(order.totalAmount.toString()).toNumber()) {
-            throw new Error('退款金額不可大於訂單總額');
+            throw new AppError('退款金額不可大於訂單總額', StatusCodes.BAD_REQUEST);
         }
 
         try {
@@ -332,7 +358,7 @@ export class PaymentService {
                 if (res.data.returnCode === '1198') {
                     console.log(`⚠️ Order ${String(order.id).replace(/\n|\r/g, ' ')} already refunded (1198).`);
                 } else {
-                    throw new Error(`Refund Failed: ${res.data.returnMessage}`);
+                    throw new AppError(`Refund Failed: ${res.data.returnMessage}`, StatusCodes.INTERNAL_SERVER_ERROR);
                 }
             }
 
@@ -354,7 +380,7 @@ export class PaymentService {
 
         } catch (error: any) {
             console.error('LinePay Refund Exception:', String(error.response?.data || error.message).replace(/\n|\r/g, ' '));
-            throw new Error('退款失敗');
+            throw new AppError('退款失敗', StatusCodes.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -362,10 +388,10 @@ export class PaymentService {
     // 適用情境：訂單狀態為 AUTHORIZED (尚未請款)，管理者決定取消訂單
     static async voidAuthorization(orderId: string) {
         const order = await prisma.order.findUnique({ where: { id: orderId } });
-        if (!order || !order.paymentId) throw new Error('訂單無效');
+        if (!order || !order.paymentId) throw new AppError('訂單無效', StatusCodes.BAD_REQUEST);
 
         if (order.status !== 'AUTHORIZED') {
-            throw new Error(`只有 AUTHORIZED 狀態的訂單可以執行 Void (目前: ${order.status})`);
+            throw new AppError(`只有 AUTHORIZED 狀態的訂單可以執行 Void (目前: ${order.status})`, StatusCodes.BAD_REQUEST);
         }
 
         try {
@@ -373,7 +399,7 @@ export class PaymentService {
             const res = await linePayClient.post(`/v3/payments/authorizations/${order.paymentId}/void`, {});
 
             if (res.data.returnCode !== '0000') {
-                throw new Error(`Void Failed: ${res.data.returnMessage}`);
+                throw new AppError(`Void Failed: ${res.data.returnMessage}`, StatusCodes.INTERNAL_SERVER_ERROR);
             }
 
             // 更新狀態為 CANCELLED
@@ -389,7 +415,7 @@ export class PaymentService {
 
         } catch (error: any) {
             console.error('LinePay Void Exception:', String(error.response?.data || error.message).replace(/\n|\r/g, ' '));
-            throw new Error('取消授權失敗');
+            throw new AppError('取消授權失敗', StatusCodes.INTERNAL_SERVER_ERROR);
         }
     }
 }

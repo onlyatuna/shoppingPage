@@ -32,7 +32,8 @@ export const checkLinePayStatus = asyncHandler(async (req: Request, res: Respons
         throw new Error('缺少 transactionId');
     }
 
-    const result = await PaymentService.checkPaymentStatus(transactionId);
+    const userId = req.user!.userId;
+    const result = await PaymentService.checkPaymentStatus(transactionId, userId);
 
     res.json({
         status: 'success',
@@ -51,8 +52,9 @@ export const captureLinePay = asyncHandler(async (req: Request, res: Response) =
 export const getLinePayDetails = asyncHandler(async (req: Request, res: Response) => {
     const transactionId = req.query.transactionId as string;
     const orderId = req.query.orderId as string;
+    const userId = req.user!.userId;
 
-    const result = await PaymentService.getPaymentDetails({ transactionId, orderId });
+    const result = await PaymentService.getPaymentDetails({ transactionId, orderId }, userId);
 
     res.json({
         status: 'success',

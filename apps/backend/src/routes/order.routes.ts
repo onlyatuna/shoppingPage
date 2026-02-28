@@ -19,7 +19,7 @@ router.post('/', OrderController.createOrder);    // 結帳 (下單)
 router.get('/', OrderController.getMyOrders);     // 訂單列表
 router.get('/:id', OrderController.getOrderById); // 訂單詳情
 
-// [新增] 模擬付款 (BOLA 修復版本)
-router.patch('/:id/pay', OrderController.payOrder);
+// [新增] 模擬付款 (緊急修復：限制僅限管理員調用，防止付款繞過漏洞)
+router.patch('/:id/pay', requireAdmin, OrderController.payOrder);
 
 export default router;

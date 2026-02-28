@@ -54,25 +54,27 @@ export class ProductService {
 
     // --- 取得單一商品詳情 ---
     static async findById(id: number) {
-        const product = await prisma.product.findUnique({
-            where: { id },
+        // [SECURITY] Use findFirst with deletedAt check to strictly filter soft-deleted items
+        const product = await prisma.product.findFirst({
+            where: { id, deletedAt: null },
             include: {
                 category: true,
             },
         });
-        if (!product || product.deletedAt) throw new AppError('找不到該商品', StatusCodes.NOT_FOUND); // [新增] 檢查是否已刪除
+        if (!product) throw new AppError('找不到該商品', StatusCodes.NOT_FOUND);
         return product;
     }
 
     // --- 透過 Slug 取得單一商品詳情 ---
     static async findBySlug(slug: string) {
-        const product = await prisma.product.findUnique({
-            where: { slug },
+        // [SECURITY] Use findFirst with deletedAt check to strictly filter soft-deleted items
+        const product = await prisma.product.findFirst({
+            where: { slug, deletedAt: null },
             include: {
                 category: true,
             },
         });
-        if (!product || product.deletedAt) throw new AppError('找不到該商品', StatusCodes.NOT_FOUND);
+        if (!product) throw new AppError('找不到該商品', StatusCodes.NOT_FOUND);
         return product;
     }
 

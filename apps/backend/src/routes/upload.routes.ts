@@ -125,10 +125,18 @@ router.get('/resources', uploadRateLimiter, authenticateToken, requireAdmin, asy
 // 5. 刪除 Cloudinary 圖片
 import { prisma } from '../utils/prisma';
 
-router.delete('/:publicId', uploadRateLimiter, authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+router.delete('/:publicId(*)', uploadRateLimiter, authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
     const { publicId } = req.params;
 
-    // 1. Check if image is used by any product
+    // [SECURITY] Strict input validation for publicId to prevent SQL wildcard injection in JSON_SEARCH
+    // Only allow alphanumeric, underscore, slash, and dash
+    if (!publicId || !/^[a-zA-Z0-9_\-\/]+$/.test(publicId)) {
+        throw new AppError('無效的圖片 ID 格式', StatusCodes.BAD_REQUEST);
+    }
+
+    // 1. Check if image is used by any product using a safe, parameterized query
+    // [PERFORMANCE NOTE - 4th Audit] If products scale > 10,000, JSON_SEARCH inside MySQL will incur full table scans.
+    // It is highly recommended to normalize product <-> image mapping into a `product_images` relational table in the future.
     const productsUsingImage: any[] = await prisma.$queryRaw`
         SELECT id, name FROM products 
         WHERE JSON_SEARCH(images, 'one', ${'%' + publicId + '%'}) IS NOT NULL

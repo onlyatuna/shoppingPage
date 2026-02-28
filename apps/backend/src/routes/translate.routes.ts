@@ -1,11 +1,26 @@
-// translate.routes.ts
 import { Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { authenticateToken } from '../middlewares/auth.middleware';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
+// [SECURITY] 翻譯 API 速率限制：15分鐘內最多 10 次請求 (保護 DeepL 配額)
+const translateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => {
+        res.status(StatusCodes.TOO_MANY_REQUESTS).json({
+            message: '翻譯請求過於頻繁，請 15 分鐘後再試'
+        });
+    }
+});
+
 // DeepL Translation API
-router.post('/', async (req, res) => {
+// [SECURITY] 已加入 authenticateToken 與 translateLimiter
+router.post('/', authenticateToken, translateLimiter, async (req: any, res: any) => {
     try {
         const { text, targetLang = 'EN' } = req.body;
 
@@ -19,6 +34,14 @@ router.post('/', async (req, res) => {
         if (!apiKey) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 message: 'DeepL API Key 未設定'
+            });
+        }
+
+        const { MonitorService } = await import('../services/monitor.service');
+        const hasQuota = await MonitorService.checkDeepLQuota(text.length);
+        if (!hasQuota) {
+            return res.status(StatusCodes.SERVICE_UNAVAILABLE).json({
+                message: '伺服器翻譯配額(DeepL)本月已用盡，請稍後再試或通知系統管理員'
             });
         }
 
@@ -44,6 +67,21 @@ router.post('/', async (req, res) => {
 
         const data = await response.json();
         const translatedText = data.translations[0].text;
+
+        // [SECURITY] 記錄 DeepL API 使用量，避免配額耗盡
+        // DeepL Free API limit is 500,000 characters per month
+        if (req.user?.userId) {
+            import('../services/monitor.service').then(({ MonitorService }) => {
+                // Character count as "inputTokens", 0 as output since DeepL bills by character
+                MonitorService.logUsage(
+                    req.user.userId,
+                    'TRANSLATE_TEXT',
+                    'deepl-api-free',
+                    text.length,
+                    translatedText.length
+                ).catch(err => console.error('Failed to log DeepL usage:', err));
+            });
+        }
 
         res.json({
             status: 'success',

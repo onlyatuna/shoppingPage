@@ -31,25 +31,28 @@ import path from 'path';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// [修正 1] 信任 Proxy (Caddy)
+// [SECURITY] 信任 Proxy (Caddy)
 // 必須設定，否則在 HTTPS 環境下，Secure Cookie 會寫入失敗
+// [ALERT/SECURITY] 如果伺服器直接對外開放 3000 埠口 (未透過 Proxy)，則此設定可能導致 IP 偽造。
+// 目前在 docker-compose.yml 中僅 use 'expose' 3000，確保只有內部容器 (Caddy) 能存取，因此設定為 1 是安全的。
 app.set('trust proxy', 1);
 
 // Middlewares
 // Security headers configuration
 app.use(helmet({
-    // CSP with permissive settings for React SPA compatibility
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: [
-                "'self'", "'unsafe-inline'", "'unsafe-eval'",
+                "'self'",
+                // [SECURITY] Removed 'unsafe-inline' and 'unsafe-eval' for production hardening
+                // Nonce or Hash should be used if inline scripts are required
                 "https://static.cloudflareinsights.com",
-                "https://cdn.jsdelivr.net",   // MediaPipe (Hand Gesture)
+                "https://cdn.jsdelivr.net",
             ],
             styleSrc: [
-                "'self'", "'unsafe-inline'",
-                "https://fonts.googleapis.com", // Google Fonts / Material Icons
+                "'self'",
+                "https://fonts.googleapis.com",
             ],
             imgSrc: [
                 "'self'", "data:", "blob:",
@@ -67,20 +70,18 @@ app.use(helmet({
                 "'self'",
                 "https://res.cloudinary.com",
                 "https://api.cloudinary.com",
-                "https://generativelanguage.googleapis.com",  // Gemini AI API
-                "https://cdn.jsdelivr.net",                   // MediaPipe WASM assets
+                "https://generativelanguage.googleapis.com",
+                "https://cdn.jsdelivr.net",
                 "wss:", "ws:",
             ],
-            workerSrc: ["'self'", "blob:", "data:"],     // Service Worker & Web Workers
+            workerSrc: ["'self'", "blob:", "data:"],
             frameAncestors: ["'self'"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
         },
     },
-    xssFilter: false, // Disabled - x-xss-protection header is deprecated by browsers
-    // X-Frame-Options for clickjacking protection
+    xssFilter: false,
     frameguard: { action: 'sameorigin' },
-    // Allow cross-origin resource loading (for Cloudinary images)
     crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
@@ -98,16 +99,7 @@ app.use(cors({
 
 
 
-// [SECURITY] Strict JSON body limits to prevent Memory Exhaustion/DoS
-// Use 2mb as default for general API metadata
-app.use((req, res, next) => {
-    // Specify routes that need higher limit for image/Base64 payloads
-    if (req.path.startsWith(`${apiV1Prefix}/upload`) || req.path.startsWith(`${apiV1Prefix}/custom-styles`)) {
-        express.json({ limit: '50mb' })(req, res, next);
-    } else {
-        express.json({ limit: '2mb' })(req, res, next);
-    }
-});
+app.use(express.json({ limit: '2mb' }));
 
 app.use(cookieParser()); // 解析 Cookie
 app.use(csrf);  // [SECURITY] CSRF Protection (Double Submit Cookie Pattern)

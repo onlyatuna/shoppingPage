@@ -71,11 +71,11 @@ export default function PortfolioPage() {
                         {/* E-commerce Case Study */}
                         <CaseStudyCard
                             title="AI ShopMaster"
-                            description="結合生成式 AI 自動撰寫商品文案的智慧型電商儀表板，並提供無縫結帳體驗。"
-                            tags={['Instagram API', 'Gemini AI', 'Node.js', 'React 19', 'Stripe']}
-                            keyFeatures="串接 Gemini AI 進行商品文案生成與自動化發文排程"
-                            techStack="Node.js, MySQL, OpenAI/Gemini API, Instagram Graph API, React 19"
-                            impact="減少 80% 商家上架文案時間，自動化社群行銷流程"
+                            description="結合生成式 AI 與社群自動化的全端電商系統，提供 SaaS 級智慧編輯器與無縫結帳體驗。"
+                            tags={['Full-Stack', 'Gemini AI', 'Instagram API', 'Node.js', 'React 19']}
+                            keyFeatures="實作 SaaS 級圖文編輯器，並串接 Gemini AI 與 IG API 達成從生成到發文的端到端自動化。"
+                            techStack="Node.js, Express, Prisma, MySQL, React 19, Vite, Zustand"
+                            impact="減少 80% 商家上架文案與作圖時間，大幅降低社群營運成本。"
                             imagePath="/preview.png"
                             linkTo="/work/ecommerce"
                             demoLink="/work/ecommerce/demo"

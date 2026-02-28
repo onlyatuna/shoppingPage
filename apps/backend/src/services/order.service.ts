@@ -175,10 +175,10 @@ export class OrderService {
     }
 
     // [新增] 模擬付款 (BOLA 修復版本)
-    static async payOrder(userId: number, orderId: string) {
-        // [SECURITY] 使用 findFirst 並帶入 userId 確保擁有權
+    static async payOrder(userId: number, orderId: string, isAdmin: boolean = false) {
+        // [SECURITY] 使用 findFirst 並帶入 userId 確保擁有權 (除非是 Admin)
         const order = await prisma.order.findFirst({
-            where: { id: orderId, userId }
+            where: isAdmin ? { id: orderId } : { id: orderId, userId }
         });
 
         if (!order) {
@@ -186,7 +186,7 @@ export class OrderService {
         }
 
         if (order.status !== 'PENDING') {
-            throw new AppError('訂單狀態不正確', StatusCodes.BAD_REQUEST);
+            throw new AppError(`訂單狀態不正確 (當前為: ${order.status})`, StatusCodes.BAD_REQUEST);
         }
 
         return prisma.order.update({

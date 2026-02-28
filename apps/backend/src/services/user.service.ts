@@ -5,6 +5,12 @@ import { Role } from '@prisma/client';
 import { AppError } from '../utils/appError';
 import { StatusCodes } from 'http-status-codes';
 
+const ROLE_LEVELS: { [key in Role]: number } = {
+    'DEVELOPER': 3,
+    'ADMIN': 2,
+    'USER': 1
+};
+
 export class UserService {
     // --- 1. 取得所有使用者 (Developer) ---
     static async findAll(searchQuery?: string, skip = 0, take = 20) {
@@ -61,6 +67,7 @@ export class UserService {
 
             // 加密新密碼
             updateData.password = await bcrypt.hash(data.password, 10);
+            updateData.tokenVersion = { increment: 1 }; // [SECURITY] Invalidate existing JWTs
         }
 
         // 如果沒有任何資料要更新，直接回傳當前資料
@@ -83,8 +90,20 @@ export class UserService {
         const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
         if (!targetUser) throw new AppError('使用者不存在', StatusCodes.NOT_FOUND);
 
-        // 2. 只有 DEVELOPER 才能執行此功能 (在 route 層已檢查)
-        // 不需要額外的權限限制，DEVELOPER 可以修改任何人的權限
+        // 2. [SECURITY] Role Hierarchy Check
+        const requesterLevel = ROLE_LEVELS[requesterRole] || 0;
+        const targetCurrentLevel = ROLE_LEVELS[targetUser.role] || 0;
+        const targetNewLevel = ROLE_LEVELS[newRole] || 0;
+
+        // Rule A: Cannot modify someone with a higher or equal role level (unless they are a developer managing admins)
+        if (requesterLevel <= targetCurrentLevel && requesterRole !== 'DEVELOPER') {
+            throw new AppError('權限不足，無法修改同級或更高級別使用者的權限', StatusCodes.FORBIDDEN);
+        }
+
+        // Rule B: Cannot promote anyone to a level higher or equal to your own (e.g. Admin cannot create Developer)
+        if (targetNewLevel >= requesterLevel && requesterRole !== 'DEVELOPER') {
+            throw new AppError('權限不足，無法將使用者提升至與您相等或更高級別的權限', StatusCodes.FORBIDDEN);
+        }
 
         // 3. 執行更新
         return prisma.user.update({
@@ -104,8 +123,13 @@ export class UserService {
         const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
         if (!targetUser) throw new AppError('使用者不存在', StatusCodes.NOT_FOUND);
 
-        // 只有 DEVELOPER 才能執行此功能 (在 route 層已檢查)
-        // DEVELOPER 可以刪除任何人 (除了自己)
+        // [SECURITY] Role Hierarchy Check
+        const requesterLevel = ROLE_LEVELS[requesterRole] || 0;
+        const targetLevel = ROLE_LEVELS[targetUser.role] || 0;
+
+        if (requesterLevel <= targetLevel && requesterRole !== 'DEVELOPER') {
+            throw new AppError('權限不足，無法刪除同級或更高級別使用者', StatusCodes.FORBIDDEN);
+        }
 
         // 執行刪除
         return prisma.user.delete({

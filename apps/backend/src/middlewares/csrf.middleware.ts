@@ -44,11 +44,12 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
     }
 
     // 4. Origin & Referer Validation (Additional Layer)
-    const allowedOrigins = [
-        process.env.FRONTEND_URL || 'http://localhost:5173',
-        'http://127.0.0.1:5173',
-        'https://evanchen316.com'
-    ];
+    const allowedOrigins = process.env.CSRF_ALLOWED_ORIGINS
+        ? process.env.CSRF_ALLOWED_ORIGINS.split(',').map(o => o.trim())
+        : [
+            process.env.FRONTEND_URL || 'http://localhost:5173',
+            'http://127.0.0.1:5173'
+        ];
 
     const origin = req.get('Origin');
     const referer = req.get('Referer');
@@ -66,8 +67,8 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
         }
     } else {
         // No Origin or Referer header - block for state-changing requests if no header either 
-        // (but since we checked the X-XSRF-TOKEN above, it's quite safe already)
-        isValidSource = true; // Trust the token check if the browser didn't provide Origin (uncommon)
+        // as per Security Audit 3: if browser didn't provide Origin, default to false.
+        isValidSource = false;
     }
 
     if (!isValidSource) {

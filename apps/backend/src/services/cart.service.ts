@@ -1,5 +1,7 @@
 //cart.service.ts
 import { prisma } from '../utils/prisma';
+import { AppError } from '../utils/appError';
+import { StatusCodes } from 'http-status-codes';
 
 export class CartService {
 
@@ -63,98 +65,98 @@ export class CartService {
     // apps/backend/src/services/cart.service.ts
 
     static async addItem(userId: number, productId: number, quantity: number, variantId?: string) {
-        // 1. 撈取商品資訊
-        const product = await prisma.product.findUnique({ where: { id: productId } });
-        if (!product) throw new Error('商品不存在');
-        if (!product.isActive) throw new Error('商品已下架');
+        return prisma.$transaction(async (tx) => {
+            // 1. 撈取最新的商品資訊 (在交易內，確保讀取一致性)
+            const product = await tx.product.findUnique({ where: { id: productId } });
+            if (!product || product.deletedAt) throw new AppError('商品不存在', StatusCodes.NOT_FOUND);
+            if (!product.isActive) throw new AppError('商品已下架', StatusCodes.BAD_REQUEST);
 
-        // --- 庫存檢查 (支援變體) ---
-        let currentStock = product.stock;
-
-        if (variantId) {
-            // 如果有指定變體，檢查該變體是否存在且有庫存
-            const variants = product.variants as any[];
-            const targetVariant = variants?.find((v: any) => v.id === variantId);
-
-            if (!targetVariant) {
-                throw new Error('無效的規格變體');
+            // --- 庫存檢查 (支援變體) ---
+            let currentStock = product.stock;
+            if (variantId) {
+                const variants = product.variants as any[];
+                const targetVariant = variants?.find((v: any) => v.id === variantId);
+                if (!targetVariant) throw new AppError('無效的規格變體', StatusCodes.BAD_REQUEST);
+                currentStock = Number(targetVariant.stock);
             }
-            currentStock = Number(targetVariant.stock);
 
             if (quantity > currentStock) {
-                throw new Error(`該規格庫存不足，僅剩 ${currentStock} 件`);
+                throw new AppError(`庫存不足，僅剩 ${currentStock} 件`, StatusCodes.BAD_REQUEST);
             }
-        } else {
-            // 無變體，檢查總庫存 (或主庫存)
-            if (quantity > currentStock) {
-                throw new Error(`庫存不足，僅剩 ${currentStock} 件`);
+
+            // 2. 取得或建立購物車
+            let cart = await tx.cart.findUnique({ where: { userId } });
+            if (!cart) {
+                cart = await tx.cart.create({ data: { userId } });
             }
-        }
 
+            // 3. 檢查商品是否已在車內
+            const existingItem = await tx.cartItem.findFirst({
+                where: {
+                    cartId: cart.id,
+                    productId: productId,
+                    variantId: variantId || null,
+                }
+            });
 
-        // 2. 取得或建立購物車
-        let cart = await prisma.cart.findUnique({ where: { userId } });
-        if (!cart) {
-            cart = await prisma.cart.create({ data: { userId } });
-        }
+            if (existingItem) {
+                const newTotalQuantity = existingItem.quantity + quantity;
+                if (newTotalQuantity > currentStock) {
+                    throw new AppError(`庫存不足！購物車已有 ${existingItem.quantity} 件，再加 ${quantity} 件會超過庫存 (${currentStock} 件)`, StatusCodes.BAD_REQUEST);
+                }
 
-        // 3. 檢查商品是否已在車內 (符合 ProductId AND VariantId)
-        // 使用 findFirst 來安全處理可能為 null 的 variantId
-
-        const existingItemSafe = await prisma.cartItem.findFirst({
-            where: {
-                cartId: cart.id,
-                productId: productId,
-                variantId: variantId || null,
+                return tx.cartItem.update({
+                    where: { id: existingItem.id },
+                    data: { quantity: newTotalQuantity },
+                });
+            } else {
+                return tx.cartItem.create({
+                    data: {
+                        cartId: cart.id,
+                        productId,
+                        variantId: variantId || null,
+                        quantity,
+                    },
+                });
             }
         });
-
-        if (existingItemSafe) {
-            // 累加檢查
-            const newTotalQuantity = existingItemSafe.quantity + quantity;
-
-            if (newTotalQuantity > currentStock) {
-                throw new Error(`庫存不足！購物車已有 ${existingItemSafe.quantity} 件，再加 ${quantity} 件會超過庫存 (${currentStock} 件)`);
-            }
-
-            return prisma.cartItem.update({
-                where: { id: existingItemSafe.id },
-                data: { quantity: newTotalQuantity },
-            });
-        } else {
-            return prisma.cartItem.create({
-                data: {
-                    cartId: cart.id,
-                    productId,
-                    variantId, // Can be null
-                    quantity,
-                },
-            });
-        }
     }
     // --- 更新項目數量 ---
     static async updateItemQuantity(userId: number, itemId: number, quantity: number) {
-        // [SECURITY] 結合 userId 查詢，確保該項目屬於當前使用者
-        const item = await prisma.cartItem.findFirst({
-            where: {
-                id: itemId,
-                cart: { userId }
+        return prisma.$transaction(async (tx) => {
+            // [SECURITY] 結合 userId 查詢，確保該項目屬於當前使用者
+            const item = await tx.cartItem.findFirst({
+                where: {
+                    id: itemId,
+                    cart: { userId }
+                }
+            });
+
+            if (!item) {
+                throw new AppError('找不到該購物車項目', StatusCodes.NOT_FOUND);
             }
-        });
 
-        if (!item) {
-            throw new Error('找不到該購物車項目');
-        }
+            // 檢查庫存
+            const product = await tx.product.findUnique({ where: { id: item.productId } });
+            if (!product || product.deletedAt) throw new AppError('商品不存在', StatusCodes.NOT_FOUND);
 
-        // 檢查庫存 (如果要嚴謹一點，這裡也要查 Product 表看庫存夠不夠)
-        const product = await prisma.product.findUnique({ where: { id: item.productId } });
-        if (product && quantity > product.stock) {
-            throw new Error(`庫存不足，最大可購買數量為 ${product.stock}`);
-        }
+            let currentStock = product.stock;
+            if (item.variantId) {
+                const variants = product.variants as any[];
+                const targetVariant = variants?.find((v: any) => v.id === item.variantId);
+                if (targetVariant) {
+                    currentStock = Number(targetVariant.stock);
+                }
+            }
 
-        return prisma.cartItem.update({
-            where: { id: itemId },
-            data: { quantity },
+            if (quantity > currentStock) {
+                throw new AppError(`庫存不足，最大可購買數量為 ${currentStock}`, StatusCodes.BAD_REQUEST);
+            }
+
+            return tx.cartItem.update({
+                where: { id: itemId },
+                data: { quantity },
+            });
         });
     }
 
@@ -169,7 +171,7 @@ export class CartService {
         });
 
         if (!item) {
-            throw new Error('無法刪除：權限不足或項目不存在');
+            throw new AppError('無法刪除：權限不足或項目不存在', StatusCodes.FORBIDDEN);
         }
 
         return prisma.cartItem.delete({

@@ -19,3 +19,10 @@ export const updateOrderStatusSchema = z.object({
     }),
 });
 
+// [新增] 查詢所有訂單 (Admin)
+export const adminOrdersQuerySchema = z.object({
+    status: z.enum(Object.values(OrderStatus) as [OrderStatus, ...OrderStatus[]])
+        .optional()
+        .catch(undefined), // 若不合法則 fallback 為 undefined (查全部)
+});
+

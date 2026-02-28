@@ -28,42 +28,23 @@ export const errorHandler = (err: any, req: Request, res: Response, _next: NextF
     const message = err.message || '系統發生錯誤';
     let statusCode = err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
 
-    // 為通用的 Error (非 AppError) 提供關鍵字保底機制
-    if (!(err instanceof AppError)) {
-        const errorMapping: { [key: string]: number } = {
-            '找不到': StatusCodes.NOT_FOUND,
-            '存在': StatusCodes.NOT_FOUND,
-            '已被註冊': StatusCodes.CONFLICT,
-            '重複': StatusCodes.CONFLICT,
-            '其餘': StatusCodes.CONFLICT, // 處理相關聯衝突
-            '權限不足': StatusCodes.FORBIDDEN,
-            '未經授權': StatusCodes.FORBIDDEN,
-            '驗證信': StatusCodes.FORBIDDEN,
-            '帳號或密碼錯誤': StatusCodes.UNAUTHORIZED,
-            '尚有': StatusCodes.BAD_REQUEST,
-            '無法刪除': StatusCodes.BAD_REQUEST,
-            '驗證失敗': StatusCodes.BAD_REQUEST,
-            '不合法': StatusCodes.BAD_REQUEST,
-            '格式錯誤': StatusCodes.BAD_REQUEST,
-        };
-
-        for (const [key, code] of Object.entries(errorMapping)) {
-            if (message.includes(key)) {
-                statusCode = code;
-                break;
-            }
-        }
-    }
+    // HTTP 500 is used for generic Error instances unless they explicitly set statusCode
+    // Developers should use AppError to trigger specific UI error boundaries
 
     // 3. 記錄錯誤日誌 (排除常見的使用者輸入錯誤以減少噪音，或全部記錄)
     if (statusCode === StatusCodes.INTERNAL_SERVER_ERROR) {
         logger.error({ err, reqId: (req as any).id }, 'Unexpected Internal Server Error');
     }
 
+    // [SECURITY] 500 錯誤在 Production 環境下模糊化，避免洩漏敏感內部路徑/資料庫連線字串
+    const finalMessage = (statusCode === StatusCodes.INTERNAL_SERVER_ERROR && process.env.NODE_ENV === 'production')
+        ? '系統發生不可預期的錯誤，請稍後再試。'
+        : message;
+
     // 4. 回傳錯誤回應
     res.status(statusCode).json({
         status: 'error',
-        message,
+        message: finalMessage,
         // 開發環境顯示堆疊資訊
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     });

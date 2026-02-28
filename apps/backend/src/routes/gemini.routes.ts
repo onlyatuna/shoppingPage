@@ -27,7 +27,8 @@ router.post('/edit-image', aiRateLimiter, authenticateToken, async (req: Request
     let userId: number | undefined;
     try {
         // [MODIFIED] 支援 imageBase64 與 maskBase64
-        const { imageUrl, imageBase64, maskBase64, prompt, systemInstruction } = req.body;
+        // [SECURITY] 移除從前端傳入的 systemInstruction，防止 Prompt Injection
+        const { imageUrl, imageBase64, maskBase64, prompt } = req.body;
         userId = (req as any).user?.userId;
 
         if (!userId) {
@@ -69,7 +70,7 @@ router.post('/edit-image', aiRateLimiter, authenticateToken, async (req: Request
             targetImage,
             maskBase64, // [NEW] 傳遞遮罩
             prompt,
-            systemInstruction,
+            undefined, // [SECURITY] 使用 Service 層預設指令
             userId
         );
 

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { v2 as cloudinary } from 'cloudinary';
-import { sanitizeLog } from '../utils/securityUtils';
+import { sanitizeLog, sanitizeImageUrl, sanitizePrompt } from '../utils/securityUtils';
 
 // Configure Cloudinary
 if (process.env.CLOUDINARY_CLOUD_NAME) {
@@ -57,6 +57,7 @@ export class InstagramService {
         }
 
         try {
+            const safeCaption = sanitizePrompt(caption, 2000); // Instagram limit is ~2200
             let targetUrl = imageUrl;
 
             // 如果是 Base64 格式，先上傳到 Cloudinary 轉成公開連結
@@ -71,13 +72,20 @@ export class InstagramService {
                 });
                 targetUrl = uploadResult.secure_url;
                 console.log('Image uploaded to Cloudinary:', sanitizeLog(targetUrl));
+            } else {
+                // [SECURITY] 針對外部 URL 進行 SSRF 驗證
+                const { host, pathname, search, port, isLocal } = sanitizeImageUrl(imageUrl);
+                const protocol = isLocal ? 'http:' : 'https:';
+                // 使用樣板字串重建 URL 以徹底打破 Taint 追蹤 (CodeQL Pattern)
+                targetUrl = `${protocol}//${host}${port}${pathname}${search}`;
+                console.log('Sanitized external URL:', sanitizeLog(targetUrl));
             }
 
             // Step 1: Create Media Container
             const containerResponse = await axios.post(`https://graph.instagram.com/${igUserId}/media`, null, {
                 params: {
                     image_url: targetUrl,
-                    caption: caption,
+                    caption: safeCaption,
                     access_token: token
                 }
             });
@@ -85,10 +93,8 @@ export class InstagramService {
             const creationId = containerResponse.data.id;
             console.log('Container created:', sanitizeLog(creationId));
 
-
-
             // Step 2: Wait for Media Processing with exponential backoff
-            const maxAttempts = 20; // Increased from 10
+            const maxAttempts = 20;
             let attempt = 0;
 
             while (attempt < maxAttempts) {
@@ -131,9 +137,7 @@ export class InstagramService {
                     // Still IN_PROGRESS, continue loop
 
                 } catch (error: any) {
-                    // Log error but continue trying unless it's the last attempt
                     console.warn(`Error on attempt ${attempt}:`, sanitizeLog(error.message));
-
                     if (attempt >= maxAttempts) {
                         throw new Error('媒體處理超時，請稍後再試或檢查圖片格式');
                     }

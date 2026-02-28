@@ -131,7 +131,7 @@ export class AuthService {
         if (!user.isVerified) throw new AppError('請先至信箱收取驗證信啟用帳號', StatusCodes.FORBIDDEN);
 
         const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role },
+            { userId: user.id, email: user.email, role: user.role, tokenVersion: user.tokenVersion },
             process.env.JWT_SECRET!,
             {
                 expiresIn: '7d',
@@ -239,6 +239,7 @@ export class AuthService {
                 password: hashedPassword,
                 resetPasswordToken: null,
                 resetPasswordTokenExpiresAt: null,
+                tokenVersion: { increment: 1 }, // [SECURITY] Invalidate old JWTs
             },
         });
 

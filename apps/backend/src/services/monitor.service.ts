@@ -11,6 +11,10 @@ const PRICING = {
         input: 0.075 / 1_000_000,
         output: 0.30 / 1_000_000
     },
+    'deepl-api-free': {
+        input: 0,
+        output: 0
+    },
     'default': { // Fallback
         input: 0.10 / 1_000_000,
         output: 0.40 / 1_000_000
@@ -56,33 +60,73 @@ export class MonitorService {
     }
 
     /**
-     * Check if today's total cost exceeds limit
+     * Check if DeepL Free Tier quota limits are exceeded
      */
-    private static async checkDailyBudget() {
+    static async checkDeepLQuota(characterCount: number): Promise<boolean> {
         try {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
             const result = await prisma.aiUsageLog.aggregate({
                 _sum: {
-                    cost: true
+                    inputTokens: true // Assuming inputTokens stores character count for DeepL
                 },
                 where: {
+                    model: 'deepl-api-free',
                     createdAt: {
-                        gte: today
+                        gte: new Date(today.getFullYear(), today.getMonth(), 1) // Monthly limit
                     }
                 }
             });
 
-            const totalCost = Number(result._sum.cost || 0);
+            // DeepL Free API limit is 500,000 chars per month
+            const monthTotal = Number(result._sum.inputTokens || 0);
 
-            if (totalCost > DAILY_COST_LIMIT) {
-                console.warn(`🚨 DAILY AI COST ALERT: $${totalCost.toFixed(4)} exceeds limit of $${DAILY_COST_LIMIT}`);
-                // In a real app, send email/Slack notification here
+            if (monthTotal + characterCount > 490000) { // Safety margin
+                console.warn(`🚨 DEEPL QUOTA ALERT: Reached ${monthTotal} chars this month.`);
+                return false;
             }
+            return true;
 
         } catch (error) {
+            console.error('Failed to check DeepL quota:', error);
+            return true; // Fail open to not block translations if DB fails
+        }
+    }
+
+    /**
+     * Circuit breaker: Check if today's total cost is under limit BEFORE allowing AI execution
+     */
+    static async checkBudgetAllowed(): Promise<boolean> {
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const result = await prisma.aiUsageLog.aggregate({
+                _sum: { cost: true },
+                where: { createdAt: { gte: today } }
+            });
+
+            const totalCost = Number(result._sum.cost || 0);
+
+            if (totalCost >= DAILY_COST_LIMIT) {
+                console.warn(`🚨 AI CIRCUIT BREAKER TRIGGERED: $${totalCost.toFixed(4)} >= $${DAILY_COST_LIMIT}`);
+                return false;
+            }
+            return true;
+        } catch (error) {
             console.error('Failed to check daily budget:', error);
+            // Fail open so we don't break app if DB is slow, but log heavily
+            return true;
+        }
+    }
+
+    /**
+     * Check if today's total cost exceeds limit after an execution
+     */
+    static async checkDailyBudget() {
+        if (!(await this.checkBudgetAllowed())) {
+            // Already tracked warning inside checkBudgetAllowed
         }
     }
 

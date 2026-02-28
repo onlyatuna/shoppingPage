@@ -1,7 +1,7 @@
 // apps/backend/src/controllers/order.controller.ts
 import { Request, Response } from 'express';
 import { OrderService } from '../services/order.service';
-import { createOrderSchema, updateOrderStatusSchema } from '../schemas/order.schema';
+import { createOrderSchema, updateOrderStatusSchema, adminOrdersQuerySchema } from '../schemas/order.schema';
 import { StatusCodes } from 'http-status-codes';
 import { OrderStatus } from '@prisma/client';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -40,11 +40,7 @@ export const getOrderById = asyncHandler(async (req: Request, res: Response) => 
 
 // [新增] 取得所有訂單 (Admin)
 export const getAllOrders = asyncHandler(async (req: Request, res: Response) => {
-    const { status } = req.query;
-    // 簡單驗證 status 是否合法，若不合法則當作 undefined (查全部)
-    const filterStatus = Object.values(OrderStatus).includes(status as any)
-        ? (status as OrderStatus)
-        : undefined;
+    const { status: filterStatus } = adminOrdersQuerySchema.parse(req.query);
 
     const orders = await OrderService.findAllAdmin(filterStatus);
     res.json({ status: 'success', data: orders });
@@ -70,7 +66,8 @@ export const deleteOrder = asyncHandler(async (req: Request, res: Response) => {
 export const payOrder = asyncHandler(async (req: Request, res: Response) => {
     const orderId = req.params.id;
     const userId = req.user!.userId;
+    const isAdmin = req.user!.role === 'ADMIN' || req.user!.role === 'DEVELOPER';
 
-    await OrderService.payOrder(userId, orderId);
+    await OrderService.payOrder(userId, orderId, isAdmin);
     res.json({ status: 'success', message: '付款成功' });
 });

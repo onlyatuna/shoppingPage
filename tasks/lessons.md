@@ -1,5 +1,57 @@
 # Lessons Learned
 
+## [Security Audit] Second Wave of Infrastructure Hardening (March 2026)
+### 🐛 Bug:
+A secondary security audit revealed critical oversights:
+1. **Unprotected Instagram Endpoints**: Anyone could publish to Instagram (`/api/v1/instagram/publish`) because middleware was omitted.
+2. **LINE Pay TOC/TOU Discrepancy (Race Condition)**: While `initiateLinePay` checked for price mismatches between cart and DB, it proceeded to use the cart calculation instead of the DB snapshot for payment initiation, risking price manipulation during checkout flow.
+3. **Caddy Reverse Proxy Spoofing**: The app trusted `X-Forwarded-For` from the proxy, but `Caddyfile` wasn't explicitly rewriting it, allowing external clients to forge their IP addressing, rendering rate limiting ineffective. 
+4. **Hardcoded CSRF Whitelist**: Included hardcoded localhost and explicit domains in source code instead of relying on `.env` settings.
+5. **AI Unrestricted Budget**: AI functions lacked a "circuit breaker" where daily budgets exceeding the limit triggered warnings but still allowed executions, risking massive API charges if flooded.
+6. **Express Body `limit` Configuration DoS**: Previous Base64 uploads required a global 10mb body limit on select endpoints, allowing arbitrary malformed 10mb payloads to exhaust Node.js memory. 
+
+### 🛠️ Solution:
+1. **Added Middlewares**: Restored `requireAdmin`, `authenticateToken`, and `rateLimit` on the `instagram.routes.ts`.
+2. **Order Amount Freeze**: Redesigned `initiateLinePay` logic to *strictly* enforce that the payment request uses `order.totalAmount` (the DB snapshot taken at Order creation). Recalculated total amounts are only used to throw a hard Error if they differ from the DB string to halt potentially manipulated orders.
+3. **Caddy Headers**: Appended `header_up X-Forwarded-For {remote_host}` inside Caddy's `reverse_proxy` definition to overwrite forged IPs.
+4. **Env CSRF Variables**: Removed `https://evanchen316.com` and hardcoded localhost variables from `csrf.middleware.ts`. Now defaults to reading `process.env.CSRF_ALLOWED_ORIGINS`.
+5. **Circuit Breaker Check**: Added `await MonitorService.checkBudgetAllowed()` at the start of expensive Gemini API methods to proactively decline generations once the daily budget ceiling is hit.
+6. **Optimized Payloads via Multipart/Multer**: Reduced `express.json({ limit: 'xx' })` back to a uniform globally safe `2mb`. Refactored `upload.routes.ts` Cloudinary integrations to process standard multipart/form-data images in memory (Multer) via `upload_stream(buffer)`.
+
+## [Security Audit] Third Wave of Architecture Robustness (March 2026)
+### 🐛 Bug:
+A third deeper analysis surfaced logical edge cases:
+1. **CSRF Implicit Trusts**: Previously, missing `Origin` / `Referer` headers defaulted to trusting state-changing requests, relying entirely on the XSRF-TOKEN.
+2. **Fragile String Matching**: The global `errorHandler.ts` caught errors by comparing text strings (e.g., `message.includes('找不到')`), converting them to HTTP 404/400. This could break if text changes.
+3. **JWT Statelessness Trap**: Standard `jwt` implementations lack an automated way to revoke existing logins across devices if an account resets its password or if forced-logged out.
+4. **Unvalidated Admin Query**: `getAllOrders` verified the req.query via generic logic instead of using Zod.
+
+### 🛠️ Solution:
+1. **Strict Origin Nullification**: Set `isValidSource = false;` when `Origin/Referer` are completely absent on state-changing requests.
+2. **AppError Subclasses**: Eliminated the string dictionary from `errorHandler.ts` entirely. Migrated critical internal services (`PaymentService`, `GeminiService`) to directly `throw new AppError('msg', StatusCodes)`.
+3. **JWT tokenVersion Revocation**: Added a `tokenVersion: Int` to Prisma `User` schema. Every login stamps the JWT with this model integer. Resets/Updates increment it. `authenticateToken` now does a lightweight `findUnique` check per-access, providing a fast "Logout everywhere" system.
+4. **Zod Strict Native Enum**: Pushed `adminOrdersQuerySchema` to `order.schema.ts` holding `z.enum(Object.values(OrderStatus)).optional().catch(undefined)`.
+
+## [Security Audit] Fourth Wave of Hardening Edge Cases (March 2026)
+### 🐛 Bug:
+A fourth deeper analysis surfaced further edge cases primarily around internal state exposure and IDORs:
+1. **Error Handler Info Disclosure**: If a base Error got trapped matching `StatusCodes.INTERNAL_SERVER_ERROR`, the `err.message` string was still returned. This could possibly leak SQL disconnect logs, file paths, etc.
+2. **IDOR on LinePay Status**: `/api/v1/payment/status/:transactionId` merely checked if a token was provided, but didn't ensure the `transactionId` being requested actually originated from the calling user's orders.
+3. **Logging Data Leaks**: `linePay.ts` intercepted and freely dumped `process.env.LINE_PAY_CHANNEL_SECRET` derivatives alongside the `Signature Base` across STDOUT if `DEBUG_LINE_PAY` was enabled, which was risky if left true in production.
+
+### 🛠️ Solution:
+1. **Error Masking in Prod**: Adjusted `errorHandler.ts` to output `"系統發生不可預期的錯誤，請稍後再試。"` exclusively when both `statusCode === 500` AND `process.env.NODE_ENV === 'production'` evaluate to true, hiding internal mechanics.
+2. **Payment Lookup Ownership Validation**: Updated `PaymentService.checkPaymentStatus` to additionally accept and mandate a Prisma validation lookup (`where: { paymentId: ..., userId }`), ensuring cross-user peeking evaluates to a hard 403 Forbidden.
+3. **Debug Guarding**: Locked `linePay.ts` debugging logs to `process.env.NODE_ENV !== 'production'`, creating a dual-lock system that prevents accidental data dumps in living environments.
+4. **Performance Notes**: Commented `upload.routes.ts` around `JSON_SEARCH` inside `MySQL` regarding Future O(N) penalties during scaling, proposing an eventual decoupling into a Many-to-Many `product_images` schema for indexed lookup speed when inventory outgrows its bounds.
+
+## [Security Audit] Fifth Wave Final Review - Cryptography (March 2026)
+### 🐛 Bug:
+`JWT_SECRET` was identified in `.env` as a weak, human-readable string (`"ilovejessicayang..."`). While long enough to pass the >32 chars middleware check, it lacked cryptographic entropy.
+### 🛠️ Solution:
+Generated a true random 64-byte (128 char) Hex string via `crypto.randomBytes(64).toString('hex')` directly inside Node.js and injected it directly into `.env`, guaranteeing immense cryptographic entropy for HMAC-SHA256 operations against offline brute-forcing.
+
+
 ## Project Architecture (Monorepo Logic)
 
 | Layer / Folder | Role (職責) | Core Tech Stack / Note |
@@ -251,6 +303,15 @@
 - **Pattern: Business-Grade Aesthetic**: Light grey-blue gradients + Specialized icons (No Emojis).
 - **Pattern: IDOR 防護下沉至資料庫層 (Prisma/SQL Layer)**: 
   驗證權限時，優先使用 `findFirst({ where: { id, userId } })`。這能帶來更好的效能，並防止因邏輯決策被使用者輸入惡意規避的風險。
+- **[2026-03-01 Update] AI Prompt Injection 防護**:
+    1. **隔離數據與指令**: 在提示詞中使用 `[USER DATA]` 與 `[INSTRUCTION]` 標記，明確告知 AI 哪些文字僅供參考，不應被視為指令。
+    2. **髒字過濾 (Sanitization)**: 針對使用者輸入執行關鍵字過濾 (如 `ignore all instructions`, `system api key`) 與長度限制，防止惡意注入導致模型行為異常或 Token 浪費。
+- **[2026-03-01 Update] 內網探測與 delegated SSRF 防護**:
+    1. **SSRF 安全名單 (Whitelist)**: 所有外部 URL (尤其是傳送給第三方服務如 Instagram, Google 的 URL) 必須通過 `sanitizeImageUrl` 驗證，限制僅允許受信任的圖片域名 (如 Cloudinary, Unsplash)。
+    2. **URL 重建模式 (Pure Literal Selection)**: 不要直接對輸入 URL 進行正則替換，而是解析出 components 後，使用代碼中的字串字面量 (如 `https://`) 與安全名單中的域名重新拼接，徹底打破 CodeQL 的 Taint Tracking。
+- **[2026-03-01 Update] DoS 防護策略**:
+    1. **階層式 `express.json` 限制**: 對一般路由嚴格限制 `2mb`，僅對必要的圖片上傳路由開放較大限制 (如 `10mb`)。避免全域開放 `50mb` 導致記憶體耗盡風險。
+    2. **優先選用 `multer` 串流**: 大檔案上傳應優先透過 `multipart/form-data` 搭配 `multer.memoryStorage()` 或 `diskStorage` 串流處理，而非轉為巨大的 Base64 JSON。
 
 ## Docker 容器資安與效能優化 (Production-Ready Docker)
 - **Dockerfile Hardening**: 
@@ -297,3 +358,17 @@
 
 ## Transactional Integrity & Rollbacks
 - **Prisma Interactive Transactions**: When performing operations with multiple side effects (e.g., decrementing inventory AND creating an order), ALWAYS wrap them in `prisma.$transaction`. This ensures that if any step fails (like a card decline or server error during record creation), ALL previous database changes within that block are automatically rolled back, preventing orphaned records or incorrect inventory counts (Atomic Data Integrity).
+
+## AI Security & Prompt Injection
+- **System Instruction Isolation**: Never allow the `systemInstruction` for generative AI models to be passed from the client-side. This prevents 'Prompt Injection' where an attacker overrides the model's behavioral constraints. Keep these instructions as server-side constants.
+- **SSRF in Image Processing**: When downloading images for AI processing, strictly validate the URL's hostname against a literal whitelist. Avoid allowing `localhost` or `127.0.0.1` even in development, as this can be used to scan internal services via the server's network.
+
+## Advanced RBAC & Role Hierarchy
+- **Role-Level Enforcement**: In systems with multiple administrative roles (e.g., ADMIN vs DEVELOPER), enforce a numeric 'Role Level'. A user should only be able to perform management actions (like update or delete) on users with a strictly LOWER Role Level. This prevents escalation attacks where an admin might try to hijack a developer's access.
+
+## Input Sanitization for Raw SQL
+- **Pattern Injection**: Even when using parameterized queries (like Prisma's `$queryRaw`), if the input is used inside a database function like `JSON_SEARCH` or as a `LIKE` pattern, an attacker can still inject wildcards (`%`, `_`). Always validate the input character set (e.g., Alphanumeric only) before passing it to the query.
+
+## Agent Operations & File Safety
+- **避免覆蓋既有文件 (Prevent Overwriting)**: 絕不對已建立的專案紀錄文件（如 `lessons.md` 或 `todo.md`）使用 `write_to_file` 並設為 `Overwrite: true`。這會導致歷史紀錄與使用者手動新增的內容消失。
+- **增量修改原則 (Incremental Edits)**: 優先使用 `replace_file_content` 或 `multi_replace_file_content` 進行精確修改，以保持「上下文衛生 (Context Hygiene)」並尊重專案的長期記憶。

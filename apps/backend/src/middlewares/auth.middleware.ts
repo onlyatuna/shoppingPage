@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
+import { prisma } from '../utils/prisma';
 
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
     throw new Error('JWT_SECRET must be at least 32 characters');
@@ -27,41 +28,60 @@ declare global {
 // ------------------------------------------------------------------
 // 2. 驗證邏輯 (Main Logic)
 // ------------------------------------------------------------------
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-    // 從 Header 取得 Token
-    // 格式通常是: "Authorization: Bearer <你的Token>"
-    const authHeader = req.headers['authorization'];
-    const tokenFromHeader = authHeader && authHeader.split(' ')[1];
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // 從 Header 取得 Token
+        // 格式通常是: "Authorization: Bearer <你的Token>"
+        const authHeader = req.headers['authorization'];
+        const tokenFromHeader = authHeader && authHeader.split(' ')[1];
 
-    // 優先從 Cookie 讀取 Token，如果沒有才看 Header
-    const token = req.cookies?.token || tokenFromHeader;
+        // 優先從 Cookie 讀取 Token，如果沒有才看 Header
+        const token = req.cookies?.token || tokenFromHeader;
 
-    // 情況 A: 根本沒傳 Token
-    if (!token) {
-        return res.status(StatusCodes.UNAUTHORIZED).json({
-            message: '未登入，請提供 Token'
-        });
-    }
-
-    // 情況 B: 驗證 Token 合法性
-    jwt.verify(token, process.env.JWT_SECRET as string, {
-        algorithms: ['HS256'],  // 只接受 HS256 演算法
-        issuer: 'shopping-mall-api',  // 驗證發行者
-        audience: 'shopping-mall-client'  // 驗證受眾
-    }, (err: any, decoded: any) => {
-        if (err) {
-            // Token 過期或被竄改
-            return res.status(StatusCodes.FORBIDDEN).json({
-                message: 'Token 無效或已過期'
+        // 情況 A: 根本沒傳 Token
+        if (!token) {
+            return res.status(StatusCodes.UNAUTHORIZED).json({
+                message: '未登入，請提供 Token'
             });
         }
 
+        // 情況 B: 驗證 Token 合法性
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string, {
+            algorithms: ['HS256'],  // 只接受 HS256 演算法
+            issuer: 'shopping-mall-api',  // 驗證發行者
+            audience: 'shopping-mall-client'  // 驗證受眾
+        }) as any;
+
+        // 情況 C: Token Revocation Check (檢查 tokenVersion)
+        if (decoded && decoded.userId) {
+            const user = await prisma.user.findUnique({
+                where: { id: decoded.userId },
+                select: { tokenVersion: true }
+            });
+
+            if (!user) {
+                return res.status(StatusCodes.UNAUTHORIZED).json({ message: '用戶不存在' });
+            }
+
+            // Fallback for old tokens without tokenVersion
+            const jwtVersion = decoded.tokenVersion || 0;
+            if (jwtVersion !== user.tokenVersion) {
+                // Token 被強制註銷 (密碼更新或後台踢出)
+                return res.status(StatusCodes.FORBIDDEN).json({
+                    message: '登入狀態已失效 (Token Revoked)，請重新登入'
+                });
+            }
+        }
+
         // 驗證成功！
-        // 將解碼出來的資料 (userId, role) 存入 req.user
-        // 這樣後面的 Controller 就可以用 req.user 知道是誰在發請求
         req.user = decoded as { userId: number; role: string };
 
         // 放行，進入下一個步驟 (Controller)
         next();
-    });
+    } catch (err: any) {
+        // Token 過期或被竄改
+        return res.status(StatusCodes.FORBIDDEN).json({
+            message: 'Token 無效或已過期'
+        });
+    }
 };
