@@ -1,16 +1,30 @@
-# 環境變數與秘密 
+# 環境變數與秘密 (SECURITY)
 .env
 .env.*
+
+# 排除所有層級的 node_modules (BUILD SPEED)
+**/node_modules
+
+# 排除所有層級的編譯產物
+**/dist
+**/build
+*.tsbuildinfo
+
+# 排除本地的 Prisma 產生結果
+**/generated
+apps/backend/prisma/client
+apps/backend/prisma/*.db
+
+# 排除 Git 相關
+.git
+.gitignore
 
 # 編輯器與系統雜訊
 .vscode
 .idea
+.DS_Store
+Thumbs.db
 *:Zone.Identifier
-
-# 更多編譯產物與暫存檔
-*.tsbuildinfo
-packages/shared/dist
-packages/shared/node_modules 
 
 # 測試與除錯產出
 debug_log.json

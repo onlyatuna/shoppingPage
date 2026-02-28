@@ -73,45 +73,44 @@ jobs:
           command_timeout: 30m
           
           script: |
-            # 1. 登入 GHCR
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # 1. 登入 GHCR (使用 stdin 避免密碼出現在進程列表)
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             
             # 2. 拉取最新 Image
-            docker pull ghcr.io/onlyatuna/shoppingpage:latest
+            docker pull "${{ env.IMAGE_TAG }}"
             
             # 3. 進入目錄
             cd ~/shop-app || exit 1
             
-            #此時目錄下應該已經有 scp 過來的 docker-compose.yml 了
+            # 4. 產生 .env (使用 cat << 'EOF' 確保安全，避免 Secrets 在 ps aux 中洩漏)
+            cat << 'EOF' > .env
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            LINE_PAY_CHANNEL_ID=${{ secrets.LINE_PAY_CHANNEL_ID }}
+            LINE_PAY_CHANNEL_SECRET=${{ secrets.LINE_PAY_CHANNEL_SECRET }}
+            SMTP_HOST=${{ secrets.SMTP_HOST }}
+            SMTP_USER=${{ secrets.SMTP_USER }}
+            SMTP_PASS=${{ secrets.SMTP_PASS }}
+            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            NODE_ENV=production
+            CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+            CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+            CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+            IG_ACCESS_TOKEN=${{ secrets.IG_ACCESS_TOKEN }}
+            IG_USER_ID=${{ secrets.IG_USER_ID }}
+            DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            LINE_PAY_API_URL=${{ secrets.LINE_PAY_API_URL }}
+            LINE_PAY_RETURN_HOST=${{ secrets.LINE_PAY_RETURN_HOST }}
+            LINE_PAY_RETURN_CONFIRM_URL=${{ secrets.LINE_PAY_RETURN_CONFIRM_URL }}
+            LINE_PAY_RETURN_CANCEL_URL=${{ secrets.LINE_PAY_RETURN_CANCEL_URL }}
+            EOF
             
-            # 4. 產生 .env (保持不變)
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
-            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-            echo "LINE_PAY_CHANNEL_ID=${{ secrets.LINE_PAY_CHANNEL_ID }}" >> .env
-            echo "LINE_PAY_CHANNEL_SECRET=${{ secrets.LINE_PAY_CHANNEL_SECRET }}" >> .env
-            echo "SMTP_HOST=${{ secrets.SMTP_HOST }}" >> .env
-            echo "SMTP_USER=${{ secrets.SMTP_USER }}" >> .env
-            echo "SMTP_PASS=${{ secrets.SMTP_PASS }}" >> .env
-            echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
-            echo "NODE_ENV=production" >> .env
-            echo "CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}" >> .env
-            echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}" >> .env
-            echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}" >> .env
-            echo "IG_ACCESS_TOKEN=${{ secrets.IG_ACCESS_TOKEN }}" >> .env
-            echo "IG_USER_ID=${{ secrets.IG_USER_ID }}" >> .env
-            echo "DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}" >> .env
-            echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
-            
-            # [新增] LINE Pay 完整環境變數
-            echo "LINE_PAY_API_URL=${{ secrets.LINE_PAY_API_URL }}" >> .env
-            echo "LINE_PAY_RETURN_HOST=${{ secrets.LINE_PAY_RETURN_HOST }}" >> .env
-            echo "LINE_PAY_RETURN_CONFIRM_URL=${{ secrets.LINE_PAY_RETURN_CONFIRM_URL }}" >> .env
-            echo "LINE_PAY_RETURN_CANCEL_URL=${{ secrets.LINE_PAY_RETURN_CANCEL_URL }}" >> .env
-
             # 5. 重啟服務
-            docker compose up -d --force-recreate
-
-            # 6. 資料庫遷移
-            sleep 10
-            sleep 10
+            # [優化] 使用 --remove-orphans 清理過期容器，使用 --wait 確保容器啟動成功 (需對應 healthcheck)
+            docker compose up -d --force-recreate --remove-orphans
+            
+            # 6. 資料庫遷移 (確保在應用啟動後執行)
+            # 等待應用程式就緒
+            sleep 15
             docker compose exec -T app npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma

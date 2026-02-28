@@ -97,7 +97,17 @@ app.use(cors({
 
 
 
-app.use(express.json({ limit: '50mb' }));
+// [SECURITY] Strict JSON body limits to prevent Memory Exhaustion/DoS
+// Use 2mb as default for general API metadata
+app.use((req, res, next) => {
+    // Specify routes that need higher limit for image/Base64 payloads
+    if (req.path.startsWith(`${apiV1Prefix}/upload`) || req.path.startsWith(`${apiV1Prefix}/custom-styles`)) {
+        express.json({ limit: '50mb' })(req, res, next);
+    } else {
+        express.json({ limit: '2mb' })(req, res, next);
+    }
+});
+
 app.use(cookieParser()); // 解析 Cookie
 app.use(csrf);  // [SECURITY] CSRF Protection (Double Submit Cookie Pattern)
 

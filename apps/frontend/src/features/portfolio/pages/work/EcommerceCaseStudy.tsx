@@ -40,9 +40,9 @@ export default function EcommerceCaseStudy() {
                     <div className="md:col-span-2">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">技術棧 (Tech Stack)</h3>
                         <ul className="space-y-1.5">
-                            <li className="text-[15px] font-medium text-gray-900"><span className="text-gray-500 mr-2">前端 (Frontend):</span>React 19, Tailwind CSS, Vite</li>
-                            <li className="text-[15px] font-medium text-gray-900"><span className="text-gray-500 mr-2">後端與資料庫 (Backend & DB):</span>Node.js / Express, MySQL</li>
-                            <li className="text-[15px] font-medium text-gray-900"><span className="text-gray-500 mr-2">AI 與第三方整合 (AI & API):</span>Gemini API, Instagram Graph API</li>
+                            <li className="text-[15px] font-medium text-gray-900"><span className="text-gray-500 mr-2">前端 (Frontend):</span>React 19, Tailwind CSS, Vite, Framer Motion</li>
+                            <li className="text-[15px] font-medium text-gray-900"><span className="text-gray-500 mr-2">後端與資料庫 (Backend & DB):</span>Express 5, MySQL, Prisma ORM, JWT, Zod</li>
+                            <li className="text-[15px] font-medium text-gray-900"><span className="text-gray-500 mr-2">AI 與第三方整合 (AI & API):</span>Gemini AI, LINE Pay V3, IG Graph API, Cloudinary</li>
                         </ul>
                     </div>
                 </div>
@@ -60,9 +60,9 @@ export default function EcommerceCaseStudy() {
                             <strong>核心理念：</strong>結合生成式 AI 與社群自動化的全端電商儀表板，大幅降低商家營運成本。
                         </p>
                         <ul className="list-disc pl-6 space-y-3 marker:text-gray-300">
-                            <li><strong>AI 賦能 (AI Integration)：</strong>串接 Gemini API，根據商品特徵自動生成高轉換率的行銷文案與圖片。</li>
-                            <li><strong>社群自動化 (Workflow Automation)：</strong>整合 Instagram Graph API，實作從「AI 產出內容」到「排程自動發文」的端到端 (End-to-End) 工作流。</li>
-                            <li><strong>系統架構 (Architecture)：</strong>透過 Node.js 背景工作處理非同步的 AI 請求與發文排程，確保高負載下 React 前端介面依舊即時且流暢。</li>
+                            <li><strong>AI 自動化 (AI Integration)：</strong>串接 Gemini API 自動生成行銷文案，大幅提升商品上架效率。</li>
+                            <li><strong>全端資安防護 (Security)：</strong>實作 Double Submit Cookie CSRF 防禦、動態 JSON Body 限制與 HSTS，確保金流與資料安全。</li>
+                            <li><strong>系統監控 (Observability)：</strong>整合 Pino 結構化日誌與 Zod 資料驗證，建構具備高度診斷能力的後端架構。</li>
                         </ul>
                     </section>
 
@@ -87,9 +87,9 @@ export default function EcommerceCaseStudy() {
                             在標準 CRUD 介面中整合生成式 AI (Google Gemini)，同時不能讓人覺得突兀。介面需要清楚區分 AI 生成內容與使用者輸入內容。
                         </p>
                         <ul className="list-disc pl-6 space-y-2 marker:text-gray-300">
-                            <li>在等待 AI 串流生成的同時，保持極快的 React 前端響應。</li>
-                            <li>設計從購物車到 Stripe 支付無縫銜接的結帳流程。</li>
-                            <li>確保在龐大資料表上的響應式設計。</li>
+                            <li>在處理 AI 串流生成與高流量 API 的同時，確保系統具備防禦 DoS 與記憶體耗竭的韌性。</li>
+                            <li>設計一套能自動識別 API 職責的動態 JSON Body 限制機制，平衡性能與安全性。</li>
+                            <li>處理 LINE Pay V3 複雜的 Hmac 簽章驗證，確保交易資料的完整性與不可篡改性。</li>
                         </ul>
                     </section>
 
@@ -149,16 +149,16 @@ export default function EcommerceCaseStudy() {
                                 {/* Integrations Node */}
                                 <div className="flex flex-col gap-3 w-48">
                                     <div className="flex flex-col items-center bg-purple-900/40 backdrop-blur-sm border border-purple-800/50 p-3 rounded-lg text-center">
-                                        <div className="font-bold text-sm">Gemini AI API</div>
-                                        <div className="text-[10px] text-gray-400 mt-1">生成式文字</div>
+                                        <div className="font-bold text-sm">Gemini / IG API</div>
+                                        <div className="text-[10px] text-gray-400 mt-1">AI 與自動化</div>
                                     </div>
-                                    <div className="flex flex-col items-center bg-pink-900/40 backdrop-blur-sm border border-pink-800/50 p-3 rounded-lg text-center">
-                                        <div className="font-bold text-sm">IG Graph API</div>
-                                        <div className="text-[10px] text-gray-400 mt-1">自動發文</div>
+                                    <div className="flex flex-col items-center bg-blue-900/40 backdrop-blur-sm border-blue-800/50 p-3 rounded-lg text-center">
+                                        <div className="font-bold text-sm">Security Layers</div>
+                                        <div className="text-[10px] text-blue-300 mt-1">CSRF / CSP / HSTS</div>
                                     </div>
-                                    <div className="flex flex-col items-center bg-indigo-900/40 backdrop-blur-sm border border-indigo-800/50 p-3 rounded-lg text-center">
-                                        <div className="font-bold text-sm">Stripe API</div>
-                                        <div className="text-[10px] text-gray-400 mt-1">支付串接</div>
+                                    <div className="flex flex-col items-center bg-indigo-900/40 backdrop-blur-sm border-indigo-800/50 p-3 rounded-lg text-center">
+                                        <div className="font-bold text-sm">Payment API</div>
+                                        <div className="text-[10px] text-gray-400 mt-1">LINE Pay V3</div>
                                     </div>
                                 </div>
                             </div>

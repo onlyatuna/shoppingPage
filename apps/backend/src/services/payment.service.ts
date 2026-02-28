@@ -44,13 +44,13 @@ export class PaymentService {
 
     // --- 步驟 1: 向 LINE Pay 請求付款 ---
     static async initiateLinePay(orderId: string, userId: number) {
-        // 1. 找訂單
-        const order = await prisma.order.findUnique({
-            where: { id: orderId },
+        // 1. 找訂單 (結合 userId 確保擁有權)
+        const order = await prisma.order.findFirst({
+            where: { id: orderId, userId },
             include: { items: { include: { product: true } } }
         });
 
-        if (!order || order.userId !== userId) throw new Error('訂單不存在或無權限訪問');
+        if (!order) throw new Error('訂單不存在或無權限訪問');
         if (order.status !== 'PENDING') throw new Error(`訂單狀態無效: ${order.status}`);
 
         // 2. 建構 Products 列表 (安全性清洗與型別修正)
@@ -155,13 +155,15 @@ export class PaymentService {
         // [SECURITY] Sanitize transaction ID to prevent SSRF
         const safeTransactionId = sanitizeTransactionId(transactionId);
 
-        const order = await prisma.order.findUnique({ where: { id: orderId } });
-        if (!order) throw new Error('訂單不存在');
+        // 1. 找訂單 (結合 userId 確保擁有權)
+        const order = await prisma.order.findFirst({
+            where: {
+                id: orderId,
+                ...(userId !== undefined ? { userId } : {})
+            }
+        });
 
-        // 驗證訂單所有權（如果提供了 userId）
-        if (userId !== undefined && order.userId !== userId) {
-            throw new Error('無權操作此訂單');
-        }
+        if (!order) throw new Error('訂單不存在或無權限訪問');
 
         // [開發環境容錯]
         if (order.paymentId && order.paymentId !== safeTransactionId) {

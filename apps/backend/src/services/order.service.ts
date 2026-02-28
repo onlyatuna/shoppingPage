@@ -104,8 +104,8 @@ export class OrderService {
 
     // --- 查詢單筆訂單詳情 ---
     static async getOrderById(userId: number, orderId: string) {
-        const order = await prisma.order.findUnique({
-            where: { id: orderId },
+        const order = await prisma.order.findFirst({
+            where: { id: orderId, userId },
             include: {
                 items: {
                     include: { product: true },
@@ -113,7 +113,7 @@ export class OrderService {
             },
         });
 
-        if (!order || order.userId !== userId) {
+        if (!order) {
             throw new Error('找不到訂單');
         }
 

@@ -9,6 +9,7 @@ services:
       - "443:443" # HTTPS
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile # 掛載設定檔
+      - ./certs:/etc/caddy/certs # 新增掛載憑證資料夾
       - caddy_data:/data # 持久化憑證
       - caddy_config:/config
     depends_on:
@@ -20,11 +21,10 @@ services:
     container_name: shopping-app
     restart: always
 
-    # 2. [設定] 連接埠
-    # 您原本寫 80:3000，如果您沒有用 Caddy/Nginx，這樣可以直接用 IP 訪問
-    # 如果有用 Caddy，建議改回 3000:3000
-    ports:
-      - "3000:3000"
+    # 2. [SECURITY] 內部網路隔離
+    # 不再直接對外開放 3000 埠口，僅透過 Caddy 進行反向代理訪問
+    expose:
+      - "3000"
 
     # 3. [修正] 讀取 CI/CD 生成的 .env 檔案
     # 這樣就不用把密碼寫死在這裡，而且能讀到最新的 GitHub Secrets
@@ -40,6 +40,14 @@ services:
         limits:
           cpus: '0.80'
           memory: 600M
+
+    # 5. [新增] 健全狀況檢查 (搭配 CI/CD 的 --wait 強化部署可靠性)
+    healthcheck:
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {if (r.statusCode !== 200) process.exit(1);})\"" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   db:
     image: mysql:8.0

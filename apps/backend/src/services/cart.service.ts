@@ -134,13 +134,15 @@ export class CartService {
     }
     // --- 更新項目數量 ---
     static async updateItemQuantity(userId: number, itemId: number, quantity: number) {
-        // 驗證該 Item 是否屬於該使用者的購物車 (安全性檢查)
-        const item = await prisma.cartItem.findUnique({
-            where: { id: itemId },
-            include: { cart: true },
+        // [SECURITY] 結合 userId 查詢，確保該項目屬於當前使用者
+        const item = await prisma.cartItem.findFirst({
+            where: {
+                id: itemId,
+                cart: { userId }
+            }
         });
 
-        if (!item || item.cart.userId !== userId) {
+        if (!item) {
             throw new Error('找不到該購物車項目');
         }
 
@@ -158,13 +160,15 @@ export class CartService {
 
     // --- 移除單一項目 ---
     static async removeItem(userId: number, itemId: number) {
-        // 同樣做安全性檢查
-        const item = await prisma.cartItem.findUnique({
-            where: { id: itemId },
-            include: { cart: true },
+        // [SECURITY] 結合 userId 查詢，確保該項目屬於當前使用者
+        const item = await prisma.cartItem.findFirst({
+            where: {
+                id: itemId,
+                cart: { userId }
+            }
         });
 
-        if (!item || item.cart.userId !== userId) {
+        if (!item) {
             throw new Error('無法刪除：權限不足或項目不存在');
         }
 
