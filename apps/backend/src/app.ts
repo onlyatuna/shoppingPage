@@ -47,7 +47,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: [
                 "'self'",
-                "'unsafe-inline'", // [RESTORED] Required for React/Vite development/production injection
+                // [SECURITY] Removed 'unsafe-inline' based on latest audit
                 "https://static.cloudflareinsights.com",
                 "https://cdn.jsdelivr.net",
             ],
