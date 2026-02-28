@@ -152,7 +152,7 @@ router.delete(/\/(.*)/, uploadRateLimiter, authenticateToken, requireAdmin, asyn
     const result = await cloudinary.uploader.destroy(publicId);
 
     if (result.result === 'ok') {
-        res.json({ status: 'success', message: '圖片刪除成功' });
+        res.json({ message: '圖片刪除成功' });
     } else {
         throw new AppError('刪除失敗或找不到圖片', StatusCodes.BAD_REQUEST);
     }

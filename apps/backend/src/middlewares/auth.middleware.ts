@@ -29,25 +29,21 @@ declare global {
 // 2. 驗證邏輯 (Main Logic)
 // ------------------------------------------------------------------
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+    // 從 Header 取得 Token
+    // 格式通常是: "Authorization: Bearer <你的Token>"
+    const authHeader = req.headers['authorization'];
+    const tokenFromHeader = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
+
+    // 優先從 Signed Cookie 讀取 Token，如果沒有才看 Header
+    const tokenFromCookie = req.signedCookies?.token;
+    const token = tokenFromCookie || tokenFromHeader;
+
+    // 情況 A & B: 驗證 Token 合法性 (利用 jwt.verify 處理所有校驗，避免 CodeQL js/user-controlled-bypass)
+    // 將 undefined 轉为空字串，讓 jwt.verify 去拋出錯誤，避免我們自己對 user input 做提早分支判斷
+    const tokenStr = typeof token === 'string' ? token : '';
+
     try {
-        // 從 Header 取得 Token
-        // 格式通常是: "Authorization: Bearer <你的Token>"
-        const authHeader = req.headers['authorization'];
-        const tokenFromHeader = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : undefined;
-
-        // 優先從 Signed Cookie 讀取 Token，如果沒有才看 Header
-        const tokenFromCookie = req.signedCookies?.token;
-        const token = tokenFromCookie || tokenFromHeader;
-
-        // 情況 A: 確保 token 是存在且為合法長度 (Input Validation, avoids CodeQL user-controlled-bypass)
-        if (typeof token !== 'string' || token.length < 10) {
-            return res.status(StatusCodes.UNAUTHORIZED).json({
-                message: '未登入，請提供 Token'
-            });
-        }
-
-        // 情況 B: 驗證 Token 合法性
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string, {
+        const decoded = jwt.verify(tokenStr, process.env.JWT_SECRET as string, {
             algorithms: ['HS256'],  // 只接受 HS256 演算法
             issuer: 'shopping-mall-api',  // 驗證發行者
             audience: 'shopping-mall-client'  // 驗證受眾
@@ -80,9 +76,11 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         // 放行，進入下一個步驟 (Controller)
         next();
     } catch (err: any) {
-        // Token 過期或被竄改
-        return res.status(StatusCodes.FORBIDDEN).json({
-            message: 'Token 無效或已過期'
+        // 若 tokenStr 為空，代表並未傳入 Token，回傳 401；否則代表過期或竄改，回傳 403
+        const isMissing = !token || (typeof token === 'string' && token.trim().length === 0);
+
+        return res.status(isMissing ? StatusCodes.UNAUTHORIZED : StatusCodes.FORBIDDEN).json({
+            message: isMissing ? '未登入，請提供 Token' : 'Token 無效或已過期'
         });
     }
 };
