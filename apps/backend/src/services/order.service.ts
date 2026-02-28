@@ -102,29 +102,36 @@ export class OrderService {
                 include: { items: true }
             });
 
-            const deletedOrderIds: string[] = [];
-            for (const po of pendingOrders) {
-                deletedOrderIds.push(po.id);
-                for (const poItem of po.items) {
-                    await tx.product.updateMany({
-                        where: { id: poItem.productId },
-                        data: { stock: { increment: poItem.quantity } }
-                    });
-                }
-            }
+            const deletedOrderIds: string[] = pendingOrders.map((o: any) => o.id);
 
             if (deletedOrderIds.length > 0) {
+                // A. 返還庫存邏輯
+                for (const po of pendingOrders) {
+                    for (const poItem of po.items) {
+                        await tx.product.updateMany({
+                            where: { id: poItem.productId },
+                            data: { stock: { increment: poItem.quantity } }
+                        });
+                    }
+                }
+
+                // B. 先刪除所有關聯的 OrderItem (外鍵約束)
+                await tx.orderItem.deleteMany({
+                    where: { orderId: { in: deletedOrderIds } }
+                });
+
+                // C. 再刪除 Order 本身
+                await tx.order.deleteMany({
+                    where: { id: { in: deletedOrderIds } }
+                });
+
                 DevLogService.log(
                     'CLEAN_PENDING_ORDERS',
                     userId,
-                    `開發者繞過：成功刪除 ${deletedOrderIds.length} 筆 PENDING 訂單並返還庫存`,
+                    `開發者繞過：成功清空 ${deletedOrderIds.length} 筆舊有 PENDING 訂單與項目`,
                     { deletedOrderIds }
                 );
             }
-
-            await tx.order.deleteMany({
-                where: { userId, status: 'PENDING' }
-            });
 
             // 2. 執行原有的建立訂單邏輯 (扣庫存、建快照)
             const order = await this.createOrderInternal(tx, userId, shippingInfo);
