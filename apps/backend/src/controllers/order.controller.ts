@@ -89,3 +89,17 @@ export const deleteOrder = async (req: Request, res: Response) => {
         res.status(StatusCodes.BAD_REQUEST).json({ message: error.message || '刪除失敗' });
     }
 };
+
+// [新增] 模擬付款
+export const payOrder = async (req: Request, res: Response) => {
+    try {
+        const orderId = req.params.id;
+        const userId = req.user!.userId;
+
+        await OrderService.payOrder(userId, orderId);
+        res.json({ status: 'success', message: '付款成功' });
+    } catch (error: any) {
+        const status = error.message === '訂單不存在' ? StatusCodes.NOT_FOUND : StatusCodes.BAD_REQUEST;
+        res.status(status).json({ message: error.message || '付款失敗' });
+    }
+};

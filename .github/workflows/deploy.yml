@@ -10,8 +10,22 @@ env:
   IMAGE_TAG: ghcr.io/onlyatuna/shoppingpage:latest
 
 jobs:
+  # --- Job 0: 安全性稽核 ---
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run npm audit (Backend)
+        working-directory: ./apps/backend
+        run: npm audit --audit-level=high
+
   # --- Job 1: 建置並推送 Docker Image ---
   build-and-push:
+    needs: security-audit
     runs-on: ubuntu-latest
     permissions:
       contents: read

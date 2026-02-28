@@ -94,11 +94,17 @@ export class OrderService {
         return prisma.order.findMany({
             where: { userId },
             orderBy: { createdAt: 'desc' },
-            include: {
+            select: {
+                id: true,
+                status: true,
+                totalAmount: true,
+                shippingInfo: true,
+                createdAt: true,
+                updatedAt: true,
                 items: {
-                    include: { product: true }, // 顯示商品詳情
+                    include: { product: true },
                 },
-            },
+            }
         });
     }
 
@@ -106,11 +112,19 @@ export class OrderService {
     static async getOrderById(userId: number, orderId: string) {
         const order = await prisma.order.findFirst({
             where: { id: orderId, userId },
-            include: {
+            select: {
+                id: true,
+                status: true,
+                totalAmount: true,
+                shippingInfo: true,
+                paymentId: true, // 使用者可以看 ID
+                // paymentData: false, // 排除敏感原始資料
+                createdAt: true,
+                updatedAt: true,
                 items: {
                     include: { product: true },
                 },
-            },
+            }
         });
 
         if (!order) {
@@ -158,4 +172,24 @@ export class OrderService {
         });
     }
 
+    // [新增] 模擬付款 (BOLA 修復版本)
+    static async payOrder(userId: number, orderId: string) {
+        // [SECURITY] 使用 findFirst 並帶入 userId 確保擁有權
+        const order = await prisma.order.findFirst({
+            where: { id: orderId, userId }
+        });
+
+        if (!order) {
+            throw new Error('訂單不存在');
+        }
+
+        if (order.status !== 'PENDING') {
+            throw new Error('訂單狀態不正確');
+        }
+
+        return prisma.order.update({
+            where: { id: orderId },
+            data: { status: 'PAID' },
+        });
+    }
 }

@@ -23,7 +23,7 @@ export class EmailService {
 
     // 移除結尾斜線 (避免產生 //verify-email)
     const baseUrl = frontendUrl.replace(/\/$/, '');
-    const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+    const verificationUrl = `${baseUrl}/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
 
     const mailOptions = {
       from: `"My E-Commerce" <${process.env.SMTP_USER}>`,
@@ -57,7 +57,7 @@ export class EmailService {
     }
 
     const baseUrl = frontendUrl.replace(/\/$/, '');
-    const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+    const resetUrl = `${baseUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
     const mailOptions = {
       from: `"My E-Commerce" <${process.env.SMTP_USER}>`,

@@ -81,9 +81,9 @@ export const logout = async (req: Request, res: Response) => {
 export const verifyEmail = async (req: Request, res: Response) => {
     try {
         // 1. 驗證 Token 格式 (從 Query String)
-        const { token } = verificationSchema.parse(req.query);
+        const { token, email } = verificationSchema.parse(req.query);
 
-        const result = await AuthService.verifyEmail(token);
+        const result = await AuthService.verifyEmail(token, email);
 
         res.status(StatusCodes.OK).json({
             status: 'success',
@@ -132,9 +132,9 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
 
 export const verifyResetToken = async (req: Request, res: Response) => {
     try {
-        const { token } = verificationSchema.parse(req.query);
+        const { token, email } = verificationSchema.parse(req.query);
 
-        const result = await AuthService.verifyResetToken(token);
+        const result = await AuthService.verifyResetToken(token, email);
         res.status(StatusCodes.OK).json({ status: 'success', data: result });
     } catch (error: any) {
         if (error instanceof ZodError) {
@@ -148,8 +148,9 @@ export const verifyResetToken = async (req: Request, res: Response) => {
 export const resetPassword = async (req: Request, res: Response) => {
     try {
         const { token, password } = resetPasswordSchema.parse(req.body);
+        const email = req.body.email; // Optional email from body if provided
 
-        const result = await AuthService.resetPassword(token, password);
+        const result = await AuthService.resetPassword(token, password, email);
         res.status(StatusCodes.OK).json({ status: 'success', message: result.message });
     } catch (error: any) {
         if (error instanceof ZodError) {

@@ -4,7 +4,7 @@ import { z } from 'zod';
 // 加入購物車
 export const addToCartSchema = z.object({
     productId: z.number().int().positive('ProductID 必須為正整數'),
-    variantId: z.string().optional(), // [New] format check? usually just string
+    variantId: z.string().max(100).optional(),
     quantity: z.number().int().min(1, '數量至少為 1').default(1),
 });
 

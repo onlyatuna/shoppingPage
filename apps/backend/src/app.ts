@@ -213,6 +213,8 @@ if (process.env.NODE_ENV === 'production') {
 
     // SPA Fallback: 所有非 API 請求都回傳 index.html
     // Rate limited to prevent DoS attacks on file system access
+    // [SECURITY] If implementing SSR or manual state injection (e.g. window.__INITIAL_STATE__),
+    // ALWAYS use safeJsonStringify() to prevent XSS.
     app.use(spaFallbackLimiter, (req, res) => {
         // 確保不是 API 請求才回傳 HTML (雖然放在最後面了，但多一層保險也好)
         if (req.path.startsWith('/api')) {

@@ -4,8 +4,8 @@ import { Role } from '@prisma/client';
 
 // 使用者更新自己的資料
 export const updateProfileSchema = z.object({
-    name: z.string().min(2, '名字至少需要 2 個字元').optional(),
-    password: z.string().min(6, '密碼長度至少需要 6 個字元').optional(), // 密碼是選填的
+    name: z.string().min(2, '名字至少需要 2 個字元').max(100, '名字過長').optional(),
+    password: z.string().trim().min(6, '密碼長度至少需要 6 個字元').max(100, '密碼過長').optional(), // 密碼是選填的
     // 這裡不允許更新 email 或 role
 });
 
