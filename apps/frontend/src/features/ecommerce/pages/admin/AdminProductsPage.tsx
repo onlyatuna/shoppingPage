@@ -17,7 +17,7 @@ export default function AdminProductsPage() {
     useEffect(() => {
         if (location.state?.newProductImage) {
             // Navigate to create page with pre-filled image
-            navigate('/app/admin/products/new', {
+            navigate('/work/ecommerce/demo/admin/products/new', {
                 state: {
                     initialImage: location.state.newProductImage,
                     initialDescription: location.state.newProductDescription
@@ -102,21 +102,21 @@ export default function AdminProductsPage() {
                 <div className="flex gap-3 w-full md:w-auto">
                     <button
                         type="button"
-                        onClick={() => navigate('/app/admin/promotions')}
+                        onClick={() => navigate('/work/ecommerce/demo/admin/promotions')}
                         className="flex-1 md:flex-none bg-[#E85D3F] text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-[#D04C30] shadow-sm transition-colors"
                     >
                         <Tag size={20} /> 促銷活動
                     </button>
                     <button
                         type="button"
-                        onClick={() => navigate('/app/editor')}
+                        onClick={() => navigate('/work/ecommerce/demo/editor')}
                         className="flex-1 md:flex-none bg-indigo-600 text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-indigo-700 shadow-sm transition-colors"
                     >
                         <Sparkles size={20} /> AI輔助上架
                     </button>
                     <button
                         type="button"
-                        onClick={() => navigate('/app/admin/products/new')}
+                        onClick={() => navigate('/work/ecommerce/demo/admin/products/new')}
                         className="flex-1 md:flex-none bg-black text-white px-4 py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
                     >
                         <Plus size={20} /> 新增商品
@@ -174,7 +174,7 @@ export default function AdminProductsPage() {
                                     </button>
                                 </td>
                                 <td className="p-4 flex gap-2">
-                                    <button type="button" onClick={() => navigate(`/app/admin/products/edit/${product.id}`)} className="p-2 text-gray-600 hover:bg-gray-200 rounded" aria-label="編輯商品">
+                                    <button type="button" onClick={() => navigate(`/work/ecommerce/demo/admin/products/edit/${product.id}`)} className="p-2 text-gray-600 hover:bg-gray-200 rounded" aria-label="編輯商品">
                                         <Edit size={18} />
                                     </button>
                                     <button type="button" onClick={() => handleDelete(product)} className="p-2 text-red-500 hover:bg-red-50 rounded" aria-label="刪除商品">
@@ -228,7 +228,7 @@ export default function AdminProductsPage() {
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
-                                        onClick={() => navigate(`/app/admin/products/edit/${product.id}`)}
+                                        onClick={() => navigate(`/work/ecommerce/demo/admin/products/edit/${product.id}`)}
                                         className="flex items-center gap-1 text-xs bg-gray-100 px-3 py-1.5 rounded hover:bg-gray-200"
                                     >
                                         <Edit size={14} /> 編輯

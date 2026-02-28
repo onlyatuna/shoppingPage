@@ -14,7 +14,7 @@ export default function CheckoutInfoPage() {
 
     // Redirect if cart is empty or info missing (optional robust check)
     if (items.length === 0) {
-        // navigate('/app/cart'); // Too strict for reload? Let's leave for now.
+        // navigate('/work/ecommerce/demo/cart'); // Too strict for reload? Let's leave for now.
     }
 
     const { register, handleSubmit, formState: { errors } } = useForm<OrderInput>({
@@ -44,7 +44,7 @@ export default function CheckoutInfoPage() {
             queryClient.invalidateQueries({ queryKey: ['orders'] });
             // Assuming data.data.orderId is the structure based on previous controllers
             const orderId = data.data.orderId;
-            navigate(`/app/orders/success/${orderId}`);
+            navigate(`/work/ecommerce/demo/orders/success/${orderId}`);
         },
     });
 
@@ -105,7 +105,7 @@ export default function CheckoutInfoPage() {
                 <div className="flex gap-4">
                     <button
                         type="button"
-                        onClick={() => navigate('/app/cart')}
+                        onClick={() => navigate('/work/ecommerce/demo/cart')}
                         className="flex-1 bg-gray-200 text-black py-3 rounded-lg font-bold hover:bg-gray-300"
                     >
                         回上一步

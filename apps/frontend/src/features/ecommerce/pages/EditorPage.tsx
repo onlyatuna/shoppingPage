@@ -315,7 +315,7 @@ export default function EditorPage() {
                     setUploadedImage(null); // Clear dirty state so any subsequent leave is clean
                     historyPushed.current = false;
                     // Force navigation to home to break loop
-                    setTimeout(() => navigate('/app'), 0);
+                    setTimeout(() => navigate('/work/ecommerce/demo'), 0);
                 }
             }
         };

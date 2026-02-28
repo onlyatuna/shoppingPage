@@ -18,7 +18,7 @@ export default function Footer() {
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 mb-12">
                     {/* Brand Section */}
                     <div className="col-span-2 md:col-span-1 space-y-4">
-                        <Link to="/app" className="text-2xl font-extrabold tracking-tighter flex items-center gap-2">
+                        <Link to="/work/ecommerce/demo" className="text-2xl font-extrabold tracking-tighter flex items-center gap-2">
                             <img src="/icon.png" alt="Logo" className="w-8 h-8 object-contain rounded" />
                             <span className="text-[#F5F0E6]">EvanShop</span>
                         </Link>

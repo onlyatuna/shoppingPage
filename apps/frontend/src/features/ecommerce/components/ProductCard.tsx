@@ -14,7 +14,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
     return (
         <div className="group bg-white rounded-xl border-2 border-[#1D2D45] shadow-[3px_3px_0px_#1D2D45] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_#1D2D45] transition-all duration-200 overflow-hidden flex flex-col h-full">
-            <Link to={`/app/products/${product.slug}`} className="block relative">
+            <Link to={`/work/ecommerce/demo/products/${product.slug}`} className="block relative">
                 {/* Main Image Area */}
                 <div className="relative aspect-square bg-gray-100 overflow-hidden">
                     {displayImage ? (
@@ -61,7 +61,7 @@ export default function ProductCard({ product }: { product: Product }) {
                     )}
                 </div>
 
-                <Link to={`/app/products/${product.slug}`} className="block">
+                <Link to={`/work/ecommerce/demo/products/${product.slug}`} className="block">
                     <h3 className="font-bold text-lg truncate" title={product.name}>{product.name}</h3>
 
                     <div className="flex justify-between items-center mt-2">

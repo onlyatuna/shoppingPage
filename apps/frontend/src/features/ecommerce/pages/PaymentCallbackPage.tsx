@@ -19,7 +19,7 @@ export default function PaymentCallbackPage() {
 
         if (!transactionId || !orderId) {
             toast.error('參數錯誤，無法確認付款');
-            navigate('/app/orders');
+            navigate('/work/ecommerce/demo/orders');
             return;
         }
 
@@ -30,11 +30,11 @@ export default function PaymentCallbackPage() {
                     orderId
                 });
                 toast.success('🎉 付款成功！');
-                navigate('/app/orders'); // 跳回訂單頁
+                navigate('/work/ecommerce/demo/orders'); // 跳回訂單頁
             } catch (error) {
                 console.error(error);
                 toast.error('付款確認失敗，請聯繫客服');
-                navigate('/app/orders');
+                navigate('/work/ecommerce/demo/orders');
             }
         };
 

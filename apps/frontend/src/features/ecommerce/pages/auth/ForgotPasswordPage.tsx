@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
             請檢查您的收件匣（包括垃圾郵件資料夾）
           </p>
           <button
-            onClick={() => navigate('/app/login')}
+            onClick={() => navigate('/work/ecommerce/demo/login')}
             className="w-full px-6 py-3 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
           >
             <ArrowLeft size={18} />
@@ -105,7 +105,7 @@ export default function ForgotPasswordPage() {
 
           <button
             type="button"
-            onClick={() => navigate('/app/login')}
+            onClick={() => navigate('/work/ecommerce/demo/login')}
             className="w-full text-gray-600 hover:text-gray-900 transition flex items-center justify-center gap-2"
           >
             <ArrowLeft size={18} />

@@ -20,13 +20,13 @@ export default function OrderSuccessPage() {
 
             <div className="flex gap-4">
                 <Link
-                    to="/app/orders"
+                    to="/work/ecommerce/demo/orders"
                     className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                     查看訂單
                 </Link>
                 <Link
-                    to="/app"
+                    to="/work/ecommerce/demo"
                     className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
                 >
                     繼續購物

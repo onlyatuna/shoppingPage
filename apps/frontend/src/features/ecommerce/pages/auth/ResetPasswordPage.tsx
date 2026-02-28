@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
       });
       setIsSuccess(true);
       toast.success('密碼重設成功！');
-      setTimeout(() => navigate('/app/login'), 3000);
+      setTimeout(() => navigate('/work/ecommerce/demo/login'), 3000);
     } catch (error: any) {
       toast.error(error.response?.data?.message || '重設失敗，請稍後再試');
     }
@@ -94,13 +94,13 @@ export default function ResetPasswordPage() {
           </p>
           <div className="space-y-3">
             <button
-              onClick={() => navigate('/app/forgot-password')}
+              onClick={() => navigate('/work/ecommerce/demo/forgot-password')}
               className="w-full px-6 py-3 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-colors"
             >
               重新申請
             </button>
             <button
-              onClick={() => navigate('/app/login')}
+              onClick={() => navigate('/work/ecommerce/demo/login')}
               className="w-full px-6 py-3 bg-gray-100 text-gray-800 rounded-lg font-bold hover:bg-gray-200 transition-colors"
             >
               返回登入
@@ -122,7 +122,7 @@ export default function ResetPasswordPage() {
           <h2 className="text-2xl font-bold text-green-600 mb-2">密碼重設成功！</h2>
           <p className="text-gray-600 mb-6">您現在可以使用新密碼登入了</p>
           <button
-            onClick={() => navigate('/app/login')}
+            onClick={() => navigate('/work/ecommerce/demo/login')}
             className="w-full px-6 py-3 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-colors"
           >
             前往登入

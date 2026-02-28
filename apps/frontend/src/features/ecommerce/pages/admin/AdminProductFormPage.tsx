@@ -124,7 +124,7 @@ export default function AdminProductFormPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-products'] });
             toast.success('商品新增成功');
-            navigate('/app/admin/products');
+            navigate('/work/ecommerce/demo/admin/products');
         },
         onError: (err: { response?: { data?: { message?: string } } }) => {
             toast.error(err.response?.data?.message || '新增失敗');
@@ -139,7 +139,7 @@ export default function AdminProductFormPage() {
             queryClient.invalidateQueries({ queryKey: ['admin-products'] });
             queryClient.invalidateQueries({ queryKey: ['products'] });
             toast.success('商品更新成功');
-            navigate('/app/admin/products');
+            navigate('/work/ecommerce/demo/admin/products');
         },
         onError: (err: { response?: { data?: { message?: string } } }) => {
             toast.error(err.response?.data?.message || '更新失敗');
@@ -392,7 +392,7 @@ export default function AdminProductFormPage() {
             <div className="flex items-center gap-4 mb-6">
                 <button
                     type="button"
-                    onClick={() => navigate('/app/admin/products')}
+                    onClick={() => navigate('/work/ecommerce/demo/admin/products')}
                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                     <ArrowLeft size={24} />
@@ -822,7 +822,7 @@ export default function AdminProductFormPage() {
                 <div className="flex gap-3">
                     <button
                         type="button"
-                        onClick={() => navigate('/app/admin/products')}
+                        onClick={() => navigate('/work/ecommerce/demo/admin/products')}
                         className="flex-1 border border-gray-300 text-gray-700 py-2 rounded hover:bg-gray-50"
                     >
                         取消

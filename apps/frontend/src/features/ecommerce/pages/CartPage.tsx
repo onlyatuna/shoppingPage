@@ -34,7 +34,7 @@ export default function CartPage() {
 
     const onSubmit = useCallback((data: { deliveryMethod: string; paymentMethod: string }) => {
         setCheckoutInfo(data);
-        navigate('/app/checkout/info');
+        navigate('/work/ecommerce/demo/checkout/info');
     }, [setCheckoutInfo, navigate]);
 
     // 1. 取得購物車資料
@@ -112,7 +112,7 @@ export default function CartPage() {
             <div className="flex flex-col items-center justify-center h-[60vh] text-gray-500">
                 <ShoppingBag size={64} className="mb-4 text-gray-300" />
                 <p className="text-xl font-medium mb-4">購物車是空的</p>
-                <Link to="/app" className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
+                <Link to="/work/ecommerce/demo" className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
                     去逛逛
                 </Link>
             </div>
@@ -148,7 +148,7 @@ export default function CartPage() {
                             {/* 商品資訊 */}
                             <div className="flex-1">
                                 <h3 className="font-bold text-lg">
-                                    <Link to={`/app/products/${item.product.slug}`} className="hover:underline">
+                                    <Link to={`/work/ecommerce/demo/products/${item.product.slug}`} className="hover:underline">
                                         {item.product.name}
                                     </Link>
                                 </h3>

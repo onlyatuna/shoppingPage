@@ -23,7 +23,7 @@ export default function VerifyEmailPage() {
         setStatus('success');
         toast.success('驗證成功！');
         // 3秒後跳轉登入頁
-        setTimeout(() => navigate('/app/login'), 3000);
+        setTimeout(() => navigate('/work/ecommerce/demo/login'), 3000);
       })
       .catch((err) => {
         console.error(err);
@@ -57,7 +57,7 @@ export default function VerifyEmailPage() {
             <p className="text-gray-600 mb-6">您的帳號已成功啟用，現在可以登入使用了</p>
             <div className="space-y-3">
               <button
-                onClick={() => navigate('/app/login')}
+                onClick={() => navigate('/work/ecommerce/demo/login')}
                 className="w-full px-6 py-3 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-colors"
               >
                 立即登入
@@ -77,13 +77,13 @@ export default function VerifyEmailPage() {
             <p className="text-sm text-gray-500 mb-6">請確認連結是否正確，或聯繫客服協助</p>
             <div className="space-y-3">
               <button
-                onClick={() => navigate('/app/login')}
+                onClick={() => navigate('/work/ecommerce/demo/login')}
                 className="w-full px-6 py-3 bg-black text-white rounded-lg font-bold hover:bg-gray-800 transition-colors"
               >
                 返回登入頁
               </button>
               <button
-                onClick={() => navigate('/app')}
+                onClick={() => navigate('/work/ecommerce/demo')}
                 className="w-full px-6 py-3 bg-gray-100 text-gray-800 rounded-lg font-bold hover:bg-gray-200 transition-colors"
               >
                 回到首頁

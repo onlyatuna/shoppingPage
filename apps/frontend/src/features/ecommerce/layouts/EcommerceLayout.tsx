@@ -35,7 +35,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     const { user, isInitialized } = useAuthStore();
 
     if (!isInitialized) return null; // 等待初始化
-    if (!user) return <Navigate to="/app/login" replace />;
+    if (!user) return <Navigate to="/work/ecommerce/demo/login" replace />;
     if (user.role !== 'ADMIN' && user.role !== 'DEVELOPER') {
         return <div className="p-10 text-center text-red-500">權限不足</div>;
     }
@@ -49,7 +49,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
     if (!isInitialized) return null; // 等待初始化
     if (!user) {
-        return <Navigate to="/app/login" replace />;
+        return <Navigate to="/work/ecommerce/demo/login" replace />;
     }
     return <>{children}</>;
 };
@@ -83,7 +83,7 @@ function EcommerceLayout() {
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="login" element={<LoginPage />} />
-                    <Route path="register" element={<Navigate to="/app/login" replace />} />
+                    <Route path="register" element={<Navigate to="/work/ecommerce/demo/login" replace />} />
                     <Route path="verify-email" element={<VerifyEmailPage />} />
                     <Route path="forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="reset-password" element={<ResetPasswordPage />} />
@@ -188,7 +188,7 @@ function EcommerceLayout() {
                     <Route path="products/:slug" element={<ProductPage />} />
 
                     {/* Fallback for unknown routes under /app */}
-                    <Route path="*" element={<Navigate to="/app" replace />} />
+                    <Route path="*" element={<Navigate to="/work/ecommerce/demo" replace />} />
                 </Routes>
             </div>
             {!isEditorPage && <Footer />}

@@ -51,7 +51,7 @@ export default function AuthPage() {
             const { user } = res.data.data;
             login(user);
             toast.success(`歡迎回來，${user.name}`);
-            navigate('/app');
+            navigate('/work/ecommerce/demo');
         } catch (error: any) {
             toast.error(error.response?.data?.message || '登入失敗');
         }
@@ -199,7 +199,7 @@ export default function AuthPage() {
                             <div className="text-right">
                                 <button
                                     type="button"
-                                    onClick={() => navigate('/app/forgot-password')}
+                                    onClick={() => navigate('/work/ecommerce/demo/forgot-password')}
                                     className="text-sm text-gray-600 hover:text-black transition"
                                 >
                                     忘記密碼？

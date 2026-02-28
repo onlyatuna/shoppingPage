@@ -61,7 +61,7 @@ export default function ProductPage() {
     const handleAddToCart = () => {
         if (!user) {
             toast.error('請先登入');
-            navigate('/app/login');
+            navigate('/work/ecommerce/demo/login');
             return;
         }
 
@@ -181,7 +181,7 @@ export default function ProductPage() {
             <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-4">
                 <h2 className="text-2xl font-bold">找不到商品</h2>
                 <button
-                    onClick={() => navigate('/app')}
+                    onClick={() => navigate('/work/ecommerce/demo')}
                     className="flex items-center gap-2 text-blue-600 hover:underline"
                 >
                     <ArrowLeft size={20} /> 回首頁

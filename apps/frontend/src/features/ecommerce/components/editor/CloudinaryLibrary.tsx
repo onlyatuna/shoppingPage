@@ -132,7 +132,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
                 toast.error(msg, {
                     action: {
                         label: '前往管理',
-                        onClick: () => navigate('/app/admin/products')
+                        onClick: () => navigate('/work/ecommerce/demo/admin/products')
                     },
                     duration: 5000
                 });

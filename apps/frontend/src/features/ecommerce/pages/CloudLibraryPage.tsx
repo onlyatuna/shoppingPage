@@ -7,7 +7,7 @@ export default function CloudLibraryPage() {
 
     const handleSelectImage = (url: string) => {
         // Navigate to editor with the selected image
-        navigate('/app/editor', { state: { imageUrl: url } });
+        navigate('/work/ecommerce/demo/editor', { state: { imageUrl: url } });
     };
 
     return (
@@ -17,7 +17,7 @@ export default function CloudLibraryPage() {
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => navigate('/app/editor')}
+                            onClick={() => navigate('/work/ecommerce/demo/editor')}
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-600 dark:text-gray-300"
                             title="返回編輯器"
                         >

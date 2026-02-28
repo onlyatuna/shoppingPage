@@ -56,12 +56,12 @@ export default function Navbar() {
         await logout();
         setIsUserDropdownOpen(false);
         setIsMobileMenuOpen(false);
-        navigate('/app/login');
+        navigate('/work/ecommerce/demo/login');
     };
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        navigate(`/app?search=${encodeURIComponent(searchInput)}`);
+        navigate(`/work/ecommerce/demo?search=${encodeURIComponent(searchInput)}`);
         setIsMobileMenuOpen(false);
     };
 
@@ -101,7 +101,7 @@ export default function Navbar() {
 
                     {/* Logo */}
                     <div className="absolute left-1/2 transform -translate-x-1/2 md:static md:transform-none md:flex-shrink-0">
-                        <Link to="/app" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-extrabold tracking-tighter flex items-center gap-2 text-white relative">
+                        <Link to="/work/ecommerce/demo" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-extrabold tracking-tighter flex items-center gap-2 text-white relative">
                             <img src="/icon.png" alt="Logo" className="w-16 h-16 object-contain rounded" />
                             {/* Sakura Petal Decoration */}
 
@@ -121,11 +121,11 @@ export default function Navbar() {
                                     </button>
                                     <div className="absolute top-full right-0 w-48 bg-white border-2 border-[#1A2B42] shadow-[4px_4px_0px_#1A2B42] rounded-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50 text-left">
                                         <div className="px-4 py-2 text-xs font-bold text-gray-400 border-b border-gray-50">管理功能</div>
-                                        <Link to="/app/admin/products" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A2B42] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Package size={16} /> 商品管理</Link>
-                                        <Link to="/app/admin/categories" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A2B42] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Tag size={16} /> 分類管理</Link>
-                                        <Link to="/app/admin/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A2B42] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Shield size={16} /> 訂單管理</Link>
+                                        <Link to="/work/ecommerce/demo/admin/products" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A2B42] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Package size={16} /> 商品管理</Link>
+                                        <Link to="/work/ecommerce/demo/admin/categories" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A2B42] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Tag size={16} /> 分類管理</Link>
+                                        <Link to="/work/ecommerce/demo/admin/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm text-[#1A2B42] hover:bg-gray-50 hover:text-[#E85D3F] font-medium"><Shield size={16} /> 訂單管理</Link>
                                         {user?.role === 'DEVELOPER' && (
-                                            <Link to="/app/admin/users" className="flex items-center gap-2 px-4 py-2.5 text-sm text-green-700 hover:bg-green-50 border-t border-gray-50 mt-1"><Users size={16} /> 帳號管理</Link>
+                                            <Link to="/work/ecommerce/demo/admin/users" className="flex items-center gap-2 px-4 py-2.5 text-sm text-green-700 hover:bg-green-50 border-t border-gray-50 mt-1"><Users size={16} /> 帳號管理</Link>
                                         )}
                                     </div>
                                 </div>
@@ -133,7 +133,7 @@ export default function Navbar() {
                         )}
 
                         {/* 購物車 */}
-                        <Link to="/app/cart" className="relative p-2 text-white hover:text-[#1A2B42] transition-colors" title="購物車">
+                        <Link to="/work/ecommerce/demo/cart" className="relative p-2 text-white hover:text-[#1A2B42] transition-colors" title="購物車">
                             <ShoppingBag size={24} />
                             {cartCount > 0 && (
                                 <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-[#E85D3F] rounded-full flex items-center justify-center border-2 border-[#1A2B42]">
@@ -144,7 +144,7 @@ export default function Navbar() {
 
                         {/* 我的訂單 */}
                         {user && (
-                            <Link to="/app/orders" className="relative p-2 text-white hover:text-[#1A2B42] transition-colors" title="我的訂單">
+                            <Link to="/work/ecommerce/demo/orders" className="relative p-2 text-white hover:text-[#1A2B42] transition-colors" title="我的訂單">
                                 <Package size={26} />
                             </Link>
                         )}
@@ -162,7 +162,7 @@ export default function Navbar() {
                                     <User size={26} />
                                 </button>
                             ) : (
-                                <Link to="/app/login" className="text-sm font-bold px-3 py-2 rounded-md text-white hover:text-[#1A2B42] transition-colors">登入</Link>
+                                <Link to="/work/ecommerce/demo/login" className="text-sm font-bold px-3 py-2 rounded-md text-white hover:text-[#1A2B42] transition-colors">登入</Link>
                             )}
 
                             {isUserDropdownOpen && user && (
@@ -180,12 +180,12 @@ export default function Navbar() {
                                     </div>
 
                                     <div className="py-1">
-                                        <Link to="/app/profile" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                                        <Link to="/work/ecommerce/demo/profile" onClick={() => setIsUserDropdownOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
                                             <Settings size={16} /> 帳號設定
                                         </Link>
 
                                         {/* 我的訂單已經移出去了，這裡可以拿掉，或者保留做為備用 */}
-                                        {/* <Link to="/app/orders" ... >我的訂單</Link> */}
+                                        {/* <Link to="/work/ecommerce/demo/orders" ... >我的訂單</Link> */}
 
                                         <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left">
                                             <LogOut size={16} /> 登出
@@ -205,15 +205,15 @@ export default function Navbar() {
                 <div className="max-w-7xl mx-auto px-4 h-12 flex items-center relative">
                     {/* Centered Navigation Links */}
                     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex gap-8 text-base font-bold h-full items-center text-white">
-                        <Link to="/app?sort=new" className="hover:text-[#1A2B42] transition-colors">最新商品</Link>
-                        <Link to="/app?sort=popular" className="hover:text-[#1A2B42] transition-colors">熱銷排行</Link>
+                        <Link to="/work/ecommerce/demo?sort=new" className="hover:text-[#1A2B42] transition-colors">最新商品</Link>
+                        <Link to="/work/ecommerce/demo?sort=popular" className="hover:text-[#1A2B42] transition-colors">熱銷排行</Link>
                         <div className="group relative h-full flex items-center">
                             <button type="button" className="flex items-center gap-1 hover:text-[#1A2B42] transition-colors cursor-pointer h-full">
                                 商品分類 <ChevronDown size={14} />
                             </button>
                             <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border-2 border-[#1A2B42] shadow-[4px_4px_0px_#1A2B42] rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-40 translate-y-2 group-hover:translate-y-0 text-left">
                                 {categories?.map(cat => (
-                                    <Link key={cat.id} to={`/app?categoryId=${cat.id}`} className="block px-4 py-2 hover:bg-gray-50 text-[#1A2B42] hover:text-[#E85D3F] font-medium border-b border-dashed border-gray-100 last:border-0">
+                                    <Link key={cat.id} to={`/work/ecommerce/demo?categoryId=${cat.id}`} className="block px-4 py-2 hover:bg-gray-50 text-[#1A2B42] hover:text-[#E85D3F] font-medium border-b border-dashed border-gray-100 last:border-0">
                                         {cat.name}
                                     </Link>
                                 ))}
@@ -266,7 +266,7 @@ export default function Navbar() {
                                 </button>
                             </form>
 
-                            <Link to="/app?sort=new" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
+                            <Link to="/work/ecommerce/demo?sort=new" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-3 text-lg font-bold text-gray-900 border-b border-gray-100">
                                 最新商品
                             </Link>
 
@@ -277,7 +277,7 @@ export default function Navbar() {
                                 {mobileExpandCategory && (
                                     <div className="bg-white/40 px-4 py-2 space-y-2">
                                         {categories?.map(cat => (
-                                            <Link key={cat.id} to={`/app?categoryId=${cat.id}`} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-600 pl-2 border-l-2 border-transparent hover:border-black">
+                                            <Link key={cat.id} to={`/work/ecommerce/demo?categoryId=${cat.id}`} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-gray-600 pl-2 border-l-2 border-transparent hover:border-black">
                                                 {cat.name}
                                             </Link>
                                         ))}
@@ -304,11 +304,11 @@ export default function Navbar() {
                                 <div className="mt-6 pt-6 border-t border-gray-100">
                                     <p className="px-4 text-xs font-bold text-gray-400 uppercase mb-2">後台管理</p>
                                     <div className="grid grid-cols-2 gap-2 px-2">
-                                        <Link to="/app/admin/products" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Package className="mb-1" size={20} /> 商品</Link>
-                                        <Link to="/app/admin/categories" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Tag className="mb-1" size={20} /> 分類</Link>
-                                        <Link to="/app/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Shield className="mb-1" size={20} /> 訂單</Link>
+                                        <Link to="/work/ecommerce/demo/admin/products" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Package className="mb-1" size={20} /> 商品</Link>
+                                        <Link to="/work/ecommerce/demo/admin/categories" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Tag className="mb-1" size={20} /> 分類</Link>
+                                        <Link to="/work/ecommerce/demo/admin/orders" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-white/40 rounded-lg text-sm font-medium text-gray-700"><Shield className="mb-1" size={20} /> 訂單</Link>
                                         {user.role === 'DEVELOPER' && (
-                                            <Link to="/app/admin/users" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-green-50 text-green-800 rounded-lg text-sm font-medium"><Users className="mb-1" size={20} /> 帳號</Link>
+                                            <Link to="/work/ecommerce/demo/admin/users" onClick={() => setIsMobileMenuOpen(false)} className="flex flex-col items-center justify-center p-3 bg-green-50 text-green-800 rounded-lg text-sm font-medium"><Users className="mb-1" size={20} /> 帳號</Link>
                                         )}
                                     </div>
                                 </div>
@@ -316,7 +316,7 @@ export default function Navbar() {
 
                             {!user && (
                                 <div className="p-4 mt-4">
-                                    <Link to="/app/login" onClick={() => setIsMobileMenuOpen(false)} className="block w-full bg-black text-white text-center py-3 rounded-lg font-bold">登入 / 註冊</Link>
+                                    <Link to="/work/ecommerce/demo/login" onClick={() => setIsMobileMenuOpen(false)} className="block w-full bg-black text-white text-center py-3 rounded-lg font-bold">登入 / 註冊</Link>
                                 </div>
                             )}
                         </div>

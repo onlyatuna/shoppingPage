@@ -244,7 +244,7 @@ export default function AdminPromotionsPage() {
             setPendingChanges({}); // Clear pending
             queryClient.invalidateQueries({ queryKey: ['admin-products'] });
             queryClient.invalidateQueries({ queryKey: ['products'] });
-            navigate('/app/admin/products');
+            navigate('/work/ecommerce/demo/admin/products');
         },
         onError: () => toast.error('儲存失敗，請重試')
     });
@@ -255,7 +255,7 @@ export default function AdminPromotionsPage() {
         <div className="p-4 md:p-8 max-w-7xl mx-auto animate-fade-in pb-20">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/app/admin/products')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <button onClick={() => navigate('/work/ecommerce/demo/admin/products')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                         <ArrowLeft size={24} />
                     </button>
                     <div>
