@@ -47,8 +47,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: [
                 "'self'",
-                // [SECURITY] Removed 'unsafe-inline' and 'unsafe-eval' for production hardening
-                // Nonce or Hash should be used if inline scripts are required
+                "'unsafe-inline'", // [RESTORED] Required for React/Vite development/production injection
                 "https://static.cloudflareinsights.com",
                 "https://cdn.jsdelivr.net",
             ],

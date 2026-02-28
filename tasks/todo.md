@@ -71,3 +71,6 @@
 
 ## Phase 14: Emergency Backend Recovery (March 2026)
 - [x] **Fix PathError (Express 5 Compatibility)**: Resolved `ECONNREFUSED` by fixing a backend crash caused by incompatible greedy parameter syntax in `upload.routes.ts`. Implemented a `RegExp` object as a workaround for `path-to-regexp` v7+ string parsing issues. <!-- id: 218 -->
+
+## Phase 15: CSP Inline Scripts (March 2026)
+- [x] **Fix Script Execution Block**: Re-enable `'unsafe-inline'` in `script-src` to prevent Vite/React injection breakage in DEV/Demo environments. <!-- id: 301 -->
