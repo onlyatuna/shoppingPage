@@ -54,6 +54,7 @@ app.use(helmet({
             ],
             styleSrc: [
                 "'self'",
+                "'unsafe-inline'",
                 "https://fonts.googleapis.com",
             ],
             imgSrc: [
