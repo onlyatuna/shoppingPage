@@ -41,8 +41,6 @@ test-monitoring.ts
 .agent/
 .agents/
 tasks/
-!tasks/todo.md
-/tasks/lessons.md
 
 # --- 臨時產出與分析檔案 ---
 build_log.txt
