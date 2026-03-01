@@ -63,6 +63,7 @@ app.use(helmet({
                 "https://*.cdninstagram.com",
                 "https://images.unsplash.com",
                 "https://picsum.photos",
+                "https://placehold.co",
             ],
             fontSrc: [
                 "'self'", "data:", "blob:",

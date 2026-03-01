@@ -12,9 +12,10 @@ interface CaseStudyCardProps {
     linkTo: string;
     demoLink?: string;
     reverse?: boolean;
+    containImage?: boolean;
 }
 
-export default function CaseStudyCard({ title, description, tags, keyFeatures, techStack, impact, imagePath, linkTo, demoLink, reverse = false }: CaseStudyCardProps) {
+export default function CaseStudyCard({ title, description, tags, keyFeatures, techStack, impact, imagePath, linkTo, demoLink, reverse = false, containImage = false }: CaseStudyCardProps) {
     return (
         <div className={`group bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden flex flex-col ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} hover:border-blue-100 transition-colors duration-300`}>
             <div
@@ -23,7 +24,7 @@ export default function CaseStudyCard({ title, description, tags, keyFeatures, t
             >
                 {imagePath ? (
                     <div
-                        className="absolute inset-0 bg-cover bg-top transition-transform duration-700 group-hover:scale-[1.02]"
+                        className={`absolute inset-0 ${containImage ? 'bg-contain bg-center bg-no-repeat' : 'bg-cover bg-top'} transition-transform duration-700 group-hover:scale-[1.02]`}
                         style={{ backgroundImage: `url(${imagePath})` }}
                     />
                 ) : (

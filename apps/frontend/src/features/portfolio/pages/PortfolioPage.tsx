@@ -77,7 +77,8 @@ export default function PortfolioPage() {
                             keyFeatures={<>實作 SaaS 級圖文編輯器，並串接 <strong className="text-gray-900">Gemini AI</strong> 與 <strong className="text-gray-900">IG Graph API</strong> 達成從生成到發文的端到端自動化。</>}
                             techStack={<><strong className="text-gray-900">Node.js (MVC)</strong>, Express, Prisma, MySQL, React 19, Vite, Zustand</>}
                             impact="減少 80% 商家上架文案與作圖時間，大幅降低社群營運成本。"
-                            imagePath="/preview.png"
+                            imagePath="/assets/images/ecommerce_preview.png"
+                            containImage={true}
                             linkTo="/work/ecommerce"
                             demoLink="/work/ecommerce/demo"
                         />
