@@ -93,7 +93,7 @@ export default function AuthPage() {
 
                         {/* 手機版切換按鈕 */}
                         <div className="lg:hidden text-center mb-4">
-                            <button type="button" onClick={() => setIsLoginMode(true)} className="text-sm text-blue-600 underline">
+                            <button type="button" onClick={() => setIsLoginMode(true)} className="text-sm text-zinc-400 underline">
                                 已有帳號？去登入
                             </button>
                         </div>
@@ -168,7 +168,7 @@ export default function AuthPage() {
 
                         {/* 手機版切換按鈕 */}
                         <div className="lg:hidden text-center mb-4">
-                            <button type="button" onClick={() => setIsLoginMode(false)} className="text-sm text-blue-600 underline">
+                            <button type="button" onClick={() => setIsLoginMode(false)} className="text-sm text-zinc-400 underline">
                                 還沒有帳號？去註冊
                             </button>
                         </div>
@@ -237,7 +237,7 @@ export default function AuthPage() {
 
                             {/* 左側內容 (Login 模式時顯示在左邊) */}
                             <div className="w-1/2 h-full flex flex-col justify-center items-center p-12 text-center">
-                                <h2 className="text-4xl font-bold mb-4">還沒有帳號？</h2>
+                                <h2 className="text-4xl font-bold mb-4 text-zinc-300">還沒有帳號？</h2>
                                 <p className="mb-8 text-lg text-gray-200">立即註冊，享受專屬會員優惠與快速結帳服務。</p>
                                 <button
                                     type="button"
@@ -250,7 +250,7 @@ export default function AuthPage() {
 
                             {/* 右側內容 (Register 模式時顯示在右邊 - 但因為 Overlay 移到右邊了，所以這裡看起來是在 Overlay 內部) */}
                             <div className="w-1/2 h-full flex flex-col justify-center items-center p-12 text-center">
-                                <h2 className="text-4xl font-bold mb-4">已經有帳號？</h2>
+                                <h2 className="text-4xl font-bold mb-4 text-zinc-300">已經有帳號？</h2>
                                 <p className="mb-8 text-lg text-gray-200">請使用您的帳號登入，繼續您的購物旅程。</p>
                                 <button
                                     type="button"

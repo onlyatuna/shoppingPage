@@ -325,7 +325,7 @@ export default function ProductPage() {
                             <button
                                 onClick={handleAddToCart}
                                 disabled={addToCartMutation.isPending || isOutOfStock || isSelectionIncomplete}
-                                className={`flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-lg border-2 border-[#1D2D45] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${(isOutOfStock || isSelectionIncomplete)
+                                className={`flex-1 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 text-sm md:text-lg border-2 border-[#1D2D45] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${(isOutOfStock || isSelectionIncomplete)
                                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-gray-300'
                                     : 'bg-[#E85D3F] text-white shadow-[6px_6px_0px_#1D2D45] hover:bg-[#E85D3F]/90 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[5px_5px_0px_#1D2D45]'
                                     }`}
