@@ -51,6 +51,12 @@ export default defineConfig({
         },
     },
     server: {
+        host: true, // 允許從 Docker 外部存取
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: 'localhost',
+        },
         proxy: {
             '/api': {
                 target: 'http://localhost:3000', // 後端的位址

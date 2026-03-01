@@ -49,3 +49,7 @@ lint_results_pretty.json
 new_lint_results_v2.json
 hooks_lint.txt
 project_structure.txt
+# --- Docker Development Local Files ---
+Dockerfile.dev
+docker-compose.dev.yml
+Caddyfile.dev
