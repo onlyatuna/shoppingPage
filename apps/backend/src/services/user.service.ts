@@ -16,8 +16,8 @@ export class UserService {
     static async findAll(searchQuery?: string, skip = 0, take = 20) {
         const whereClause = searchQuery ? {
             OR: [
-                { email: { contains: searchQuery, mode: 'insensitive' as const } },
-                { name: { contains: searchQuery, mode: 'insensitive' as const } }
+                { email: { contains: searchQuery } },
+                { name: { contains: searchQuery } }
             ]
         } : {};
 
