@@ -12,7 +12,7 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getProduct = asyncHandler(async (req: Request, res: Response) => {
-    const { key } = req.params;
+    const key = req.params.key as string;
     let product;
 
     // 如果 key 是純數字，先試 ID，再試 Slug

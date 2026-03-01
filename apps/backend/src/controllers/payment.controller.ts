@@ -25,7 +25,7 @@ export const confirmLinePay = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const checkLinePayStatus = asyncHandler(async (req: Request, res: Response) => {
-    const { transactionId } = req.params;
+    const transactionId = req.params.transactionId as string;
 
     if (!transactionId) {
         throw new Error('缺少 transactionId');

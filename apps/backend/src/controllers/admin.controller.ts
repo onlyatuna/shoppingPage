@@ -60,7 +60,7 @@ export const resetTestData = asyncHandler(async (req: Request, res: Response) =>
  * Bypasses real payment gateway.
  */
 export const forcePayOrder = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user!.userId;
 
     // We reuse payOrder logic with isAdmin=true to bypass ownership if developer

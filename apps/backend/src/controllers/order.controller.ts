@@ -32,7 +32,7 @@ export const getMyOrders = asyncHandler(async (req: Request, res: Response) => {
 // 取得訂單詳情
 export const getOrderById = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user!.userId;
-    const orderId = req.params.id;
+    const orderId = req.params.id as string;
     const order = await OrderService.getOrderById(userId, orderId);
     res.json({ status: 'success', data: order });
 });
@@ -47,7 +47,7 @@ export const getAllOrders = asyncHandler(async (req: Request, res: Response) => 
 
 // [新增] 更新狀態 (Admin)
 export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
-    const orderId = req.params.id;
+    const orderId = req.params.id as string;
     const { status, trackingNumber } = updateOrderStatusSchema.parse(req.body);
 
     const order = await OrderService.updateStatus(orderId, status, trackingNumber);
@@ -57,14 +57,14 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
 
 // [新增] 刪除訂單 (僅限開發者)
 export const deleteOrder = asyncHandler(async (req: Request, res: Response) => {
-    const orderId = req.params.id;
+    const orderId = req.params.id as string;
     await OrderService.deleteOrder(orderId);
     res.json({ status: 'success', message: '訂單已刪除' });
 });
 
 // [新增] 模擬付款
 export const payOrder = asyncHandler(async (req: Request, res: Response) => {
-    const orderId = req.params.id;
+    const orderId = req.params.id as string;
     const userId = req.user!.userId;
     const isAdmin = req.user!.role === 'ADMIN' || req.user!.role === 'DEVELOPER';
 
