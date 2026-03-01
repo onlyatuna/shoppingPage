@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     ArrowDown, ArrowRight,
     User, Activity,
-    Sparkles, BrainCircuit, Landmark, Calculator, TrendingDown,
-    ChevronLeft
+    Sparkles, BrainCircuit, Landmark, Calculator, TrendingDown
 } from 'lucide-react';
 
 import TrustVaultModal from '@/features/portfolio/components/TrustVaultModal';
@@ -40,16 +39,7 @@ export default function BehavioralPage() {
                 onVerify={handleVerifyKey}
             />
 
-            {/* Simple Navbar for Lab pages */}
-            <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-[#e2e8f0] bg-white/90 px-6 py-4 backdrop-blur-md lg:px-10">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                    <ChevronLeft size={18} />
-                    Back to Portfolio
-                </button>
-            </nav>
+
 
             <main className="flex flex-1 flex-col items-center mt-12">
                 <div className="w-full max-w-7xl px-4 lg:px-8 flex flex-col gap-12">
@@ -72,7 +62,7 @@ export default function BehavioralPage() {
                             </div>
                         </div>
                         <p className="text-slate-600 max-w-3xl text-lg">
-                            Experimental components exploring the intersection of behavioral finance, AI-driven insights, and interactive data visualization.
+                            結合行為財務學、生成式 AI 洞察與互動式數據視覺化的前瞻性實驗平台。
                         </p>
                     </div>
 

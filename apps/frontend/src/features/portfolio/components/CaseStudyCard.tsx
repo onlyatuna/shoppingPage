@@ -1,20 +1,22 @@
 import { ArrowRight, ExternalLink, Lightbulb, Server, Zap } from 'lucide-react';
+import React from 'react';
 
 interface CaseStudyCardProps {
     title: string;
-    description: string;
+    description: React.ReactNode;
     tags: string[];
-    keyFeatures?: string;
-    techStack?: string;
-    impact?: string;
+    keyFeatures?: React.ReactNode;
+    techStack?: React.ReactNode;
+    impact?: React.ReactNode;
     imagePath?: string;
     linkTo: string;
     demoLink?: string;
+    reverse?: boolean;
 }
 
-export default function CaseStudyCard({ title, description, tags, keyFeatures, techStack, impact, imagePath, linkTo, demoLink }: CaseStudyCardProps) {
+export default function CaseStudyCard({ title, description, tags, keyFeatures, techStack, impact, imagePath, linkTo, demoLink, reverse = false }: CaseStudyCardProps) {
     return (
-        <div className="group bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden flex flex-col lg:flex-row hover:border-blue-100 transition-colors duration-300">
+        <div className={`group bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden flex flex-col ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} hover:border-blue-100 transition-colors duration-300`}>
             <div
                 className="lg:w-7/12 relative min-h-[360px] lg:min-h-[500px] bg-gray-50 overflow-hidden cursor-pointer"
                 onClick={() => window.open(linkTo, '_blank')}

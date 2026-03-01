@@ -1,5 +1,6 @@
 import CaseStudyCard from '@/features/portfolio/components/CaseStudyCard';
 import LabCard from '@/features/portfolio/components/LabCard';
+
 import { ArrowDown, Monitor, Database, Cpu } from 'lucide-react';
 
 export default function PortfolioPage() {
@@ -71,10 +72,10 @@ export default function PortfolioPage() {
                         {/* E-commerce Case Study */}
                         <CaseStudyCard
                             title="AI ShopMaster"
-                            description="結合生成式 AI 與社群自動化的全端電商系統，提供 SaaS 級智慧編輯器與無縫結帳體驗。"
-                            tags={['Full-Stack', 'Gemini AI', 'Instagram API', 'Node.js', 'React 19']}
-                            keyFeatures="實作 SaaS 級圖文編輯器，並串接 Gemini AI 與 IG API 達成從生成到發文的端到端自動化。"
-                            techStack="Node.js, Express, Prisma, MySQL, React 19, Vite, Zustand"
+                            description={<>結合<strong className="text-gray-900">生成式 AI</strong> 與社群自動化的全端電商系統，提供 SaaS 級智慧編輯器與無縫結帳體驗。</>}
+                            tags={['AI-Automation', 'System-Architecture', 'Node.js', 'React 19']}
+                            keyFeatures={<>實作 SaaS 級圖文編輯器，並串接 <strong className="text-gray-900">Gemini AI</strong> 與 <strong className="text-gray-900">IG Graph API</strong> 達成從生成到發文的端到端自動化。</>}
+                            techStack={<><strong className="text-gray-900">Node.js (MVC)</strong>, Express, Prisma, MySQL, React 19, Vite, Zustand</>}
                             impact="減少 80% 商家上架文案與作圖時間，大幅降低社群營運成本。"
                             imagePath="/preview.png"
                             linkTo="/work/ecommerce"
@@ -84,59 +85,81 @@ export default function PortfolioPage() {
                         {/* Pension Case Study */}
                         <CaseStudyCard
                             title="退休金缺口試算器 (Pension Gap Calculator)"
-                            description="全方位的金融工具，協助使用者透過互動式多層次視覺化系統，預見退休軌跡並了解潛在的儲蓄缺口。"
-                            tags={['FinTech', 'Data Viz', 'React', 'TypeScript']}
+                            description={<>全方位的金融工具，協助使用者透過互動式<strong className="text-gray-900">多層次視覺化</strong>系統，預見退休軌跡並了解潛在的儲蓄缺口。</>}
+                            tags={['FinTech', 'Data-Viz', 'Financial-Security', 'React']}
                             keyFeatures="互動式多層次退休軌跡視覺化系統"
-                            techStack="React, TypeScript, 金融數據視覺化, RESTful APIs"
+                            techStack={<>React, TypeScript, <strong className="text-gray-900">Recharts</strong>, RESTful APIs</>}
                             impact="提供數據驅動的洞察，幫助使用者掌握退休金缺口"
                             imagePath="/assets/images/pension_preview.png"
                             linkTo="/work/pension"
                             demoLink="/work/pension/demo"
+                            reverse={true}
+                        />
+
+                        {/* 行為決策導航儀 (原 Behavioral & FinTech Lab) */}
+                        <CaseStudyCard
+                            title="行為決策導航儀 (Behavioral Compass)"
+                            description={<>結合行為科學與數據視覺化的<strong className="text-gray-900">互動式決策工具</strong>，幫助使用者直觀地識別並校正投資心理偏誤。</>}
+                            tags={['Behavioral-Finance', 'Data-Viz', 'React UI']}
+                            keyFeatures="即時心理偏誤雷達圖、動態風險評估、視覺化決策校正提示"
+                            techStack="React 19, Recharts, Tailwind CSS, Zustand"
+                            impact="將抽象的心理學概念轉化為直觀的互動圖表，有效提升使用者的自我風險認知。"
+                            imagePath="/assets/images/placeholder_abstract.png"
+                            linkTo="/work/behavioral-lab"
+                            demoLink="/lab/behavioral"
                         />
                     </div>
                 </section>
 
-                {/* Lab Section */}
-                <section id="lab" className="flex flex-col gap-8 scroll-mt-24 mb-16">
+                {/* Lab Section (絕對對齊的 4 欄佈局) */}
+                <section id="lab" className="flex flex-col gap-8 scroll-mt-24 mb-16 w-full">
                     <div className="flex items-end justify-between border-b border-gray-200 pb-6">
                         <div>
                             <h2 className="text-3xl font-black text-[#111418] tracking-tight">工程實驗室與概念驗證 (PoCs) <span className="text-blue-600">.</span></h2>
-                            <p className="text-gray-500 mt-2 font-medium">實驗性前端介面、自動化腳本與 AI 金融原型。</p>
+                            <p className="text-gray-500 mt-2 font-medium">實驗性前端介面、3D 渲染與 AI 互動原型。</p>
                         </div>
                     </div>
 
+                    {/* lg:grid-cols-4 確保在大螢幕上剛好 4 個一排，大小完全相同 */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {/* 1. AI 投資行為診斷室 */}
+                        <LabCard
+                            title="AI 投資行為診斷室"
+                            tag="Gemini API"
+                            color="blue"
+                            description="透過互動式問卷與生成式 AI，深度解析投資者的心理特質與潛在認知偏誤。"
+                            linkTo="/lab/diagnosis"
+                            imagePath="/assets/images/diagnosis_thumb.png"
+                        />
+
+                        {/* 2. Hand Gesture Zoom */}
                         <LabCard
                             title="Hand Gesture Zoom"
                             tag="TensorFlow.js"
                             color="purple"
-                            description="利用視訊鏡頭追蹤手部距離邏輯來控制 UI 縮放。"
+                            description="利用視訊鏡頭即時追蹤手部距離邏輯，實現無接觸控制 UI 縮放。"
                             linkTo="/lab/hand-gesture"
                             imagePath="/assets/images/lab_hand.png"
                         />
+
+                        {/* 3. BREEZEMASTER 3D */}
                         <LabCard
                             title="BREEZEMASTER 3D"
                             tag="Three.js"
                             color="orange"
-                            description="具有動態自然風邏輯的互動式 3D 風扇模擬。"
+                            description="結合 WebGL 渲染與動態自然風運算邏輯的互動式 3D 風扇模擬器。"
                             linkTo="/lab/breeze3d"
                             imagePath="/assets/images/lab_3d.png"
                         />
+
+                        {/* 4. Retro Arcade */}
                         <LabCard
                             title="Retro Arcade"
                             tag="Canvas API"
                             color="green"
-                            description="使用 JavaScript 重現經典俄羅斯方塊與小精靈遊戲機制。"
+                            description="使用純 JavaScript 重現經典小精靈與俄羅斯方塊，實踐核心渲染迴圈。"
                             linkTo="/lab/pacman"
                             imagePath="/assets/images/lab_arcade.png"
-                        />
-                        <LabCard
-                            title="Behavioral Engine"
-                            tag="FinTech UI"
-                            color="blue"
-                            description="AI 驅動的投資人設診斷與市場風險視覺化。"
-                            linkTo="/lab/behavioral"
-                            imagePath="/assets/images/hero_bg.png"
                         />
                     </div>
                 </section>

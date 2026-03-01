@@ -31,7 +31,15 @@ export default function PortfolioLayout() {
 
                     {showBackButton && (
                         <button
-                            onClick={() => navigate(-1)}
+                            onClick={() => {
+                                if (window.history.state && window.history.state.idx > 0) {
+                                    navigate(-1);
+                                } else if (window.history.length > 2) {
+                                    navigate(-1);
+                                } else {
+                                    navigate('/', { replace: true });
+                                }
+                            }}
                             className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors"
                         >
                             <ChevronLeft size={16} />
