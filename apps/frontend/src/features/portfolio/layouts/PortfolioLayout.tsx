@@ -79,7 +79,7 @@ export default function PortfolioLayout() {
                 <div className="flex gap-8 mt-4 md:mt-0">
                     <a href="#" className="hover:text-blue-600 transition-colors"><Linkedin size={20} /></a>
                     <a href="https://github.com/onlyatuna" target="_blank" rel="noreferrer" className="hover:text-blue-600 transition-colors"><Github size={20} /></a>
-                    <a href="mailto:your@email.com" className="hover:text-blue-600 transition-colors"><Mail size={20} /></a>
+                    <a href="mailto:sss1919xk999@email.com" className="hover:text-blue-600 transition-colors"><Mail size={20} /></a>
                 </div>
             </footer>
         </div>

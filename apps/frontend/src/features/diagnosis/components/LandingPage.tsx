@@ -73,7 +73,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
             {/* Main Image Container */}
             <div className="relative w-full aspect-[16/9] md:aspect-[21/9] rounded-3xl overflow-hidden shadow-soft border border-white/50 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm animate-float">
               {/* Using a high quality abstract image from picsum to match the vibe */}
-              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/assets/images/placeholder_abstract.png')" }}></div>
+              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/assets/images/diagnosis_hero.png')" }}></div>
               <div className="absolute inset-0 bg-gradient-to-t from-background-light/20 via-transparent to-transparent dark:from-background-dark/20 pointer-events-none"></div>
 
               {/* Overlay Text for context */}

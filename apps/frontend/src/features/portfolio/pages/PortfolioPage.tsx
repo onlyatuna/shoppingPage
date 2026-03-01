@@ -29,7 +29,10 @@ export default function PortfolioPage() {
                             <button onClick={() => document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' })} className="h-12 px-8 rounded-xl bg-[#2463eb] text-white font-bold text-sm hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 w-full sm:w-auto hover:-translate-y-0.5">
                                 查看作品 <ArrowDown size={18} />
                             </button>
-                            <button className="h-12 px-8 rounded-xl bg-white border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-all hidden sm:flex items-center hover:-translate-y-0.5 shadow-sm">
+                            <button
+                                onClick={() => window.open('https://pda.104.com.tw/profile/share/5gVZNXHGZuHp7E7ZXpajuEeq4OlphDYL', '_blank')}
+                                className="h-12 px-8 rounded-xl bg-white border border-gray-200 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-all hidden sm:flex items-center hover:-translate-y-0.5 shadow-sm"
+                            >
                                 個人履歷
                             </button>
                         </div>
@@ -92,6 +95,7 @@ export default function PortfolioPage() {
                             techStack={<>React, TypeScript, <strong className="text-gray-900">Recharts</strong>, RESTful APIs</>}
                             impact="提供數據驅動的洞察，幫助使用者掌握退休金缺口"
                             imagePath="/assets/images/pension_preview.png"
+                            containImage={true}
                             linkTo="/work/pension"
                             demoLink="/work/pension/demo"
                             reverse={true}
@@ -106,6 +110,7 @@ export default function PortfolioPage() {
                             techStack="React 19, Recharts, Tailwind CSS, Zustand"
                             impact="將抽象的心理學概念轉化為直觀的互動圖表，有效提升使用者的自我風險認知。"
                             imagePath="/assets/images/placeholder_abstract.png"
+                            containImage={true}
                             linkTo="/work/behavioral-lab"
                             demoLink="/lab/behavioral"
                         />
