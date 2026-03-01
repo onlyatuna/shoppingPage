@@ -48,6 +48,7 @@ app.use(helmet({
             scriptSrc: [
                 "'self'",
                 "'sha256-2Mjg+mXzqYKLSQG2ZpN+1+EBUSimdRH4gZyQD/d7kfI='", // React/Vite development/production injection
+                "'sha256-33Kvd6T078BSMIWxdj4g+/cIw3/imVZHAMbiD85aYy0='", // Breeze3D inline script
                 "https://static.cloudflareinsights.com",
                 "https://cdn.jsdelivr.net",
             ],
@@ -74,6 +75,8 @@ app.use(helmet({
                 "https://api.cloudinary.com",
                 "https://generativelanguage.googleapis.com",
                 "https://cdn.jsdelivr.net",
+                "https://raw.githack.com",
+                "https://raw.githubusercontent.com",
                 "wss:", "ws:",
             ],
             workerSrc: ["'self'", "blob:", "data:"],
