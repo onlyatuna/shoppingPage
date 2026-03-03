@@ -78,7 +78,8 @@ export class GeminiService {
         maskInput: string | undefined,
         prompt: string,
         systemInstruction?: string,
-        userId?: number
+        userId?: number,
+        modelName: string = 'gemini-2.5-flash-image'
     ): Promise<string> {
         if (!process.env.GEMINI_API_KEY) {
             throw new Error('GEMINI_API_KEY is not configured');
@@ -144,42 +145,48 @@ export class GeminiService {
             }
 
             const modelConfig: any = {
-                model: 'gemini-2.5-flash-image',
+                model: modelName,
                 systemInstruction: systemInstruction || defaultSystemInstruction,
             };
 
             const model = genAI.getGenerativeModel(modelConfig);
             const requestParts: any[] = [];
 
-            let finalPrompt = prompt;
             if (maskBase64) {
-                finalPrompt = `[INSTRUCTION]:
-Image 1 is the MAIN IMAGE.
-Image 2 is the MASK.
-- WHITE area of mask = PROTECTED AREA (KEEP UNCHANGED).
-- BLACK area of mask = MASKED AREA (REGENERATE/EDIT).
+                const finalPrompt = `[INSTRUCTION]:
+You are performing an INPAINTING task.
+Image 1 is the MAIN image containing the subject.
+Image 2 is the MASK image.
+- The WHITE areas in Image 2 represent the PROTECTED areas. You MUST NOT change the pixels in the WHITE areas of Image 1.
+- The BLACK areas in Image 2 represent the EDITABLE areas. Generate a new background ONLY in these BLACK areas based on the user request.
 
 USER REQUEST: ${prompt}`;
-            }
 
-            requestParts.push({ text: finalPrompt });
-            requestParts.push({
-                inlineData: {
-                    data: imageBase64,
-                    mimeType: mimeType
-                }
-            });
-
-            if (maskBase64) {
+                requestParts.push({ text: finalPrompt });
+                requestParts.push({
+                    inlineData: {
+                        data: imageBase64,
+                        mimeType: mimeType
+                    }
+                });
                 requestParts.push({
                     inlineData: {
                         data: maskBase64,
                         mimeType: maskMimeType
                     }
                 });
+            } else {
+                requestParts.push({ text: prompt });
+                requestParts.push({
+                    inlineData: {
+                        data: imageBase64,
+                        mimeType: mimeType
+                    }
+                });
             }
 
             const aiStart = Date.now();
+            console.log(`🤖 Sending to ${modelName} (${maskBase64 ? 'With Mask' : 'No Mask'})...`);
             const result = await model.generateContent(requestParts);
             console.log(`🤖 [GeminiService] AI Inference took: ${Date.now() - aiStart}ms`);
             const response = result.response;

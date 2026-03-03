@@ -12,6 +12,7 @@ interface Props {
 export default function ImageEditModal({ isOpen, onClose, imageUrl, onImageEdited }: Props) {
     const [prompt, setPrompt] = useState('');
     const [systemInstruction, setSystemInstruction] = useState('');
+    const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-image');
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -88,7 +89,8 @@ Shot with 100mm macro lens, f/2.8 aperture for shallow depth of field, ISO 100. 
             const res = await apiClient.post('/gemini/edit-image', {
                 imageUrl: targetImageUrl,
                 prompt: prompt.trim(),
-                systemInstruction: systemInstruction.trim() || undefined
+                systemInstruction: systemInstruction.trim() || undefined,
+                model: selectedModel
             });
 
             const { imageBase64 } = res.data.data;
@@ -240,6 +242,39 @@ Shot with 100mm macro lens, f/2.8 aperture for shallow depth of field, ISO 100. 
                                 alt="Edited"
                                 className="w-full h-full object-contain"
                             />
+                        </div>
+                    </div>
+                )}
+
+                {/* [新增] AI 模型選擇 UI */}
+                {!editedImageBase64 && (
+                    <div className="mb-4">
+                        <label className="block text-sm font-bold mb-2">🧠 AI 處理模型</label>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedModel('gemini-2.5-flash-image')}
+                                className={`flex-1 py-3 px-4 border-2 rounded-lg text-left transition-colors ${selectedModel === 'gemini-2.5-flash-image'
+                                        ? 'border-black bg-gray-50'
+                                        : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                disabled={isEditing}
+                            >
+                                <div className="font-bold text-sm">Gemini 2.5 Flash</div>
+                                <div className="text-xs text-gray-500 mt-1">🚀 速度極快 (約 3-5 秒)，適合多數合成。</div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedModel('gemini-3.1-flash-image-preview')}
+                                className={`flex-1 py-3 px-4 border-2 rounded-lg text-left transition-colors ${selectedModel === 'gemini-3.1-flash-image-preview'
+                                        ? 'border-black bg-gray-50'
+                                        : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                disabled={isEditing}
+                            >
+                                <div className="font-bold text-sm text-blue-700">Gemini 3.1 Preview</div>
+                                <div className="text-xs text-gray-500 mt-1">✨ 細節更精緻，但雲端網路延遲較高 (約 15 秒+)。</div>
+                            </button>
                         </div>
                     </div>
                 )}
