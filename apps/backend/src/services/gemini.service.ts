@@ -278,7 +278,7 @@ USER REQUEST: ${prompt}`;
                 await MonitorService.logUsage(
                     userId,
                     'GENERATE_CAPTION',
-                    'gemini-2.5-flash-lite-preview-09-2025',
+                    'gemini-2.5-flash-lite',
                     response.usageMetadata.promptTokenCount || 0,
                     response.usageMetadata.candidatesTokenCount || 0
                 );
