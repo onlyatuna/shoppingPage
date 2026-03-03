@@ -49,6 +49,7 @@ app.use(helmet({
                 "'self'",
                 "'sha256-2Mjg+mXzqYKLSQG2ZpN+1+EBUSimdRH4gZyQD/d7kfI='", // React/Vite development/production injection
                 "'sha256-33Kvd6T078BSMIWxdj4g+/cIw3/imVZHAMbiD85aYy0='", // Breeze3D inline script
+                "'sha256-/27uAljvyvAL+Ta9AI9fPF04bDcZabkYi91QN73manE='", // Required by standard inline scripts
                 "https://static.cloudflareinsights.com",
                 "https://cdn.jsdelivr.net",
             ],
