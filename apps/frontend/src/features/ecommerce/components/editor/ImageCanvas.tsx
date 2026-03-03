@@ -596,8 +596,15 @@ export default function ImageCanvas({
                 )
             }
 
-            {/* Loading State */}
-            {(isProcessing || (selectedMockup && !imagesLoaded)) && <LoadingState />}
+            {/* Loading State for AI Processing */}
+            {isProcessing && <LoadingState />}
+
+            {/* Subtle Loading State for missing/loading assets */}
+            {selectedMockup && !imagesLoaded && !isProcessing && (
+                <div className="absolute inset-0 bg-gray-900/10 backdrop-blur-sm flex flex-col items-center justify-center z-30 transition-opacity">
+                    <div className="w-8 h-8 max-w-full outline-none border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-2" />
+                </div>
+            )}
 
             {/* Floating Toolbar */}
             {
