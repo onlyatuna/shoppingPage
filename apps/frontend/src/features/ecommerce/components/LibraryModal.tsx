@@ -4,7 +4,7 @@ import CloudinaryLibrary from './editor/CloudinaryLibrary';
 interface LibraryModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSelect: (imageUrl: string) => void;
+    onSelect: (imageUrl: string, aiUrl?: string) => void;
 }
 
 export default function LibraryModal({ isOpen, onClose, onSelect }: LibraryModalProps) {

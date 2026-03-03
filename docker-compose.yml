@@ -44,7 +44,7 @@ services:
       resources:
         limits:
           cpus: '0.80'
-          memory: 600M
+          memory: 1G
 
     # 5. [新增] 健全狀況檢查 (搭配 CI/CD 的 --wait 強化部署可靠性)
     healthcheck:

@@ -35,6 +35,7 @@ export default function EditorPage() {
 
     // Editor State
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+    const [aiOptimizedUrl, setAiOptimizedUrl] = useState<string | null>(null); // Optimized URL for AI processing
     const [editedImage, setEditedImage] = useState<string | null>(null);
     const [selectedStyle, setSelectedStyle] = useState<StylePresetKey | string | null>(null);
     const [prompt, setPrompt] = useState('');
@@ -490,8 +491,9 @@ export default function EditorPage() {
         }
     };
 
-    const handleLibrarySelect = (imageUrl: string) => {
+    const handleLibrarySelect = (imageUrl: string, aiUrl?: string) => {
         setUploadedImage(imageUrl);
+        setAiOptimizedUrl(aiUrl || null);
         setEditedImage(null); // Reset edited image
         setGeneratedCaption(null); // Reset caption
         setSelectedMockup(null); // Reset mockup selection
@@ -501,6 +503,7 @@ export default function EditorPage() {
 
     const handleRemoveImage = () => {
         setUploadedImage(null);
+        setAiOptimizedUrl(null);
         setEditedImage(null);
         setGeneratedCaption(null);
         setSelectedMockup(null);
@@ -547,7 +550,7 @@ export default function EditorPage() {
     };
 
     // Helper: Upload Base64 to Cloudinary
-    const uploadBase64Image = async (base64Str: string, type: string = 'product', subfolder: string = ''): Promise<string | null> => {
+    const uploadBase64Image = async (base64Str: string, type: string = 'product', subfolder: string = ''): Promise<{ url: string, ai_url?: string } | null> => {
         try {
             const res = await fetch(base64Str);
             const blob = await res.blob();
@@ -562,7 +565,10 @@ export default function EditorPage() {
             const uploadRes = await apiClient.post('/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            return uploadRes.data.data.url;
+            return {
+                url: uploadRes.data.data.url,
+                ai_url: uploadRes.data.data.ai_url
+            };
         } catch (error) {
             console.error('Upload failed', error);
             return null;
@@ -1062,7 +1068,7 @@ export default function EditorPage() {
                 }
 
                 resolve({
-                    image: canvas.toDataURL('image/png'),
+                    image: canvas.toDataURL('image/jpeg', 0.8), // Optimize for payload size
                     mask: maskCanvas.toDataURL('image/png')
                 });
 
@@ -1078,8 +1084,11 @@ export default function EditorPage() {
 
         setIsProcessing(true);
         try {
+            // Use aiOptimizedUrl if available to save bandwidth/processing
+            const targetImageUrl = aiOptimizedUrl || uploadedImage;
+
             const response = await apiClient.post('/gemini/edit-image', {
-                imageUrl: uploadedImage,
+                imageUrl: targetImageUrl,
                 prompt: activePrompt
             });
 
@@ -1108,10 +1117,11 @@ export default function EditorPage() {
                 toast.success('圖片生成成功！正在背景上傳...');
 
                 // 2. Auto upload in background
-                uploadBase64Image(fullBase64).then((url) => {
-                    if (url) {
-                        setEditedImage(url);
-                        console.log('Auto-uploaded to Cloudinary:', url);
+                uploadBase64Image(fullBase64).then((result) => {
+                    if (result) {
+                        setEditedImage(result.url);
+                        if (result.ai_url) setAiOptimizedUrl(result.ai_url);
+                        console.log('Auto-uploaded to Cloudinary:', result.url);
                         // Optional: Toast "Saved to cloud"
                     }
                 });
@@ -1255,10 +1265,11 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                 toast.success(isPrintable ? 'AI 印刷融合完成！' : 'AI 光影融合完成！');
 
                 // 自動備份到雲端
-                uploadBase64Image(fullBase64).then((url) => {
-                    if (url) {
-                        console.log('Auto-uploaded blended image:', url);
-                        setEditedImage(url);
+                uploadBase64Image(fullBase64).then((result) => {
+                    if (result) {
+                        console.log('Auto-uploaded blended image:', result.url);
+                        setEditedImage(result.url);
+                        if (result.ai_url) setAiOptimizedUrl(result.ai_url);
                     }
                 });
             } else {
@@ -1401,8 +1412,11 @@ Action: Add realistic contact shadows and environmental lighting interactions to
 
         // If Base64, try to upload first (redundancy check)
         if (targetImage.startsWith('data:')) {
-            const uploadedUrl = await uploadBase64Image(targetImage);
-            if (uploadedUrl) targetImage = uploadedUrl;
+            const result = await uploadBase64Image(targetImage);
+            if (result) {
+                targetImage = result.url;
+                if (result.ai_url) setAiOptimizedUrl(result.ai_url);
+            }
         }
 
         // Don't set isProcessing here - ExportControls has its own loading state
@@ -1444,10 +1458,11 @@ Action: Add realistic contact shadows and environmental lighting interactions to
         // If it's a Base64 string, upload it first
         if (targetImage.startsWith('data:')) {
             const toastId = toast.loading('正在上傳圖片...');
-            const url = await uploadBase64Image(targetImage);
+            const result = await uploadBase64Image(targetImage);
 
-            if (url) {
-                targetImage = url;
+            if (result) {
+                targetImage = result.url;
+                if (result.ai_url) setAiOptimizedUrl(result.ai_url);
                 toast.success('圖片上傳完成，準備上架...', { id: toastId });
             } else {
                 toast.error('圖片上傳失敗，無法繼續上架', { id: toastId });
@@ -1461,7 +1476,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
             price: 0,
             stock: 10,
             isActive: true,
-            images: [targetImage],
+            images: [targetImage!],
             description: generatedCaption || prompt || ''
         });
         setIsProductModalOpen(true);
@@ -2002,13 +2017,13 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                     const toastId = toast.loading('正在上傳圖框...');
                     try {
                         // Upload frame to Cloudinary (folder: ecommerce-canvas/frames)
-                        const cloudUrl = await uploadBase64Image(frame.url, 'canvas', 'frames');
+                        const result = await uploadBase64Image(frame.url, 'canvas', 'frames');
 
-                        if (cloudUrl) {
+                        if (result) {
                             const updatedFrame = {
                                 ...frame,
-                                url: cloudUrl,
-                                preview: cloudUrl
+                                url: result.url,
+                                preview: result.url
                             };
 
                             setCustomFrames(prev => [...prev, updatedFrame]);

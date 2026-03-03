@@ -33,7 +33,7 @@ cloudinary.config({
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB 大小限制
+        fileSize: 2 * 1024 * 1024, // 2MB 大小限制
         files: 1, // 一次只允許上傳一個檔案
     },
     fileFilter: (req, file, cb) => {
@@ -77,6 +77,9 @@ router.post('/', uploadRateLimiter, authenticateToken, requireAdmin, upload.sing
                 {
                     folder: folder,
                     public_id: public_id,
+                    eager: [
+                        { width: 1024, height: 1024, crop: "limit", format: "webp", quality: "auto" }
+                    ]
                 },
                 (error, result) => {
                     if (result) resolve(result);
@@ -94,6 +97,8 @@ router.post('/', uploadRateLimiter, authenticateToken, requireAdmin, upload.sing
         status: 'success',
         data: {
             url: result.secure_url,
+            // 👇 AI Optimized URL: 1024px WebP Thumbnail
+            ai_url: result.secure_url.replace(/\/upload\//, '/upload/w_1024,c_limit,f_webp,q_auto/'),
             public_id: result.public_id,
             folder: folder
         }
@@ -113,10 +118,16 @@ router.get('/resources', uploadRateLimiter, authenticateToken, requireAdmin, asy
         next_cursor: next_cursor as string
     });
 
+    // Add ai_url to each resource
+    const resourcesWithAiUrl = result.resources.map((res: any) => ({
+        ...res,
+        ai_url: res.secure_url.replace(/\/upload\//, '/upload/w_1024,c_limit,f_webp,q_auto/')
+    }));
+
     res.json({
         status: 'success',
         data: {
-            resources: result.resources,
+            resources: resourcesWithAiUrl,
             next_cursor: result.next_cursor
         }
     });

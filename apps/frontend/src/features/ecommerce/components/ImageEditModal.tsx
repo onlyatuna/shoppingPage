@@ -79,9 +79,14 @@ Shot with 100mm macro lens, f/2.8 aperture for shallow depth of field, ISO 100. 
         setError(null);
 
         try {
-            // 1. 呼叫 Gemini API 編輯圖片
+            // 1. Optimize URL if it's a Cloudinary URL
+            const targetImageUrl = imageUrl.includes('cloudinary.com')
+                ? imageUrl.replace(/\/upload\//, '/upload/w_1024,c_limit,f_webp,q_auto/')
+                : imageUrl;
+
+            // 2. 呼叫 Gemini API 編輯圖片
             const res = await apiClient.post('/gemini/edit-image', {
-                imageUrl,
+                imageUrl: targetImageUrl,
                 prompt: prompt.trim(),
                 systemInstruction: systemInstruction.trim() || undefined
             });
@@ -111,11 +116,11 @@ Shot with 100mm macro lens, f/2.8 aperture for shallow depth of field, ISO 100. 
                 byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
             const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'image/png' });
+            const blob = new Blob([byteArray], { type: 'image/jpeg' });
 
             // 3. 上傳至 Cloudinary
             const formData = new FormData();
-            formData.append('image', blob, 'edited-image.png');
+            formData.append('image', blob, 'edited-image.jpeg');
 
             const uploadRes = await apiClient.post('/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -323,7 +328,7 @@ Shot with 100mm macro lens, f/2.8 aperture for shallow depth of field, ISO 100. 
                                 {isEditing ? (
                                     <>
                                         <Loader2 size={18} className="animate-spin" />
-                                        編輯中...
+                                        AI 正在精細繪圖中 (預計 10-15 秒)...
                                     </>
                                 ) : (
                                     <>

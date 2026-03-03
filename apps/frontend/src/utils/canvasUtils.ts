@@ -89,7 +89,7 @@ export default async function getCroppedImg(
     ctx.putImageData(data, 0, 0);
 
     // As Base64 string
-    return canvas.toDataURL('image/jpeg');
+    return canvas.toDataURL('image/jpeg', 0.7);
 
     // As Blob (if needed later)
     // return new Promise((resolve, reject) => {

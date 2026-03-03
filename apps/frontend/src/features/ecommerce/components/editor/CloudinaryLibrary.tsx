@@ -11,10 +11,11 @@ interface CloudinaryResource {
     width: number;
     height: number;
     created_at: string;
+    ai_url?: string;
 }
 
 interface CloudinaryLibraryProps {
-    onSelectImage: (imageUrl: string) => void;
+    onSelectImage: (imageUrl: string, aiUrl?: string) => void;
 }
 
 export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryProps) {
@@ -295,7 +296,7 @@ export default function CloudinaryLibrary({ onSelectImage }: CloudinaryLibraryPr
 
                                     // Only select if NOT in edit mode
                                     if (!isEditMode) {
-                                        onSelectImage(img.secure_url);
+                                        onSelectImage(img.secure_url, (img as any).ai_url);
                                     }
                                 }}
                                 // Mobile Long Press Handlers

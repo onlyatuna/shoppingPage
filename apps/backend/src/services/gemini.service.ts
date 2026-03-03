@@ -109,12 +109,19 @@ export class GeminiService {
             } else if (imageInput.startsWith('http')) {
                 const { host, pathname, search, port, isLocal } = sanitizeImageUrl(imageInput);
                 const protocol = isLocal ? 'http:' : 'https:';
-                const finalUrl = `${protocol}//${host}${port}${pathname}${search}`;
+                let finalUrl = `${protocol}//${host}${port}${pathname}${search}`;
 
+                // [關鍵優化] 如果是 Cloudinary 圖片，強制轉換路徑為 1024px WebP
+                if (host === 'res.cloudinary.com') {
+                    finalUrl = finalUrl.replace(/\/upload\//, '/upload/w_1024,c_limit,f_webp,q_auto/');
+                }
+
+                const downloadStart = Date.now();
                 const imageResponse = await axios.get(finalUrl, {
                     responseType: 'arraybuffer',
                     maxRedirects: 0
                 });
+                console.log(`🌐 [GeminiService] Image Download took: ${Date.now() - downloadStart}ms`);
                 const imageBuffer = Buffer.from(imageResponse.data);
                 imageBase64 = imageBuffer.toString('base64');
                 mimeType = imageResponse.headers['content-type'] || 'image/jpeg';
@@ -172,7 +179,9 @@ USER REQUEST: ${prompt}`;
                 });
             }
 
+            const aiStart = Date.now();
             const result = await model.generateContent(requestParts);
+            console.log(`🤖 [GeminiService] AI Inference took: ${Date.now() - aiStart}ms`);
             const response = result.response;
 
             if (!response.candidates || response.candidates.length === 0) {
