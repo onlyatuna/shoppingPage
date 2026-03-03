@@ -512,9 +512,14 @@ export default function EditorPage() {
     const loadImage = (src: string): Promise<HTMLImageElement> => {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = 'anonymous';
+            if (src.startsWith('http')) {
+                img.crossOrigin = 'anonymous';
+            }
             img.onload = () => resolve(img);
-            img.onerror = reject;
+            img.onerror = (err) => {
+                console.error(`Failed to load image: ${src}`, err);
+                reject(err);
+            };
             img.src = src;
         });
     };

@@ -469,6 +469,8 @@ export default function ImageCanvas({
                                         alt="background"
                                         className="block max-w-[90vw] max-h-[85vh] w-auto h-auto select-none z-0"
                                         draggable={false}
+                                        loading="eager"
+                                        decoding="async"
                                     />
 
                                     {/* Layer 2: 互動層 (Interaction - Invisible but Draggable) */}
@@ -516,6 +518,8 @@ export default function ImageCanvas({
                                                         src={draggableImageUrl}
                                                         className="w-full h-auto object-contain"
                                                         style={isPrintableMode ? { opacity: 0.95, mixBlendMode: 'multiply' } : {}}
+                                                        loading="eager"
+                                                        decoding="async"
                                                     />
                                                 ) : (
                                                     <div className="w-full aspect-square border-2 border-dashed border-white/30 rounded-lg bg-white/5 backdrop-blur-sm p-4 text-center flex flex-col items-center justify-center">
@@ -538,6 +542,8 @@ export default function ImageCanvas({
                                             src={(selectedMockup as Mockup).overlayUrl}
                                             className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none mix-blend-multiply"
                                             style={{ opacity: mockupOpacity ?? 1 }}
+                                            loading="eager"
+                                            decoding="async"
                                         />
                                     )}
                                 </div>

@@ -3,7 +3,7 @@
 FROM node:22-slim AS builder
 
 RUN apt-get update && \
-    apt-get install -y openssl ca-certificates && \
+    apt-get install -y openssl ca-certificates tini && \
     npm install -g npm@latest && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -41,7 +41,7 @@ FROM node:22-slim AS runner
 # 安裝 runtime 必要套件 (openssl 是 Prisma 二進位檔需要的)
 # 並移除 npm 與 npx 以縮減體積並降低資安風險 (Production 不應有套件管理器)
 RUN apt-get update && \
-    apt-get install -y openssl ca-certificates && \
+    apt-get install -y openssl ca-certificates tini && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     rm -f /usr/local/bin/npm /usr/local/bin/npx && \
@@ -77,5 +77,5 @@ USER node
 EXPOSE 3000
 
 # 啟動指令 (ENTRYPOINT 會先執行 entrypoint.sh，再執行 CMD)
-ENTRYPOINT ["/app/apps/backend/scripts/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/app/apps/backend/scripts/entrypoint.sh"]
 CMD ["node", "apps/backend/dist/app.js"]
