@@ -137,7 +137,7 @@ export class GeminiService {
             }
 
             const modelConfig: any = {
-                model: 'gemini-3.1-flash-image-preview',
+                model: 'gemini-2.5-flash-image',
                 systemInstruction: systemInstruction || defaultSystemInstruction,
             };
 
@@ -207,7 +207,7 @@ USER REQUEST: ${prompt}`;
         } catch (error: any) {
             console.error('Gemini 2.5 Edit Error:', sanitizeLog(error));
             if (error.message?.includes('404')) {
-                throw new AppError('找不到 gemini-3.1-flash-image-preview 模型，請確認模型名稱或權限。', StatusCodes.NOT_FOUND);
+                throw new AppError('找不到 gemini-2.5-flash-image 模型，請確認模型名稱或權限。', StatusCodes.NOT_FOUND);
             }
             throw error;
         }

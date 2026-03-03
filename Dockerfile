@@ -1,36 +1,35 @@
+# ==========================================
 # 階段 1: Builder
 # ==========================================
 FROM node:22-slim AS builder
 
+# 安裝編譯時必要的套件
 RUN apt-get update && \
-    apt-get install -y openssl ca-certificates tini && \
-    npm install -g npm@latest && \
-    apt-get clean && \
+    apt-get install -y openssl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
-
 
 WORKDIR /app
 
+# 複製依賴定義
 COPY package.json package-lock.json ./
 COPY apps/backend/package.json ./apps/backend/
 COPY apps/frontend/package.json ./apps/frontend/
 COPY packages/shared/package.json ./packages/shared/
 
+# 安裝全部依賴
 RUN npm ci
 
-# 複製 Prisma schema 並生成 Client (在 COPY . . 之前，利用 Cache)
+# 複製 Prisma 並生成 Client
 COPY apps/backend/prisma ./apps/backend/prisma
-WORKDIR /app/apps/backend
-RUN npx prisma generate
+RUN cd apps/backend && npx prisma generate
 
-WORKDIR /app
+# 複製原始碼並編譯
 COPY . .
+RUN npm run build --workspace=packages/shared && \
+    npm run build --workspace=apps/frontend && \
+    npm run build --workspace=apps/backend
 
-RUN npm run build --workspace=packages/shared
-RUN npm run build --workspace=apps/frontend
-RUN npm run build --workspace=apps/backend
-
-# 移除開發用的依賴，並清除 npm 快取
+# 移除開發依賴並清理快取
 RUN npm prune --omit=dev && npm cache clean --force
 
 # ==========================================
@@ -38,44 +37,33 @@ RUN npm prune --omit=dev && npm cache clean --force
 # ==========================================
 FROM node:22-slim AS runner
 
-# 安裝 runtime 必要套件 (openssl 是 Prisma 二進位檔需要的)
-# 並移除 npm 與 npx 以縮減體積並降低資安風險 (Production 不應有套件管理器)
+# 1. 基礎環境設定：加入 tini 解決僵屍進程問題
 RUN apt-get update && \
     apt-get install -y openssl ca-certificates tini && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -f /usr/local/bin/npm /usr/local/bin/npx && \
-    rm -rf /usr/local/lib/node_modules/npm
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
 ENV NODE_ENV=production
 
-# 複製必要的 package 定義
-COPY package.json package-lock.json ./
-COPY apps/backend/package.json ./apps/backend/
+# 2. 核心優化：使用 --chown 確保權限正確
+COPY --from=builder --chown=node:node /app/package.json /app/package-lock.json ./
+COPY --from=builder --chown=node:node /app/apps/backend/package.json ./apps/backend/
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 
-# [修正] 只複製根目錄的 node_modules (確保包含了 .prisma)
-COPY --from=builder /app/node_modules ./node_modules
+# 3. 複製編譯產物
+COPY --from=builder --chown=node:node /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder --chown=node:node /app/apps/frontend/dist ./apps/backend/public
+COPY --from=builder --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
+COPY --from=builder --chown=node:node /app/apps/backend/scripts/entrypoint.sh ./apps/backend/scripts/entrypoint.sh
 
-# [優化] 手動刪除絕對用不到的開發工具，進一步瘦身
-RUN rm -rf node_modules/typescript node_modules/@types
+# 4. 確保腳本可執行 (由 root 執行後切換回 node 使用者)
+RUN chmod +x /app/apps/backend/scripts/entrypoint.sh
 
-# 複製編譯好的產物
-COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
-COPY --from=builder /app/apps/frontend/dist ./apps/backend/public
-COPY --from=builder /app/apps/backend/prisma ./apps/backend/prisma
-# 複製 entrypoint 腳本
-COPY --from=builder /app/apps/backend/scripts/entrypoint.sh ./apps/backend/scripts/entrypoint.sh
-
-# [SECURITY] 權限與啟動設定
-USER root
-RUN chmod +x /app/apps/backend/scripts/entrypoint.sh && \
-    chown -R node:node /app
 USER node
-
 EXPOSE 3000
 
-# 啟動指令 (ENTRYPOINT 會先執行 entrypoint.sh，再執行 CMD)
+# 5. 終極解決方案：使用 tini 作為 Entrypoint
+# tini 會幫你收屍 (Reap Zombies) 並正確轉發 SIGTERM
+
 ENTRYPOINT ["/usr/bin/tini", "--", "/app/apps/backend/scripts/entrypoint.sh"]
 CMD ["node", "apps/backend/dist/app.js"]

@@ -52,6 +52,7 @@ app.use(helmet({
                 "'sha256-/27uAljvyvAL+Ta9AI9fPF04bDcZabkYi91QN73manE='", // Required by standard inline scripts
                 "'sha256-FfLU0qnExC/gKjiMUBvJaYBwrxpKYGXFGdNkyd9cTos='", // Added to fix blocked inline script
                 "'sha256-vh3R9XU9TtK1kvl7NUX7vF+wITBB52xk0vXcAZ8oVQI='", // Vite/React inline script injection (2026-03-03)
+                "'sha256-baX1TnVbpzvLASK02FWB0oM1c0iuRI61+5jbdW4RyR0='", // Vite/React inline script injection (2026-03-04)
                 "https://static.cloudflareinsights.com",
                 "https://cdn.jsdelivr.net",
             ],
@@ -75,6 +76,7 @@ app.use(helmet({
             ],
             connectSrc: [
                 "'self'",
+                "data:",
                 "https://res.cloudinary.com",
                 "https://api.cloudinary.com",
                 "https://generativelanguage.googleapis.com",
