@@ -51,6 +51,7 @@ app.use(helmet({
                 "'sha256-33Kvd6T078BSMIWxdj4g+/cIw3/imVZHAMbiD85aYy0='", // Breeze3D inline script
                 "'sha256-/27uAljvyvAL+Ta9AI9fPF04bDcZabkYi91QN73manE='", // Required by standard inline scripts
                 "'sha256-FfLU0qnExC/gKjiMUBvJaYBwrxpKYGXFGdNkyd9cTos='", // Added to fix blocked inline script
+                "'sha256-vh3R9XU9TtK1kvl7NUX7vF+wITBB52xk0vXcAZ8oVQI='", // Vite/React inline script injection (2026-03-03)
                 "https://static.cloudflareinsights.com",
                 "https://cdn.jsdelivr.net",
             ],
