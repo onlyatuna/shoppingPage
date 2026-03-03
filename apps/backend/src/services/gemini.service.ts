@@ -223,7 +223,7 @@ USER REQUEST: ${prompt}`;
                 throw new Error('AI 系統負載過高或超額，請稍後再試 (Circuit Breaker)');
             }
 
-            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite-preview-09-2025' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
             const { host, pathname, search, port, isLocal } = sanitizeImageUrl(imageUrl);
             const protocol = isLocal ? 'http:' : 'https:';
@@ -307,7 +307,7 @@ USER REQUEST: ${prompt}`;
             }
 
             const model = genAI.getGenerativeModel({
-                model: 'gemini-2.5-flash-lite-preview-09-2025'
+                model: 'gemini-2.5-flash-lite'
             });
 
             const prompt = `你是一位專業的商業攝影師和 AI 圖片編輯專家。
@@ -354,7 +354,7 @@ USER REQUEST: ${prompt}`;
                 await MonitorService.logUsage(
                     userId,
                     'GENERATE_STYLE_PROMPT',
-                    'gemini-2.5-flash-lite-preview-09-2025',
+                    'gemini-2.5-flash-lite',
                     response.usageMetadata.promptTokenCount || 0,
                     response.usageMetadata.candidatesTokenCount || 0
                 );

@@ -32,6 +32,7 @@ interface ImageCanvasProps {
     // [NEW] 新增座標控制 Props
     productPosition?: { x: number, y: number, scale: number }; // 目前位置 (百分比)
     onProductPositionChange?: (pos: { x: number, y: number, scale: number }) => void; // 更新 callback
+    showToolbar?: boolean; // [NEW] 是否顯示懸浮工具欄
 }
 
 export default function ImageCanvas({
@@ -52,7 +53,8 @@ export default function ImageCanvas({
     isBlended = false, // [NEW] 預設為 false
     productPosition = { x: 0.5, y: 0.5, scale: 0.6 }, // [NEW] 預設值
     onProductPositionChange, // [NEW]
-    isAIBlending = false // [NEW]
+    isAIBlending = false, // [NEW]
+    showToolbar = true // [NEW] 預設顯示
 }: ImageCanvasProps) {
     // Cropping State - Lifted to parent
     const [crop, setCrop] = useState<Crop>();
@@ -593,7 +595,7 @@ export default function ImageCanvas({
 
             {/* Floating Toolbar */}
             {
-                (editedImage || originalImage) && !isProcessing && !isCropping && (
+                showToolbar && (editedImage || originalImage) && !isProcessing && !isCropping && (
                     <FloatingToolbar
                         className={`
                         transition-opacity duration-300 ease-in-out

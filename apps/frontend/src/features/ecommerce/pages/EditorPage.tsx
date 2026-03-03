@@ -1516,8 +1516,8 @@ Action: Add realistic contact shadows and environmental lighting interactions to
             />
 
             {/* Left Panel - Control Panel (Desktop Only) */}
-            <div className={`hidden landscape:block flex - shrink - 0 bg - white dark: bg - [#2d2d2d] border - r border - gray - 200 dark: border - gray - 700 h - full transition - all duration - 300 ${isLeftPanelCollapsed ? 'w-12' : 'w-96'
-                } `}>
+            <div className={`hidden landscape:block flex-shrink-0 bg-white dark:bg-[#2d2d2d] border-r border-gray-200 dark:border-gray-700 h-full transition-all duration-300 ${isLeftPanelCollapsed ? 'w-12' : 'w-96'
+                }`}>
                 {isLeftPanelCollapsed ? (
                     // Collapsed state - show only toggle button
                     <div className="h-full flex items-start justify-center pt-6">
@@ -1690,7 +1690,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
 
 
             {/* Mobile View: Caption Step */}
-            <div className={`flex - 1 flex flex - col h - full overflow - hidden pb - 24 ${mobileStep === 'caption' ? 'block landscape:hidden' : 'hidden'} `}>
+            <div className={`flex-1 flex flex-col h-full overflow-hidden pb-24 ${mobileStep === 'caption' ? 'block landscape:hidden' : 'hidden'}`}>
 
                 {!isMobileCaptionExpanded && (
                     <div className="flex items-center justify-center p-6 pb-2 transition-all duration-300">
@@ -1713,6 +1713,8 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                                     isBlended={!!editedImage && isAIBlending} // 簡單判斷：如果有編輯圖且正在 Blend
                                     productPosition={productPosition}
                                     onProductPositionChange={setProductPosition}
+                                    isAIBlending={isAIBlending}
+                                    showToolbar={false}
                                 />
                             </div>
                         )}
@@ -1734,7 +1736,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
             </div>
 
             {/* Mobile View: Publish Step */}
-            <div className={`flex - 1 p - 6 pb - 32 overflow - y - auto ${mobileStep === 'publish' ? 'block landscape:hidden' : 'hidden'} `}>
+            <div className={`flex-1 p-6 pb-32 overflow-y-auto ${mobileStep === 'publish' ? 'block landscape:hidden' : 'hidden'}`}>
                 <h2 className="text-xl font-bold mb-4">發佈與匯出</h2>
                 {/* Preview Image with Frame */}
                 {(editedImage || uploadedImage) && (
@@ -1759,8 +1761,8 @@ Action: Add realistic contact shadows and environmental lighting interactions to
             </div>
 
             {/* Right Panel (Desktop Only) - Action Panel */}
-            <div className={`hidden landscape:flex landscape: flex - col flex - shrink - 0 h - full border - l border - gray - 200 dark: border - gray - 800 bg - white dark: bg - [#1e1e1e] overflow - hidden transition - all duration - 300 ${isRightPanelCollapsed ? 'w-12' : 'w-96'
-                } `}>
+            <div className={`hidden landscape:flex landscape:flex-col flex-shrink-0 h-full border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1e1e1e] overflow-hidden transition-all duration-300 ${isRightPanelCollapsed ? 'w-12' : 'w-96'
+                }`}>
                 {isRightPanelCollapsed ? (
                     // Collapsed state - show only toggle button
                     <div className="h-full flex items-start justify-center pt-6">
@@ -1829,30 +1831,30 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                     <button
                         type="button"
                         onClick={() => setMobileTab('style')}
-                        className={`flex - 1 py - 3 text - sm font - medium transition - colors ${mobileTab === 'style'
+                        className={`flex-1 py-3 text-sm font-medium transition-colors ${mobileTab === 'style'
                             ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                            } `}
+                            }`}
                     >
                         ✨ AI 風格
                     </button>
                     <button
                         type="button"
                         onClick={() => setMobileTab('mockup')}
-                        className={`flex - 1 py - 3 text - sm font - medium transition - colors ${mobileTab === 'mockup'
+                        className={`flex-1 py-3 text-sm font-medium transition-colors ${mobileTab === 'mockup'
                             ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                            } `}
+                            }`}
                     >
                         🎭 場景 Mockup
                     </button>
                     <button
                         type="button"
                         onClick={() => setMobileTab('upload')}
-                        className={`flex - 1 py - 3 text - sm font - medium transition - colors ${mobileTab === 'upload'
+                        className={`flex-1 py-3 text-sm font-medium transition-colors ${mobileTab === 'upload'
                             ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                            } `}
+                            }`}
                     >
                         📷 上傳
                     </button>
