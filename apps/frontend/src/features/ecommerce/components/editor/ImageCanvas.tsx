@@ -597,7 +597,7 @@ export default function ImageCanvas({
             }
 
             {/* Loading State */}
-            {(isProcessing || (selectedMockup && !imagesLoaded)) && <LoadingState />}
+            {(isProcessing || isAIBlending || (selectedMockup && !imagesLoaded)) && <LoadingState />}
 
             {/* Floating Toolbar */}
             {

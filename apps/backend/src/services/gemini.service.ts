@@ -192,7 +192,9 @@ USER REQUEST: ${prompt}`;
             }
 
             const aiStart = Date.now();
-            console.log(`🤖 Sending to ${modelName} (${maskBase64 ? 'With Mask' : 'No Mask'})...`);
+            const safeModelName = modelName.replace(/[\n\r]/g, '');
+            const safeMaskStatus = (maskBase64 ? 'With Mask' : 'No Mask').replace(/[\n\r]/g, '');
+            console.log(`🤖 Sending to ${safeModelName} (${safeMaskStatus})...`);
             const result = await model.generateContent(requestParts);
             console.log(`🤖 [GeminiService] AI Inference took: ${Date.now() - aiStart}ms`);
             const response = result.response;

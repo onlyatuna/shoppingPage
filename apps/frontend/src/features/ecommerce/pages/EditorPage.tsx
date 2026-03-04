@@ -1558,7 +1558,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                                 setIsCustomStyleModalOpen(true);
                             }}
                             onDeleteCustomStyle={handleDeleteCustomStyle}
-                            disabled={isProcessing || !uploadedImage}
+                            disabled={isProcessing || isAIBlending || !uploadedImage}
                         />
 
                         {/* 分隔线 */}
@@ -1584,7 +1584,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                             <MockupGrid
                                 selectedMockup={selectedMockup}
                                 onSelect={handleMockupSelect}
-                                disabled={isProcessing || !uploadedImage || isMockupLoading}
+                                disabled={isProcessing || isAIBlending || !uploadedImage || isMockupLoading}
                             />
                         </div>
                     </div>
@@ -1626,7 +1626,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                 />
 
                 {/* Center Canvas overlay buttons */}
-                {selectedMockup && (uploadedImage || editedImage) && !isProcessing && !isCropping && (
+                {selectedMockup && (uploadedImage || editedImage) && !isProcessing && !isAIBlending && !isCropping && (
                     <div className="absolute top-4 right-4 z-[50] flex gap-2">
                         {beforeBlendImage && (
                             <button
@@ -1734,7 +1734,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                     onCaptionPromptChange={setCaptionPrompt}
                     isGenerating={isGeneratingCaption}
                     onGenerate={handleGenerateCaption}
-                    disabled={(!uploadedImage && !editedImage) || isProcessing}
+                    disabled={(!uploadedImage && !editedImage) || isProcessing || isAIBlending}
                     onToggleExpand={() => setIsMobileCaptionExpanded(!isMobileCaptionExpanded)}
                     isExpanded={isMobileCaptionExpanded}
                 />
@@ -1761,7 +1761,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                     onDownload={handleDownload}
                     onPublishInstagram={handlePublish}
                     onPublishProduct={handlePublishProduct}
-                    disabled={(!editedImage && !uploadedImage) || isProcessing}
+                    disabled={(!editedImage && !uploadedImage) || isProcessing || isAIBlending}
                 />
             </div>
 
@@ -1809,7 +1809,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                             isGenerating={isGeneratingCaption}
                             onGenerate={handleGenerateCaption}
                             // Allow generating caption even if only uploaded image exists
-                            disabled={(!uploadedImage && !editedImage) || isProcessing}
+                            disabled={(!uploadedImage && !editedImage) || isProcessing || isAIBlending}
                         />
 
                         <div className="mt-auto pt-6">
@@ -1818,7 +1818,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                                 onPublishInstagram={handlePublish}
                                 onPublishProduct={handlePublishProduct}
                                 // Allow publish if ANY image exists
-                                disabled={(!editedImage && !uploadedImage) || isProcessing}
+                                disabled={(!editedImage && !uploadedImage) || isProcessing || isAIBlending}
                             />
                         </div>
                     </div>
@@ -1884,7 +1884,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                             setIsMobileSheetOpen(false); // Close bottom sheet
                         }}
                         onDeleteCustomStyle={handleDeleteCustomStyle}
-                        disabled={isProcessing}
+                        disabled={isProcessing || isAIBlending}
                     />
                 ) : mobileTab === 'mockup' ? (
                     <div className="relative">
@@ -1901,7 +1901,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                         <MockupGrid
                             selectedMockup={selectedMockup}
                             onSelect={handleMockupSelect}
-                            disabled={isProcessing || isMockupLoading}
+                            disabled={isProcessing || isAIBlending || isMockupLoading}
                         />
                     </div>
                 ) : (
@@ -1969,7 +1969,7 @@ Action: Add realistic contact shadows and environmental lighting interactions to
                 onBack={mobileStep !== 'edit' ? handleMobileBack : undefined}
                 canGoNext={canGoNext()}
                 nextLabel={mobileStep === 'publish' ? '完成' : undefined}
-                isProcessing={isProcessing}
+                isProcessing={isProcessing || isAIBlending}
                 // Disable next button if cropping
                 onNext={() => {
                     if (isCropping) {
