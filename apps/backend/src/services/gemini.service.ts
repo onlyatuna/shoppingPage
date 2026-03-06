@@ -153,43 +153,40 @@ export class GeminiService {
 
             const requestParts: any[] = [];
 
-            // [關鍵修復] 採用「夾心餅乾」順序，讓 AI 絕對不會搞錯主圖與遮罩
+            // [真正關鍵修復]：將所有文字指令集中在最前面，確保兩張圖片連續輸入，不被打斷
+            let finalPrompt = prompt;
             if (maskBase64) {
-                const finalPrompt = `[INSTRUCTION]:
-You are performing an INPAINTING task.
-Below is the MAIN image.`;
-
-                const maskPrompt = `Below is the MASK image.
-- The WHITE areas represent the PROTECTED areas. You MUST NOT change the pixels in these areas of the MAIN image.
-- The BLACK areas represent the EDITABLE areas. Generate new content ONLY in these BLACK areas based on the user request.
+                finalPrompt = `[INSTRUCTION]:
+Image 1 is the MAIN IMAGE.
+Image 2 is the MASK.
+- WHITE area of mask = PROTECTED AREA (KEEP UNCHANGED).
+- BLACK area of mask = MASKED AREA (REGENERATE/EDIT).
 
 USER REQUEST: ${prompt}`;
+            }
 
-                // 嚴格順序：文字描述 -> 主圖 -> 文字描述 -> 遮罩圖
-                requestParts.push({ text: finalPrompt });
-                requestParts.push({
-                    inlineData: {
-                        data: imageBase64,
-                        mimeType: mimeType
-                    }
-                });
+            // 1. 先放「全部」的文字指令
+            requestParts.push({ text: finalPrompt });
 
-                requestParts.push({ text: maskPrompt });
+            // 2. 放入主圖 (Image 1)
+            requestParts.push({
+                inlineData: {
+                    data: imageBase64,
+                    mimeType: mimeType
+                }
+            });
+
+            // 3. 緊接著直接放入遮罩圖 (Image 2) —— 中間絕對不要再插入任何文字！
+            if (maskBase64) {
                 requestParts.push({
                     inlineData: {
                         data: maskBase64,
                         mimeType: maskMimeType
                     }
                 });
-            } else {
-                requestParts.push({ text: prompt });
-                requestParts.push({
-                    inlineData: {
-                        data: imageBase64,
-                        mimeType: mimeType
-                    }
-                });
             }
+
+
 
             const aiStart = Date.now();
             const safeModelName = modelName.replace(/[\n\r]/g, '');
