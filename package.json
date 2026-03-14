@@ -32,7 +32,8 @@
   "overrides": {
     "axios": "1.13.5",
     "fast-xml-parser": "5.3.8",
-    "serialize-javascript": "7.0.3",
-    "tar": "7.5.9"
+    "serialize-javascript": "^7.0.3",
+    "tar": "7.5.9",
+    "@rollup/plugin-terser": "^1.0.0"
   }
 }
