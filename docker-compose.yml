@@ -20,9 +20,9 @@ services:
         max-size: "10m"
         max-file: "3"
   app:
-    # 1. [修正] 改用 GHCR Image (全小寫)
-    # 讓 EC2 直接下載編譯好的檔案，不要自己 Build
-    image: ghcr.io/onlyatuna/shoppingpage:latest
+    # 1. [修正] 改用 GHCR Image (全小寫) 並支援變數覆蓋
+    # 讓 EC2 或 DEV 直接下載編譯好的檔案，不要自己 Build
+    image: ${IMAGE_TAG:-ghcr.io/onlyatuna/shoppingpage:latest}
     container_name: shopping-app
     restart: always
 

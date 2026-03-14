@@ -66,6 +66,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 👇 [新增步驟] 將 EC2 生產機加入 known_hosts 避免連線錯誤
+      - name: Add EC2 host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
       # 👇 [新增步驟] 將 docker-compose.yml 複製到伺服器
       - name: Copy docker-compose file to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -89,14 +95,14 @@ jobs:
           
           script: |
             # 1. 登入 GHCR (使用 stdin 避免密碼出現在進程列表)
+            mkdir -p ~/shop-app
+            cd ~/shop-app || exit 1
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             
             # 2. 拉取最新 Image
             docker pull "${{ env.IMAGE_TAG }}"
             
-            # 3. 進入目錄
-            cd ~/shop-app || exit 1
-            
+            # 3. 進入目錄 (已調整至上方)
             # 4. 產生 .env (使用 cat << 'EOF' 確保安全，避免 Secrets 在 ps aux 中洩漏)
             # 4. Generate .env safely
             DB_BASE_URL="${{ secrets.DATABASE_URL }}"
@@ -126,4 +132,7 @@ jobs:
             
             # 5. 重啟服務
             # [優化] 使用 --remove-orphans 清理過期容器，使用 --wait 確保容器啟動成功 (需對應 healthcheck)
-            docker compose up -d --force-recreate --remove-orphans
+            IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --force-recreate --remove-orphans
+
+            # 6. 清理舊的 Image 避免硬碟爆滿
+            docker image prune -f
