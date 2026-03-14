@@ -9,6 +9,9 @@ on:
     # 每週一凌晨 00:30 進行深度掃描，捕捉新公佈的邏輯漏洞
     - cron: '30 0 * * 1'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   analyze:
     name: "Deep Security Analysis (JS/TS)"
