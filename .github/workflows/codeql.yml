@@ -10,7 +10,8 @@ on:
     - cron: '30 0 * * 1'
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # 強制使用 Node.js 24 執行 actions 避免 Deprecation Warning (需為字串)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   analyze:

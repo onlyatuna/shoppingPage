@@ -8,7 +8,8 @@ env:
   REGISTRY: ghcr.io
   # ⚠️ 這裡直接寫死全小寫，避免 ${{ github.repository }} 帶入大寫導致報錯
   IMAGE_TAG: ghcr.io/onlyatuna/shoppingpage:latest
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # 強制使用 Node.js 24 執行 actions 避免 Deprecation Warning (需為字串)
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   # --- Job 0: 安全性稽核 ---
