@@ -999,7 +999,8 @@ export default function EditorPage() {
                         if (logoCtx) {
                             // Draw Logo with Glow (Dilation) to create "Warp Space"
                             logoCtx.shadowColor = '#FFFFFF';
-                            logoCtx.shadowBlur = 15;
+                            // [FIX] Reduce shadowBlur for boxes to prevent AI from altering the box surface
+                            logoCtx.shadowBlur = mockup.id.includes('box') ? 0 : 15;
                             logoCtx.fillStyle = '#FFFFFF';
                             logoCtx.drawImage(productImg, drawX, drawY, targetW, targetH);
                             logoCtx.drawImage(productImg, drawX, drawY, targetW, targetH); // Strengthen alpha
@@ -1045,17 +1046,18 @@ export default function EditorPage() {
                     maskCtx.globalCompositeOperation = 'source-over';
 
                 } else {
-                    // [Scene Mode] (保持原樣：White = Product/Keep)
-                    // Scene Mode 指令通常是 "Don't change White area"，所以 White = Product
+                    // [Scene Mode] (統一：White = Edit (Background), Black = Protect (Product))
                     maskCtx.clearRect(0, 0, finalWidth, finalHeight);
                     maskCtx.drawImage(productImg, drawX, drawY, targetW, targetH);
 
+                    // 1. 產品範圍變黑（保護區）
                     maskCtx.globalCompositeOperation = 'source-in';
-                    maskCtx.fillStyle = '#FFFFFF'; // Product -> White
+                    maskCtx.fillStyle = '#000000'; // Product -> Black
                     maskCtx.fillRect(0, 0, finalWidth, finalHeight);
 
+                    // 2. 其餘背景變白（編輯區）
                     maskCtx.globalCompositeOperation = 'destination-over';
-                    maskCtx.fillStyle = '#000000'; // Background -> Black
+                    maskCtx.fillStyle = '#FFFFFF'; // Background -> White
                     maskCtx.fillRect(0, 0, finalWidth, finalHeight);
 
                     maskCtx.globalCompositeOperation = 'source-over';
@@ -1215,22 +1217,22 @@ export default function EditorPage() {
 4. **CONTENT (SACRED)**: **DO NOT HALLUCINATE.**
    - Do not turn the logo into something else (e.g. no owls).
    - Treat the logo as a fixed TEXTURE.
-5. **LIGHTING**: Multiply mug shadows onto the logo.
+5. **LIGHTING**: Multiply ${m.category === 'mug' ? 'mug' : 'object'} shadows and textures onto the logo.
 `.trim();
                 finalPrompt = `
 Context: ${m.aiPrintPrompt}.
-Action: **WARP LOCALLY**. **ALLOW CROPPING**. **DO NOT RECENTER**.
+Action: **${m.id.includes('box') ? 'KEEP SURFACE FLAT' : 'WARP LOCALLY'}**. **ALLOW CROPPING**. **DO NOT RECENTER**.
 `.trim();
             } else {
                 systemInstruction = `
 You are an expert product photography editor using an inpainting model.
-STRICT RULE: The white area in the mask represents the PRODUCT.The black area is the BACKGROUND.
+STRICT RULE: The black area in the mask represents the PRODUCT. The white area is the BACKGROUND.
 YOUR TASK:
-                1. DO NOT change, redraw, or modify the product pixels(the white masked area) AT ALL.
-2. ONLY generate realistic shadows and reflections ON THE BACKGROUND / SURFACE relative to the product.
+1. DO NOT change, redraw, or modify the product pixels (the black masked area) AT ALL.
+2. ONLY generate realistic shadows and reflections ON THE BACKGROUND / SURFACE (the white masked area) relative to the product.
 3. Blend the product edges naturally into the background.
 4. Keep the product's original resolution and text clarity 100% intact.
-                    `.trim();
+`.trim();
                 finalPrompt = `
 Context: ${selectedMockup.aiBlendPrompt}
 Action: Add realistic contact shadows and environmental lighting interactions to the product.

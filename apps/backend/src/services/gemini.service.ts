@@ -156,11 +156,12 @@ export class GeminiService {
             // [真正關鍵修復]：將所有文字指令集中在最前面，確保兩張圖片連續輸入，不被打斷
             let finalPrompt = prompt;
             if (maskBase64) {
-                // 移除硬性規定白黑區域的文字，交由 System Instruction 全權決定
+                // 修正定義，使其與前端一致：白色 = 編輯區，黑色 = 保護區
                 finalPrompt = `[INSTRUCTION]:
 Image 1 is the MAIN IMAGE.
 Image 2 is the MASK.
-Please strictly follow the protection rules defined in the System Instruction regarding the mask colors.
+- WHITE area of mask = MASKED AREA (REGENERATE/EDIT).
+- BLACK area of mask = PROTECTED AREA (KEEP UNCHANGED).
 
 USER REQUEST: ${prompt}`;
             }
