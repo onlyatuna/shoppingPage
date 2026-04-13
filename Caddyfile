@@ -34,3 +34,12 @@ evanchen316.com {
         output file /data/caddy_access.log
     }
 }
+
+sql.evanchen316.com {
+    # 反向代理至另一套獨立的 Docker 容器 (Python ERP)
+    # 利用 172.17.0.1 存取 Host 上綁定的 127.0.0.1:8000
+    reverse_proxy 172.17.0.1:8000
+
+    tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+    encode zstd gzip
+}
