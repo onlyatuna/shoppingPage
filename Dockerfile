@@ -57,12 +57,15 @@ COPY --from=builder --chown=node:node /app/apps/frontend/dist ./apps/backend/pub
 COPY --from=builder --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=builder --chown=node:node /app/apps/backend/scripts/entrypoint.sh ./apps/backend/scripts/entrypoint.sh
 
-# 4. [關鍵修復] 確保在生產環境中也能直接找到 prisma 執行檔
-# 我們在 runner 階段手動建立連結，或是確保 npx 能找到它
-RUN ln -s /app/node_modules/prisma/build/index.js /app/node_modules/prisma/index.js || true
-
-# 5. 確保腳本可執行
+# 4. [終極修復] 在生產環境顯式安裝 prisma，確保二進制文件存在
+# 不再依賴 builder 的複製，直接在 runner 內建立實體檔案
+USER root
+RUN npm install prisma@6.19.3 --save-exact
 RUN chmod +x /app/apps/backend/scripts/entrypoint.sh
+USER node
+
+# 5. 確保腳本可執行 (由 root 執行後切換回 node 使用者)
+# 已在上方 root 權限時完成
 
 USER node
 EXPOSE 3000

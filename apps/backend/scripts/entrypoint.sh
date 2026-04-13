@@ -48,8 +48,12 @@ if [ $COUNT -eq $MAX_RETRIES ]; then
   exit 1
 fi
 
-# 4. 資料庫 Port 已開，執行 Prisma Migration
-echo "Database port is open. Running Prisma migrations..."
+# 4. 資料庫 Port 已開，執行診斷與 Prisma Migration
+echo "Database port is open. Verifying environment..."
+# [DIAGNOSTIC] 先檢查 prisma 到底在不在
+npx prisma -v || echo "⚠️ Warning: Prisma CLI not found in PATH"
+
+echo "Running Prisma migrations..."
 # [FIX] 使用 npx 確保能正確定位到 prisma 執行檔
 if ! npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma; then
     echo "Error: Prisma migration failed."
