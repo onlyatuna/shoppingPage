@@ -102,34 +102,7 @@ jobs:
             docker pull "${{ env.IMAGE_TAG }}"
             
             # 3. 進入目錄 (已經移到上面)
-            # 4. Generate .env safely
-            DB_BASE_URL="${{ secrets.DEV_DATABASE_URL }}"
-            DB_URL_POOL="${DB_BASE_URL}$([[ "$DB_BASE_URL" == *\?* ]] && echo "&" || echo "?")connection_limit=5&pool_timeout=15"
-            echo "DATABASE_URL=$DB_URL_POOL" > .env
-            cat << 'EOF' >> .env
-            JWT_SECRET=${{ secrets.DEV_JWT_SECRET }}
-            LINE_PAY_CHANNEL_ID=${{ secrets.DEV_LINE_PAY_CHANNEL_ID }}
-            LINE_PAY_CHANNEL_SECRET=${{ secrets.DEV_LINE_PAY_CHANNEL_SECRET }}
-            SMTP_HOST=${{ secrets.SMTP_HOST }}
-            SMTP_USER=${{ secrets.SMTP_USER }}
-            SMTP_PASS=${{ secrets.SMTP_PASS }}
-            FRONTEND_URL=${{ secrets.DEV_FRONTEND_URL }}
-            NODE_ENV=development
-            CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
-            CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
-            CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
-            IG_ACCESS_TOKEN=${{ secrets.DEV_IG_ACCESS_TOKEN }}
-            IG_USER_ID=${{ secrets.DEV_IG_USER_ID }}
-            DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
-            GEMINI_API_KEY=${{ secrets.DEV_GEMINI_API_KEY }}
-            LINE_PAY_API_URL=${{ secrets.DEV_LINE_PAY_API_URL }}
-            LINE_PAY_RETURN_HOST=${{ secrets.DEV_LINE_PAY_RETURN_HOST }}
-            LINE_PAY_RETURN_CONFIRM_URL=${{ secrets.DEV_LINE_PAY_RETURN_CONFIRM_URL }}
-            LINE_PAY_RETURN_CANCEL_URL=${{ secrets.DEV_LINE_PAY_RETURN_CANCEL_URL }}
-            LOG_LEVEL=debug
-            EOF
-            
-            # 5. 重啟服務 (傳入 IMAGE_TAG 給 docker-compose.yml)
+            # 4. 重啟服務
             IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --force-recreate --remove-orphans
             
             # 6. 清理舊的 Image 避免硬碟爆滿
