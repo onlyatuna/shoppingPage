@@ -1,55 +1,61 @@
-# --- 基礎依賴與環境 (你原本有的) ---
-node_modules
-.env
-.env.*.local
-.DS_Store
-
-# --- 編譯產出 (Build Outputs) ---
-dist
-dist-ssr
-build
-*.tsbuildinfo
-*.sql
-
-# --- Log 與除錯檔案 (這是你目前最需要補上的) ---
-*.log
+# --- Node.js & Dependencies ---
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# --- 針對你專案中特定的雜訊檔案 ---
+# --- Environment Secrets (CRITICAL) ---
+.env
+.env.*
+*.pem
+*.ppk
+aws_key.pem
+
+# --- Database Backups (Migration) ---
+*.sql
+db_migration_*.sql
+
+# --- Build Outputs ---
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+
+# --- Debug & Logs (Junk) ---
+*.log
 debug_log.json
 debug_output.txt
-test_output.txt
-test_result.json
-test-monitoring.ts
-
-# --- 編輯器設定  ---
-.vscode
-.idea
-*.suo
-*.ntvs
-*.njsproj
-*.sln
-*.sw?
-
-# Windows 檔案串流垃圾檔
-*:Zone.Identifier
-
-# --- AI Agent 工具目錄 ---
-.agent/
-.agents/
-tasks/
-
-# --- 臨時產出與分析檔案 ---
+dev_log.txt
 build_log.txt
 lint_results.json
 lint_results_pretty.json
 new_lint_results_v2.json
 hooks_lint.txt
 project_structure.txt
-# --- Docker Development Local Files ---
+test_output.txt
+test_result.json
+test-monitoring.ts
+
+# --- OS & Editor Files ---
+.DS_Store
+.vscode/
+.idea/
+Thumbs.db
+*:Zone.Identifier
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.sw?
+
+# --- AI Agent & Tasks ---
+.agent/
+.agents/
+tasks/
+scripts/migrate-db.sh
+
+# --- Docker Local Configs ---
 Dockerfile.dev
 docker-compose.dev.yml
 Caddyfile.dev
