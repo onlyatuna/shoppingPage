@@ -48,6 +48,7 @@ ENV NODE_ENV=production
 # 2. 核心優化：使用 --chown 確保權限正確
 COPY --from=builder --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=builder --chown=node:node /app/apps/backend/package.json ./apps/backend/
+# 確保我們複製了整個 monorepo 的 node_modules 結構，包含了根目錄的 prisma CLI
 COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 
 # 3. 複製編譯產物
@@ -56,7 +57,11 @@ COPY --from=builder --chown=node:node /app/apps/frontend/dist ./apps/backend/pub
 COPY --from=builder --chown=node:node /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=builder --chown=node:node /app/apps/backend/scripts/entrypoint.sh ./apps/backend/scripts/entrypoint.sh
 
-# 4. 確保腳本可執行 (由 root 執行後切換回 node 使用者)
+# 4. [關鍵修復] 確保在生產環境中也能直接找到 prisma 執行檔
+# 我們在 runner 階段手動建立連結，或是確保 npx 能找到它
+RUN ln -s /app/node_modules/prisma/build/index.js /app/node_modules/prisma/index.js || true
+
+# 5. 確保腳本可執行
 RUN chmod +x /app/apps/backend/scripts/entrypoint.sh
 
 USER node
