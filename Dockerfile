@@ -29,8 +29,8 @@ RUN npm run build --workspace=packages/shared && \
     npm run build --workspace=apps/frontend && \
     npm run build --workspace=apps/backend
 
-# 移除開發依賴並清理快取
-RUN npm prune --omit=dev && npm cache clean --force
+# 移除快取，但保留依賴以確保 Prisma 等工具可用
+RUN npm cache clean --force
 
 # ==========================================
 # 階段 2: Runner

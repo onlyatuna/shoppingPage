@@ -50,8 +50,8 @@ fi
 
 # 4. 資料庫 Port 已開，執行 Prisma Migration
 echo "Database port is open. Running Prisma migrations..."
-# [OPTIMIZATION] 改用 node 直接執行 prisma CLI，不依賴 npx / npm
-if ! node ./node_modules/prisma/build/index.js migrate deploy --schema=./apps/backend/prisma/schema.prisma; then
+# [FIX] 使用 npx 確保能正確定位到 prisma 執行檔
+if ! npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma; then
     echo "Error: Prisma migration failed."
     exit 1
 fi
