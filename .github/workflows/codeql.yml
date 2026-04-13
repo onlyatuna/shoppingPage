@@ -39,7 +39,7 @@ jobs:
 
       # 關鍵：生成 Prisma Client，讓 CodeQL 理解資料庫存取層的型別
       - name: Generate Prisma Client
-        run: npx prisma generate --schema=apps/backend/prisma/schema.prisma
+        run: npm run prisma:generate --workspace=apps/backend
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
