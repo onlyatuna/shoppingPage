@@ -35,7 +35,8 @@ services:
     # 這樣就不用把密碼寫死在這裡，而且能讀到最新的 GitHub Secrets
     env_file:
       - .env
-
+    environment:
+      - DATABASE_URL=mysql://root:${DATABASE_PASSWORD:-Qq940628}@db:3306/shop_db
     depends_on:
       - db
 
