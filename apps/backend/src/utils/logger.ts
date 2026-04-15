@@ -36,14 +36,14 @@ export const logger = pino({
             return { level: label };
         }
     },
-    // 對於開發環境可以使用漂亮輸出
-    ...(isProduction ? {} : {
+    // 對於非生產環境（例如開發環境），嘗試使用 pino-pretty 漂亮輸出
+    ...((!isProduction && process.env.LOG_PRETTY === 'true') ? {
         transport: {
             target: 'pino-pretty',
             options: {
                 colorize: true,
-                translateTime: 'SYS:standard' // 轉換時間格式方便閱讀
+                translateTime: 'SYS:standard'
             }
         }
-    })
+    } : {})
 });
