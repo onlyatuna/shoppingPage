@@ -192,11 +192,10 @@ app.use(`${apiV1Prefix}/admin`, adminRoutes);
 
     // 全域錯誤處理器稍後在靜態檔案之後再掛載
 
-// 部署設定：託管前端靜態檔案
-if (process.env.NODE_ENV === 'production') {
-    const frontendDist = path.join(__dirname, '../public');
+// 部署設定：託管前端靜態檔案 (即使是在開發環境，如果直接呼叫後端根目錄也會吐出來)
+const frontendDist = path.join(__dirname, '../public');
 
-    // Rate limiter for SPA fallback (file system access)
+// Rate limiter for SPA fallback (file system access)
     const spaFallbackLimiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 200, // Limit each IP to 200 SPA fallback requests per windowMs
@@ -232,13 +231,12 @@ if (process.env.NODE_ENV === 'production') {
     // ALWAYS use safeJsonStringify() to prevent XSS.
     app.use(spaFallbackLimiter, (req, res) => {
         // 確保不是 API 請求才回傳 HTML (雖然放在最後面了，但多一層保險也好)
-        if (req.path.startsWith('/api')) {
-            res.status(404).json({ message: 'API Not Found' });
-        } else {
-            res.sendFile(path.join(frontendDist, 'index.html'));
-        }
-    });
-}
+    if (req.path.startsWith('/api')) {
+        res.status(404).json({ message: 'API Not Found' });
+    } else {
+        res.sendFile(path.join(frontendDist, 'index.html'));
+    }
+});
 
 // 全域錯誤處理器 (必須放在最後)
 app.use(errorHandler);
