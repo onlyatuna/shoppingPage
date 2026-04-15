@@ -260,5 +260,6 @@ cron.schedule('0 3 * * *', async () => {
 }, { timezone: 'Asia/Taipei' });
 
 app.listen(Number(PORT), '0.0.0.0', () => {
+    logger.info(`Server environment (NODE_ENV): ${process.env.NODE_ENV}`);
     console.log(`🚀 Server is running at http://0.0.0.0:${PORT}`);
 });
