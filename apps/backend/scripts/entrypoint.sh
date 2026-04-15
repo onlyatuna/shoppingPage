@@ -14,19 +14,18 @@ echo "Starting Entrypoint Script..."
 # 邏輯：嘗試建立 TCP 連線到 DATABASE_URL 指定的 Host/Port
 check_db_ready() {
     node -e "
-const { URL } = require('url');
 const net = require('net');
 try {
-    const dbUrl = new URL(process.env.DATABASE_URL);
-    const host = dbUrl.hostname;
-    const port = dbUrl.port || 3306;
+    // 捨棄複雜的 URL 解析，直接以 Docker Compose 的 host 與 port 為主
+    const host = process.env.DB_HOST || 'db';
+    const port = parseInt(process.env.DB_PORT || '3306', 10);
     const client = net.createConnection({ host, port, timeout: 2000 }, () => {
         client.end();
         process.exit(0);
     });
     client.on('error', () => process.exit(1));
 } catch (e) {
-    console.error('URL Parsing Error:', e.message);
+    console.error('Connection Check Error:', e.message);
     process.exit(1);
 }
 "
