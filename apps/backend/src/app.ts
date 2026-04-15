@@ -31,7 +31,12 @@ import cron from 'node-cron';
 import { CronService } from './services/cron.service';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+
+// 強化外部變數讀取，防止 \r 或空格導致 NaN
+const rawPort = process.env.PORT || '3000';
+const PORT = parseInt(rawPort.toString().trim(), 10) || 3000;
+
+logger.info(`[Bootstrap] 正在啟動應用程式... (原始 PORT: "${rawPort}", 解析後: ${PORT})`);
 
 // [SECURITY] 信任 Proxy (Caddy)
 // 必須設定，否則在 HTTPS 環境下，Secure Cookie 會寫入失敗
