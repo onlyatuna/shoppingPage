@@ -190,8 +190,7 @@ app.use(`${apiV1Prefix}/translate`, translateRoutes);
 app.use(`${apiV1Prefix}/custom-styles`, customStyleRoutes);
 app.use(`${apiV1Prefix}/admin`, adminRoutes);
 
-// 全域錯誤處理器
-app.use(errorHandler);
+    // 全域錯誤處理器稍後在靜態檔案之後再掛載
 
 // 部署設定：託管前端靜態檔案
 if (process.env.NODE_ENV === 'production') {
@@ -240,6 +239,10 @@ if (process.env.NODE_ENV === 'production') {
         }
     });
 }
+
+// 全域錯誤處理器 (必須放在最後)
+app.use(errorHandler);
+
 
 // ------------------------------------------------------------------
 // 排程任務 (Cron Jobs) 初始化
