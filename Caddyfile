@@ -7,8 +7,8 @@ evanchen316.com {
         header_up X-Real-IP {remote_host}
     }
 
-    # 2. TLS 設定 (使用 Cloudflare Origin 憑證)
-    tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+    # 2. TLS 設定 (改用內部自簽憑證，配搭 Cloudflare Full 模式，省去手動放憑證的麻煩)
+    tls internal
 
     # 3. 效能優化：啟用壓縮
     encode zstd gzip
@@ -40,6 +40,6 @@ sql.evanchen316.com {
     # 利用 172.17.0.1 存取 Host 上綁定的 127.0.0.1:8000
     reverse_proxy 172.17.0.1:8000
 
-    tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+    tls internal
     encode zstd gzip
 }
