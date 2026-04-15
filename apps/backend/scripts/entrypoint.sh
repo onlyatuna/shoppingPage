@@ -50,12 +50,18 @@ fi
 
 # 4. 資料庫 Port 已開，執行診斷與 Prisma Migration
 echo "Database port is open. Verifying environment..."
-# [DIAGNOSTIC] 先檢查 prisma 到底在不在
-npx prisma -v || echo "⚠️ Warning: Prisma CLI not found in PATH"
+
+# 嘗試定位 Prisma 執行檔 (根目錄 node_modules 或當前目錄)
+PRISMA_BIN="./node_modules/.bin/prisma"
+if [ ! -f "$PRISMA_BIN" ]; then
+    PRISMA_BIN="npx prisma"
+fi
+
+echo "Using Prisma binary: $PRISMA_BIN"
+$PRISMA_BIN -v
 
 echo "Running Prisma migrations..."
-# [FIX] 使用 npx 確保能正確定位到 prisma 執行檔
-if ! npx prisma migrate deploy --schema=./apps/backend/prisma/schema.prisma; then
+if ! $PRISMA_BIN migrate deploy --schema=./apps/backend/prisma/schema.prisma; then
     echo "Error: Prisma migration failed."
     exit 1
 fi
