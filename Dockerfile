@@ -23,11 +23,17 @@ RUN npm ci
 COPY apps/backend/prisma ./apps/backend/prisma
 RUN cd apps/backend && npx prisma generate
 
-# 複製原始碼並編譯
-COPY . .
-RUN npm run build --workspace=packages/shared && \
-    npm run build --workspace=apps/frontend && \
-    npm run build --workspace=apps/backend
+# 階段 A: 建置 Shared Package (底層依賴)
+COPY packages/shared ./packages/shared
+RUN npm run build --workspace=packages/shared
+
+# 階段 B: 建置 Frontend (最耗時，但後端更新時可被快取)
+COPY apps/frontend ./apps/frontend
+RUN npm run build --workspace=apps/frontend
+
+# 階段 C: 建置 Backend
+COPY apps/backend ./apps/backend
+RUN npm run build --workspace=apps/backend
 
 # 移除快取，但保留依賴以確保 Prisma 等工具可用
 RUN npm cache clean --force
