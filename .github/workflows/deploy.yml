@@ -98,24 +98,51 @@ jobs:
             cd ~/shop-app || exit 1
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             
-            # 2. 拉取最新 Image
+            # 2. 建立/更新 .env 檔案 (從 GitHub Secrets 注入)
+            # 這樣你只要在 GitHub 改 Secrets，伺服器就會自動更新
+            cat <<EOF > .env
+DATABASE_URL=mysql://root:${{ secrets.DATABASE_PASSWORD }}@db:3306/shop_db
+DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+JWT_SECRET=${{ secrets.JWT_SECRET }}
+GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+PORT=${{ secrets.PORT }}
+NODE_ENV=${{ secrets.NODE_ENV }}
+IG_USER_ID=${{ secrets.IG_USER_ID }}
+IG_ACCESS_TOKEN=${{ secrets.IG_ACCESS_TOKEN }}
+DEEPL_API_KEY=${{ secrets.DEEPL_API_KEY }}
+LINE_PAY_CHANNEL_ID=${{ secrets.LINE_PAY_CHANNEL_ID }}
+LINE_PAY_CHANNEL_SECRET=${{ secrets.LINE_PAY_CHANNEL_SECRET }}
+LINE_PAY_API_URL=${{ secrets.LINE_PAY_API_URL }}
+LINE_PAY_RETURN_HOST=${{ secrets.LINE_PAY_RETURN_HOST }}
+LINE_PAY_RETURN_CONFIRM_URL=${{ secrets.LINE_PAY_RETURN_CONFIRM_URL }}
+LINE_PAY_RETURN_CANCEL_URL=${{ secrets.LINE_PAY_RETURN_CANCEL_URL }}
+SMTP_HOST=${{ secrets.SMTP_HOST }}
+SMTP_USER=${{ secrets.SMTP_USER }}
+SMTP_PASS=${{ secrets.SMTP_PASS }}
+EOF
+
+            # 3. 拉取最新 Image
             docker pull "${{ env.IMAGE_TAG }}"
             
-            # 3. 零停機部署 (Zero Downtime Deployment)
-            # 強制重建以確保新的 NODE_OPTIONS 生效
+            # 4. 零停機部署 (Zero Downtime Deployment)
+            # 這裡依然傳入 DATABASE_PASSWORD 是為了讓 docker-compose.yml 裡的變數能被解析
             DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --no-deps --scale app=2 --force-recreate app
             
-            # 等待新容器暖機 (Node.js 啟動 + Prisma 連線)
+            # 等待新容器暖機
             echo "Waiting for new container to become healthy..."
             sleep 25
             
-            # 讓 Caddy 重新掃描後端 IP (確保它抓到新的 Healthy 容器)
+            # 讓 Caddy 重新載入
             DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose exec -T caddy caddy reload
             
             # 縮減回 1 個容器
             DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --no-deps --scale app=1 app
             
-            # 清理並保持同步
+            # 清理
             DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --remove-orphans
 
             # 5. 清理舊的 Image
