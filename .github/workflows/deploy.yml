@@ -49,7 +49,7 @@ jobs:
 
       # [修正 2] 使用全小寫名稱推送到 GHCR
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -73,7 +73,7 @@ jobs:
           ssh-keyscan -H ${{ secrets.GCP_PROD_HOST }} >> ~/.ssh/known_hosts
 
       - name: Copy docker-compose file to GCP
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.GCP_PROD_HOST }}
           username: ${{ secrets.GCP_PROD_USERNAME }}
@@ -82,7 +82,7 @@ jobs:
           target: "~/shop-app/"
 
       - name: Deploy to GCP via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.GCP_PROD_HOST }}
           username: ${{ secrets.GCP_PROD_USERNAME }}
