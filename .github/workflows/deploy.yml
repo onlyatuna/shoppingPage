@@ -101,8 +101,19 @@ jobs:
             # 2. 拉取最新 Image
             docker pull "${{ env.IMAGE_TAG }}"
             
-            # 3. 部署服務
-            IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --force-recreate --remove-orphans
+            # 3. 零停機部署 (Zero Downtime Deployment)
+            # 先擴展為 2 個容器，Docker 會保留舊的並啟動新的
+            IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --no-deps --scale app=2 app
+            
+            # 等待新容器暖機並通過 Healthcheck
+            echo "Waiting for new container to be healthy..."
+            sleep 20
+            
+            # 縮減回 1 個容器，Docker 預設會移除較舊的容器
+            IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --no-deps --scale app=1 app
+            
+            # 確保 Caddy 與其他服務狀態同步 (選用，防止 Caddy 設定跑掉)
+            IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d
 
             # 5. 清理舊的 Image
             docker image prune -f

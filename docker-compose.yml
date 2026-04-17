@@ -21,18 +21,14 @@ services:
         max-file: "3"
   app:
     # 1. [修正] 改用 GHCR Image (全小寫) 並支援變數覆蓋
-    # 讓伺服器或 DEV 直接下載編譯好的檔案，不要自己 Build
     image: ${IMAGE_TAG:-ghcr.io/onlyatuna/shoppingpage:latest}
-    container_name: shopping-app
     restart: always
 
     # 2. [SECURITY] 內部網路隔離
-    # 不再直接對外開放 3000 埠口，僅透過 Caddy 進行反向代理訪問
     expose:
       - "3000"
 
     # 3. [修正] 讀取 CI/CD 生成的 .env 檔案
-    # 這樣就不用把密碼寫死在這裡，而且能讀到最新的 GitHub Secrets
     env_file:
       - .env
     environment:
@@ -40,20 +36,20 @@ services:
     depends_on:
       - db
 
-    # 4. [保留] 資源限制 (做得好！這能防止當機)
+    # 4. [保留] 資源限制
     deploy:
       resources:
         limits:
           cpus: '0.80'
           memory: 1G
 
-    # 5. [新增] 健全狀況檢查 (搭配 CI/CD 的 --wait 強化部署可靠性)
+    # 5. [優化] 零停機部署關鍵：縮短健康檢查間隔
     healthcheck:
       test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', (r) => {if (r.statusCode !== 200) process.exit(1);})\"" ]
-      interval: 30s
-      timeout: 10s
+      interval: 5s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 15s
     logging:
       driver: "json-file"
       options:
