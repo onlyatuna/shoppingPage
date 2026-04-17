@@ -122,20 +122,35 @@ jobs:
             # 3. 拉取最新 Image
             docker pull "${{ env.IMAGE_TAG }}"
             
-            # 4. 零停機部署
-            IMAGE_TAG=${{ env.IMAGE_TAG }} DATABASE_PASSWORD=$DATABASE_PASSWORD docker compose up -d --no-deps --scale app=2 --force-recreate app
+            # 4. 部署策略 (1GB RAM 小主機 — 無法同時跑 2 個 App 容器)
+            # 直接重建 app 容器。Caddy 配有 health_uri，會在新容器就緒後自動導流。
+            # 停機時間 ≈ 容器啟動 + DB 遷移 + 健康檢查通過的時間 (約 30-60 秒)
+            IMAGE_TAG=${{ env.IMAGE_TAG }} DATABASE_PASSWORD=$DATABASE_PASSWORD docker compose up -d --no-deps --force-recreate app
             
-            echo "Waiting for new container to become healthy..."
-            sleep 25
+            # 等待容器通過健康檢查
+            echo "Waiting for app container to become healthy..."
+            MAX_WAIT=120
+            ELAPSED=0
+            while [ $ELAPSED -lt $MAX_WAIT ]; do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' $(docker compose ps -q app) 2>/dev/null || echo "starting")
+              echo "  [$ELAPSED s] Container health: $STATUS"
+              if [ "$STATUS" = "healthy" ]; then
+                echo "✅ App container is healthy!"
+                break
+              fi
+              sleep 5
+              ELAPSED=$((ELAPSED + 5))
+            done
             
-            # 嘗試重新載入 Caddy (即使失敗也不要中斷流程)
-            IMAGE_TAG=${{ env.IMAGE_TAG }} DATABASE_PASSWORD=$DATABASE_PASSWORD docker compose exec -T caddy caddy reload || true
+            if [ "$STATUS" != "healthy" ]; then
+              echo "⚠️ Container did not become healthy within ${MAX_WAIT}s. Checking logs..."
+              docker compose logs --tail=30 app
+            fi
             
-            # 縮減回 1
-            IMAGE_TAG=${{ env.IMAGE_TAG }} DATABASE_PASSWORD=$DATABASE_PASSWORD docker compose up -d --no-deps --scale app=1 app
+            # 5. Reload Caddy 以重新發現後端 (即使失敗也不中斷)
+            docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile || true
             
-            # 5. 最終同步並清理舊 Image
-            IMAGE_TAG=${{ env.IMAGE_TAG }} DATABASE_PASSWORD=$DATABASE_PASSWORD docker compose up -d --remove-orphans
+            # 6. 清理舊 Image 釋放磁碟空間
             docker image prune -f
         env:
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
