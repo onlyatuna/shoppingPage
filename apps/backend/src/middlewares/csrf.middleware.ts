@@ -44,12 +44,35 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
     }
 
     // 4. Origin & Referer Validation (Additional Layer)
-    const allowedOrigins = process.env.CSRF_ALLOWED_ORIGINS
+    //
+    // Build allowed origins from multiple sources:
+    //   a) CSRF_ALLOWED_ORIGINS env var (comma-separated, highest priority)
+    //   b) FRONTEND_URL env var (always included as fallback)
+    //   c) Same-origin auto-detection: derive the request's own origin from the Host header.
+    //      In production, the backend serves the frontend (same-origin via Caddy reverse proxy),
+    //      so the browser's Origin header matches the server's own Host — this MUST be trusted.
+    const explicitOrigins = process.env.CSRF_ALLOWED_ORIGINS
         ? process.env.CSRF_ALLOWED_ORIGINS.split(',').map(o => o.trim())
-        : [
-            process.env.FRONTEND_URL || 'http://localhost:5173',
-            'http://127.0.0.1:5173'
-        ];
+        : ['http://127.0.0.1:5173'];
+
+    // Always include FRONTEND_URL if set
+    const frontendUrl = process.env.FRONTEND_URL;
+    if (frontendUrl && !explicitOrigins.includes(frontendUrl)) {
+        explicitOrigins.push(frontendUrl);
+    }
+
+    // Auto-detect same-origin: derive origin from the incoming request's Host header.
+    // This covers production (https://evanchen316.com) where Caddy proxies to the backend.
+    const hostHeader = req.get('Host');
+    if (hostHeader) {
+        const protocol = req.protocol; // Express resolves this correctly with 'trust proxy'
+        const selfOrigin = `${protocol}://${hostHeader}`;
+        if (!explicitOrigins.includes(selfOrigin)) {
+            explicitOrigins.push(selfOrigin);
+        }
+    }
+
+    const allowedOrigins = explicitOrigins;
 
     const origin = req.get('Origin');
     const referer = req.get('Referer');
@@ -74,7 +97,7 @@ export const csrfProtection = (req: Request, res: Response, next: NextFunction) 
     if (!isValidSource) {
         let source = String(origin || referer || 'none');
         source = source.replace(/\n|\r/g, "");
-        console.warn(`⚠️ CSRF Protection: Blocked request from invalid source: ${source}`);
+        console.warn(`⚠️ CSRF Protection: Blocked request from invalid source: ${source}. Allowed: ${allowedOrigins.join(', ')}`);
         return res.status(StatusCodes.FORBIDDEN).json({
             message: 'CSRF validation failed: Invalid request source'
         });
