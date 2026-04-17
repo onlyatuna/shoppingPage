@@ -35,6 +35,7 @@ export class GeminiService {
                 }
             });
 
+            // [AI 指令] 分析產品圖並建議適合的背景顏色與分類標籤
             const prompt = `
         Analyze this product image with a transparent background.
         Suggest a background color that matches the product aesthetics and provide a category tag.
@@ -85,6 +86,8 @@ export class GeminiService {
             throw new Error('GEMINI_API_KEY is not configured');
         }
 
+        // [系統指令] 圖片編輯專家角色設定
+        // 核心邏輯：確保保護區域 (MASK 中的白色部分) 絕對不被變動，僅針對編輯區域 (黑色部分) 進行運算
         const defaultSystemInstruction = `**Role:** Expert Product Photographer & AI Image Editor.
 **Task:** Edit the provided product image based on the user prompt.
 **Strict Constraints:**
@@ -157,6 +160,8 @@ export class GeminiService {
             let finalPrompt = prompt;
             if (maskBase64) {
                 // 修正定義，使其與前端一致：白色 = 編輯區，黑色 = 保護區
+                // [AI 指令] 圖片編輯指令組合
+                // 明確告知模型 Image 1 是主圖，Image 2 是遮罩，並定義遮罩顏色的意義 (白色=編輯，黑色=保護)
                 finalPrompt = `[INSTRUCTION]:
 Image 1 is the MAIN IMAGE.
 Image 2 is the MASK.
@@ -262,6 +267,8 @@ USER REQUEST: ${prompt}`;
             // [SECURITY] Sanitize user inputs to prevent Prompt Injection
             const safeInfo = sanitizePrompt(additionalInfo || 'N/A', 300);
 
+            // [AI 指令] 社群媒體文案生成
+            // 模擬專業電商經理人的口吻，根據圖片與補充資訊，生成帶有鉤子與呼籲點的繁體中文 IG 文案
             const prompt = `
                 You are a professional social media manager for a high-end e-commerce brand.
                 Write an engaging, creative Instagram caption for this product image.
@@ -306,7 +313,16 @@ USER REQUEST: ${prompt}`;
                 );
             }
 
-            return JSON.parse(text);
+            const resultJson = JSON.parse(text);
+
+            // [自動校正] 確保每個 Hashtag 都以 # 開頭
+            if (resultJson.hashtags && Array.isArray(resultJson.hashtags)) {
+                resultJson.hashtags = resultJson.hashtags.map((tag: string) => 
+                    tag.startsWith('#') ? tag : `#${tag}`
+                );
+            }
+
+            return resultJson;
 
         } catch (error) {
             console.error('Error generating caption:', sanitizeLog(error));
@@ -332,6 +348,8 @@ USER REQUEST: ${prompt}`;
                 model: 'gemini-2.5-flash-lite'
             });
 
+            // [AI 指令] 風格提示詞專家
+            // 將用戶描述的簡單風格 (如：極簡、高級) 轉化為專業攝影角度的細節提示詞 (包含光線、視角、參數)
             const prompt = `你是一位專業的商業攝影師和 AI 圖片編輯專家。
             
             [USER DATA]:
