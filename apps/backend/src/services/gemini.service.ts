@@ -277,7 +277,7 @@ USER REQUEST: ${prompt}`;
                    - Brief relatable story or benefit description (2-3 sentences)
                    - Call to action (e.g., "Link in bio", "Shop now")
                 3. Language: Traditional Chinese (Taiwan).
-                4. Output Format: JSON with 'caption' (string) and 'hashtags' (array of strings).
+                4. Output Format: JSON with 'caption' (string) and 'hashtags' (array of strings, each starting with #).
                 
                 Do not include markdown code blocks. Just raw JSON.
             `;
