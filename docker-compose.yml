@@ -28,20 +28,23 @@ services:
     expose:
       - "3000"
 
-    # 3. [修正] 讀取 CI/CD 生成的 .env 檔案
+    # 3. [修正] 環境變數
     env_file:
       - .env
     environment:
       - DATABASE_URL=mysql://root:${DATABASE_PASSWORD:-Qq940628}@db:3306/shop_db
+      - NODE_OPTIONS=--max-old-space-size=384 # 限制 Node 記憶體堆疊 
     depends_on:
       - db
 
-    # 4. [保留] 資源限制
+    # 4. [優化] 嚴格資源限制，防止擠壓系統
     deploy:
       resources:
         limits:
-          cpus: '0.80'
-          memory: 1G
+          cpus: '0.70'
+          memory: 512M # 單個 Node 不應超過 512MB
+        reservations:
+          memory: 128M
 
     # 5. [優化] 零停機部署關鍵：縮短健康檢查間隔
     healthcheck:
@@ -49,7 +52,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
-      start_period: 15s
+      start_period: 10s
     logging:
       driver: "json-file"
       options:
@@ -61,15 +64,12 @@ services:
     container_name: shopping-db
     restart: always
     environment:
-      # 5. [修正] 密碼改用變數 (會自動讀取 .env 中的 DATABASE_PASSWORD)
-      # 為了相容您原本的 .env 生成腳本，我們稍後需確認 .env 有沒有這個變數
-      # 如果沒有，暫時寫死也可以，但建議用變數
       MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD:-Qq940628}
       MYSQL_DATABASE: shop_db
     volumes:
       - mysql_data:/var/lib/mysql
-      # 加入這個設定以優化 MySQL 記憶體使用 (對小機器很重要)
-    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=256M
+    # 限制 MySQL 緩衝區，為 1GB 小主機省下空間
+    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=128M --performance_schema=OFF
     logging:
       driver: "json-file"
       options:
