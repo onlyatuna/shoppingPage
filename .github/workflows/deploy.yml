@@ -103,20 +103,20 @@ jobs:
             
             # 3. 零停機部署 (Zero Downtime Deployment)
             # 強制重建以確保新的 NODE_OPTIONS 生效
-            IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --no-deps --scale app=2 --force-recreate app
+            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --no-deps --scale app=2 --force-recreate app
             
             # 等待新容器暖機 (Node.js 啟動 + Prisma 連線)
             echo "Waiting for new container to become healthy..."
             sleep 25
             
             # 讓 Caddy 重新掃描後端 IP (確保它抓到新的 Healthy 容器)
-            IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose exec -T caddy caddy reload
+            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose exec -T caddy caddy reload
             
             # 縮減回 1 個容器
-            IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --no-deps --scale app=1 app
+            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --no-deps --scale app=1 app
             
             # 清理並保持同步
-            IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --remove-orphans
+            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} IMAGE_TAG=${{ env.IMAGE_TAG }} docker compose up -d --remove-orphans
 
             # 5. 清理舊的 Image
             docker image prune -f

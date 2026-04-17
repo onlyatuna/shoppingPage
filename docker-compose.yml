@@ -32,7 +32,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=mysql://root:${DATABASE_PASSWORD:-Qq940628}@db:3306/shop_db
+      - DATABASE_URL=mysql://root:${DATABASE_PASSWORD}@db:3306/shop_db
       - NODE_OPTIONS=--max-old-space-size=384 # 限制 Node 記憶體堆疊 
     depends_on:
       - db
@@ -64,7 +64,7 @@ services:
     container_name: shopping-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD:-Qq940628}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD}
       MYSQL_DATABASE: shop_db
     volumes:
       - mysql_data:/var/lib/mysql
