@@ -2,13 +2,17 @@ evanchen316.com {
     # 1. 反向代理到後端容器 (port 3000)
     # Caddy 會自動處理 X-Forwarded-For 等標頭，配合 app.ts 的 trust proxy 使用
     reverse_proxy app:3000 {
-        # 讓 Caddy 自動偵測後端是否 Ready
-        # 如果新容器還沒啟動完成，Caddy 不會把流量導過去
+        # 讓 Caddy 自動偵測後端是否 Ready (放寬寬限值)
         health_uri /api/health
-        health_interval 2s
-        health_timeout 2s
+        health_interval 10s
+        health_timeout 5s
         health_status 200
 
+        # 當請求失敗時的容錯設定
+        lb_policy round_robin
+        fail_timeout 10s
+        max_fails 3
+        
         header_up Host {host}
         header_up X-Real-IP {remote_host}
     }
