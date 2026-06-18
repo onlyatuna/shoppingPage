@@ -38,13 +38,15 @@ router.get('/posts', authenticateToken, async (req: Request, res: Response) => {
         if (error.message.includes('IG_ACCESS_TOKEN')) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 status: 'error',
-                message: 'Instagram API Token 未設定'
+                message: 'Instagram API Token 未設定',
+                error: error.message
             });
         }
 
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             status: 'error',
-            message: '無法取得 Instagram 貼文'
+            message: '無法取得 Instagram 貼文',
+            error: error.message
         });
     }
 });

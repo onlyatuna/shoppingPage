@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gemio ERP 智慧查詢系統</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#001a42",
+                    "inverse-on-surface": "#eff1f3",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "secondary-container": "#d0e1fb",
+                    "primary-fixed": "#d8e2ff",
+                    "outline": "#727785",
+                    "inverse-primary": "#adc6ff",
+                    "tertiary-fixed": "#ffdcc6",
+                    "surface-bright": "#f7f9fb",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#fefcff",
+                    "background": "#f7f9fb",
+                    "secondary": "#505f76",
+                    "on-secondary": "#ffffff",
+                    "primary-container": "#2170e4",
+                    "tertiary": "#924700",
+                    "error-container": "#ffdad6",
+                    "tertiary-container": "#b75b00",
+                    "surface-container-low": "#f2f4f6",
+                    "surface": "#f7f9fb",
+                    "surface-variant": "#e0e3e5",
+                    "secondary-fixed": "#d3e4fe",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "on-tertiary-fixed": "#311400",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "outline-variant": "#c2c6d6",
+                    "on-error": "#ffffff",
+                    "on-background": "#191c1e",
+                    "surface-tint": "#005ac2",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-secondary-container": "#54647a",
+                    "surface-container-high": "#e6e8ea",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#191c1e",
+                    "inverse-surface": "#2d3133",
+                    "primary-fixed-dim": "#adc6ff",
+                    "primary": "#0058be",
+                    "on-secondary-fixed": "#0b1c30",
+                    "on-tertiary-container": "#fffbff",
+                    "surface-container": "#eceef0",
+                    "surface-dim": "#d8dadc",
+                    "on-surface-variant": "#424754",
+                    "error": "#ba1a1a",
+                    "on-primary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {},
+            "fontFamily": {
+                    "headline": [
+                            "Inter", "sans-serif"
+                    ],
+                    "body": [
+                            "Inter", "sans-serif"
+                    ],
+                    "label": [
+                            "Inter", "sans-serif"
+                    ]
+            }
+        },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
+        .tnum { font-feature-settings: "tnum"; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex antialiased">
+<!-- Top Navigation (Shared Component Shell Logic) -->
+<!-- Hidden on md/lg to favor SideNavBar, shown on mobile -->
+<header class="md:hidden flex items-center justify-between px-6 w-full fixed top-0 right-0 left-0 z-40 h-16 bg-white/70 backdrop-blur-md shadow-[0_12px_32px_rgba(25,28,30,0.04)] bg-slate-50 border-none">
+<div class="text-xl font-black text-slate-900 uppercase tracking-wider font-headline">Luminary SQL</div>
+<div class="flex gap-4 items-center">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+<span class="material-symbols-outlined text-on-surface-variant">menu</span>
+</div>
+</header>
+<!-- SideNavBar (Shared Component) -->
+<aside class="hidden md:flex flex-col h-screen w-64 z-50 fixed left-0 top-0 bg-surface-container-low border-r border-none p-4 font-body">
+<div class="mb-8">
+<div class="text-lg font-bold text-on-surface mb-1 font-headline">Gemio ERP</div>
+<div class="text-[13px] font-medium text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined fill text-tertiary-container text-sm">auto_awesome</span>
+                Smart Query
+            </div>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 bg-surface-container-lowest text-primary rounded-lg px-4 py-2.5 shadow-[0_12px_32px_rgba(25,28,30,0.04)] font-medium text-[13px] transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">database</span>
+                Query
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-highest/50 rounded-lg px-4 py-2.5 font-medium text-[13px] transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+                Explorer
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-highest/50 rounded-lg px-4 py-2.5 font-medium text-[13px] transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">table_chart</span>
+                Insights
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-highest/50 rounded-lg px-4 py-2.5 font-medium text-[13px] transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">history</span>
+                History
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-highest/50 rounded-lg px-4 py-2.5 font-medium text-[13px] transition-colors duration-150" href="#">
+<span class="material-symbols-outlined">terminal</span>
+                Terminal
+            </a>
+</nav>
+<div class="mt-auto flex flex-col gap-4">
+<div class="bg-surface-container-lowest p-3 rounded-lg shadow-[0_12px_32px_rgba(25,28,30,0.04)]">
+<label class="text-[10px] uppercase tracking-wider text-on-surface-variant font-semibold mb-2 block">System Configuration</label>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">key</span>
+<input class="bg-transparent border-none text-xs w-full focus:ring-0 text-on-surface-variant outline-none" readonly="" type="password" value="••••••••••••"/>
+<span class="text-[10px] text-primary bg-primary-container/10 px-2 py-0.5 rounded-full whitespace-nowrap">Saved</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 text-[13px]" href="#">
+<span class="material-symbols-outlined text-lg">cloud_done</span>
+                    Status
+                </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface px-4 py-2 text-[13px]" href="#">
+<span class="material-symbols-outlined text-lg">help_outline</span>
+                    Support
+                </a>
+</div>
+</div>
+</aside>
+<!-- Main Content Fluid Area -->
+<main class="flex-1 md:ml-64 p-6 md:p-8 mt-16 md:mt-0 max-w-[1600px] mx-auto w-full flex flex-col gap-8">
+<!-- Main Content Header -->
+<header class="flex items-center justify-between">
+<div class="flex items-center gap-2 text-sm text-on-surface-variant">
+<span class="hover:text-on-surface cursor-pointer transition-colors">Workspace</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="hover:text-on-surface cursor-pointer transition-colors">Queries</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-on-surface font-medium">Active Session</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-full shadow-[0_12px_32px_rgba(25,28,30,0.04)]">
+<div class="w-2 h-2 rounded-full bg-[#10b981]"></div>
+<span class="text-xs font-medium text-on-surface-variant tracking-wide">System Status: Ready</span>
+</div>
+</header>
+<!-- Command Palette Query Area -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0_12px_32px_rgba(25,28,30,0.04)] p-1 flex items-center focus-within:bg-secondary-container/20 transition-colors duration-200">
+<div class="pl-4 pr-2 text-primary">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<input class="flex-1 bg-transparent border-none text-base font-body focus:ring-0 text-on-surface placeholder:text-on-surface-variant/50 py-4 outline-none" placeholder="Query accounts where balance &gt; 10000 and region is APAC..." type="text"/>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 mr-1">
+<span>Query</span>
+<span class="material-symbols-outlined text-sm">keyboard_return</span>
+</button>
+</section>
+<!-- Results Card & Data Table -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0_12px_32px_rgba(25,28,30,0.04)] overflow-hidden flex flex-col flex-1">
+<!-- Table Toolbar -->
+<div class="flex items-center justify-between p-4 border-b border-outline-variant/20 bg-surface-container-lowest/70 backdrop-blur-md sticky top-0 z-10">
+<h2 class="text-lg font-semibold font-headline text-on-surface">Accounts Receivable (APAC)</h2>
+<div class="flex items-center gap-3">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1.5 rounded-md hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-xl">filter_list</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors p-1.5 rounded-md hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-xl">view_column</span>
+</button>
+</div>
+</div>
+<!-- Scrollable Table Area -->
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead class="bg-surface-container-low/50 sticky top-0 z-10 backdrop-blur-sm">
+<tr>
+<th class="py-3 px-4 text-xs uppercase tracking-wider font-semibold text-on-surface-variant w-12 text-center">
+<input class="rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+</th>
+<th class="py-3 px-4 text-xs uppercase tracking-[0.05em] font-semibold text-on-surface-variant">Account ID</th>
+<th class="py-3 px-4 text-xs uppercase tracking-[0.05em] font-semibold text-on-surface-variant">Client Name</th>
+<th class="py-3 px-4 text-xs uppercase tracking-[0.05em] font-semibold text-on-surface-variant">Region</th>
+<th class="py-3 px-4 text-xs uppercase tracking-[0.05em] font-semibold text-on-surface-variant text-right">Balance (USD)</th>
+<th class="py-3 px-4 text-xs uppercase tracking-[0.05em] font-semibold text-on-surface-variant">Status</th>
+<th class="py-3 px-4 text-xs uppercase tracking-[0.05em] font-semibold text-on-surface-variant text-right">Due Date</th>
+</tr>
+</thead>
+<tbody class="text-sm font-body divide-y divide-transparent">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4 text-center"><input class="rounded border-outline-variant text-primary focus:ring-primary opacity-0 group-hover:opacity-100 transition-opacity" type="checkbox"/></td>
+<td class="py-3 px-4 font-medium text-on-surface">ACC-9821</td>
+<td class="py-3 px-4 text-on-surface-variant">Nexus Technologies Inc.</td>
+<td class="py-3 px-4 text-on-surface-variant">APAC</td>
+<td class="py-3 px-4 text-right tnum font-medium text-on-surface">45,200.00</td>
+<td class="py-3 px-4">
+<span class="bg-secondary-container/50 text-on-secondary-container text-[10px] px-2 py-1 rounded-full font-medium uppercase tracking-wide">Pending</span>
+</td>
+<td class="py-3 px-4 text-right text-on-surface-variant tnum">Oct 15, 2023</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4 text-center"><input class="rounded border-outline-variant text-primary focus:ring-primary opacity-0 group-hover:opacity-100 transition-opacity" type="checkbox"/></td>
+<td class="py-3 px-4 font-medium text-on-surface">ACC-9822</td>
+<td class="py-3 px-4 text-on-surface-variant">Global Logistics Corp</td>
+<td class="py-3 px-4 text-on-surface-variant">APAC</td>
+<td class="py-3 px-4 text-right tnum font-medium text-on-surface">12,550.50</td>
+<td class="py-3 px-4">
+<span class="bg-[#10b981]/10 text-[#10b981] text-[10px] px-2 py-1 rounded-full font-medium uppercase tracking-wide">Cleared</span>
+</td>
+<td class="py-3 px-4 text-right text-on-surface-variant tnum">Oct 12, 2023</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4 text-center"><input class="rounded border-outline-variant text-primary focus:ring-primary opacity-0 group-hover:opacity-100 transition-opacity" type="checkbox"/></td>
+<td class="py-3 px-4 font-medium text-on-surface">ACC-9825</td>
+<td class="py-3 px-4 text-on-surface-variant">Synapse Systems</td>
+<td class="py-3 px-4 text-on-surface-variant">APAC</td>
+<td class="py-3 px-4 text-right tnum font-medium text-on-surface">104,800.00</td>
+<td class="py-3 px-4">
+<span class="bg-error-container text-on-error-container text-[10px] px-2 py-1 rounded-full font-medium uppercase tracking-wide">Overdue</span>
+</td>
+<td class="py-3 px-4 text-right text-on-surface-variant tnum text-error">Sep 30, 2023</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-4 text-center"><input class="rounded border-outline-variant text-primary focus:ring-primary opacity-0 group-hover:opacity-100 transition-opacity" type="checkbox"/></td>
+<td class="py-3 px-4 font-medium text-on-surface">ACC-9830</td>
+<td class="py-3 px-4 text-on-surface-variant">Apex Manufacturing</td>
+<td class="py-3 px-4 text-on-surface-variant">APAC</td>
+<td class="py-3 px-4 text-right tnum font-medium text-on-surface">28,900.25</td>
+<td class="py-3 px-4">
+<span class="bg-secondary-container/50 text-on-secondary-container text-[10px] px-2 py-1 rounded-full font-medium uppercase tracking-wide">Pending</span>
+</td>
+<td class="py-3 px-4 text-right text-on-surface-variant tnum">Oct 20, 2023</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer (Total Row) -->
+<div class="bg-surface-container-low p-4 flex items-center justify-between border-t border-outline-variant/20">
+<div class="flex items-center gap-6 text-sm text-on-surface-variant">
+<span>Showing <strong class="text-on-surface font-medium">4</strong> of <strong class="text-on-surface font-medium">128</strong> results</span>
+<div class="h-4 w-px bg-outline-variant/50"></div>
+<span>Total Balance: <strong class="text-on-surface font-medium tnum text-base ml-1">191,450.75 USD</strong></span>
+</div>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">download</span>
+                    Export to Excel
+                </button>
+</div>
+</section>
+<!-- SQL Observatory (Bottom Collapsible) -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0_12px_32px_rgba(25,28,30,0.04)] overflow-hidden">
+<div class="p-4 flex items-center justify-between cursor-pointer hover:bg-surface-container-low/50 transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">code_blocks</span>
+<h3 class="text-sm font-semibold font-headline text-on-surface">SQL Observatory</h3>
+<span class="bg-tertiary-container text-on-tertiary-container text-[10px] px-2 py-0.5 rounded-full font-medium tracking-wide">AI Generated</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">expand_less</span>
+</div>
+<div class="p-4 bg-[#1e293b] text-[#e2e8f0] font-mono text-sm overflow-x-auto rounded-b-xl border-t border-outline-variant/10">
+<pre><code><span class="text-[#cba6f7]">SELECT</span> 
+    account_id, 
+    client_name, 
+    region, 
+    balance, 
+    status, 
+    due_date
+<span class="text-[#cba6f7]">FROM</span> 
+    erp_accounts_receivable
+<span class="text-[#cba6f7]">WHERE</span> 
+    balance &gt; <span class="text-[#fab387]">10000</span> 
+    <span class="text-[#cba6f7]">AND</span> region = <span class="text-[#a6e3a1]">'APAC'</span>
+<span class="text-[#cba6f7]">ORDER BY</span> 
+    balance <span class="text-[#cba6f7]">DESC</span>;</code></pre>
+</div>
+</section>
+</main>
+</body></html>

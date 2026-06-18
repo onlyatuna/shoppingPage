@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { ExternalLink, Instagram } from 'lucide-react';
 import apiClient from '../../../api/client';
 import { Skeleton } from "../../../components/ui/Skeleton";
@@ -23,8 +24,16 @@ export default function InstagramGallery() {
         retry: 1, // 只重試一次，避免如果沒有 token 一直報錯
     });
 
-    if (error) {
-        return null; // 如果出錯 (例如沒設定 token)，直接隱藏不顯示
+    useEffect(() => {
+        if (error) {
+            const axiosError = error as any;
+            const detailMsg = axiosError.response?.data?.error || axiosError.response?.data?.message || axiosError.message;
+            console.error(`[Instagram Error] 載入失敗原因:`, detailMsg);
+        }
+    }, [error]);
+
+    if (error || !posts || posts.length === 0) {
+        return null; // 如果出錯或沒有貼文，直接隱藏不顯示
     }
 
     return (

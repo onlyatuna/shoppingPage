@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { v2 as cloudinary } from 'cloudinary';
 import { sanitizeLog, sanitizeImageUrl, sanitizePrompt } from '../utils/securityUtils';
+import { logger } from '../utils/logger';
+
 
 // Configure Cloudinary
 if (process.env.CLOUDINARY_CLOUD_NAME) {
@@ -43,8 +45,10 @@ export class InstagramService {
 
             return response.data.data;
         } catch (error: any) {
-            console.error('Instagram API Error:', sanitizeLog(error.response?.data || error.message));
-            throw new Error('Failed to fetch Instagram posts');
+            const errorMsg = error.response?.data?.error?.message || error.message;
+            const cleanMsg = String(errorMsg).replace(/[\n\r\t]/g, ' ');
+            logger.error({ action: 'instagram_get_posts_error', error: cleanMsg }, 'Failed to fetch Instagram posts');
+            throw new Error(`Instagram API Error: ${errorMsg}`);
         }
     }
 
