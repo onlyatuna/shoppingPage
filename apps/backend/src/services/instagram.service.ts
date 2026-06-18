@@ -86,7 +86,7 @@ export class InstagramService {
             }
 
             // Step 1: Create Media Container
-            const containerResponse = await axios.post(`https://graph.instagram.com/${igUserId}/media`, null, {
+            const containerResponse = await axios.post(`https://graph.facebook.com/${igUserId}/media`, null, {
                 params: {
                     image_url: targetUrl,
                     caption: safeCaption,
@@ -110,7 +110,7 @@ export class InstagramService {
                 await new Promise(resolve => setTimeout(resolve, delay));
 
                 try {
-                    const statusResponse = await axios.get(`https://graph.instagram.com/${creationId}`, {
+                    const statusResponse = await axios.get(`https://graph.facebook.com/${creationId}`, {
                         params: {
                             fields: 'status_code,status',
                             access_token: token
@@ -124,7 +124,7 @@ export class InstagramService {
                         console.log('Media ready! Publishing...');
 
                         // Step 3: Publish Media
-                        const publishResponse = await axios.post(`https://graph.instagram.com/${igUserId}/media_publish`, null, {
+                        const publishResponse = await axios.post(`https://graph.facebook.com/${igUserId}/media_publish`, null, {
                             params: {
                                 creation_id: creationId,
                                 access_token: token

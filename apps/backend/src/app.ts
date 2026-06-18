@@ -60,6 +60,7 @@ app.use(helmet({
                 "'sha256-baX1TnVbpzvLASK02FWB0oM1c0iuRI61+5jbdW4RyR0='", // Vite/React inline script injection (2026-03-04)
                 "'sha256-oyaRjFNgwpktYVPWQDCAHWnrCX5OavorY6bcYmxyolI='", // Added to fix blocked inline script (2026-04-15)
                 "'sha256-SvBAtuYLZZp4/D1Vm7XBykHxDUgvZ3GUn8tRSelSQtc='", // Whitelisted new inline script (2026-06-18)
+                "'sha256-Ht5NMbWFZZmTV+7Z2RHuKLidVji6dIBJevJrWwWlkOs='", // Whitelisted editor inline script (2026-06-18)
                 "https://static.cloudflareinsights.com",
                 "https://cdn.jsdelivr.net",
             ],
