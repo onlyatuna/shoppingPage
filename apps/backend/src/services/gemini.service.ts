@@ -128,7 +128,7 @@ export class GeminiService {
                 console.log(`🌐 [GeminiService] Image Download took: ${Date.now() - downloadStart}ms`);
                 const imageBuffer = Buffer.from(imageResponse.data);
                 imageBase64 = imageBuffer.toString('base64');
-                mimeType = imageResponse.headers['content-type'] || 'image/jpeg';
+                mimeType = (imageResponse.headers['content-type'] as string) || 'image/jpeg';
             } else {
                 imageBase64 = imageInput;
             }
@@ -262,7 +262,7 @@ USER REQUEST: ${prompt}`;
             });
             const imageBuffer = Buffer.from(imageResponse.data);
             const imageBase64 = imageBuffer.toString('base64');
-            const mimeType = imageResponse.headers['content-type'] || 'image/jpeg';
+            const mimeType = (imageResponse.headers['content-type'] as string) || 'image/jpeg';
 
             // [SECURITY] Sanitize user inputs to prevent Prompt Injection
             const safeInfo = sanitizePrompt(additionalInfo || 'N/A', 300);

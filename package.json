@@ -31,7 +31,7 @@
     "prisma": "^6.19.3"
   },
   "overrides": {
-    "axios": "1.15.0",
+    "axios": "^1.18.0",
     "fast-xml-parser": "5.3.8",
     "serialize-javascript": "7.0.5",
     "tar": "7.5.9",
@@ -43,6 +43,11 @@
     "vite": "7.3.2",
     "picomatch": "4.0.4",
     "qs": "^6.15.2",
-    "uuid": "^14.0.0"
+    "uuid": "^14.0.0",
+    "esbuild": "^0.28.1",
+    "form-data": "^4.0.6",
+    "ip-address": "^10.1.1",
+    "multer": "^2.2.0",
+    "nodemailer": "^8.0.11"
   }
 }
