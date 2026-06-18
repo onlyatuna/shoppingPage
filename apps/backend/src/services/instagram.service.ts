@@ -135,15 +135,15 @@ export class InstagramService {
                         return publishResponse.data.id;
 
                     } else if (statusCode === 'ERROR' || statusCode === 'EXPIRED') {
-                        throw new Error(`Media processing failed with status: ${statusCode}`);
+                        throw new Error(`TERMINAL: Media processing failed with status: ${statusCode}`);
                     }
 
                     // Still IN_PROGRESS, continue loop
 
                 } catch (error: any) {
                     console.warn(`Error on attempt ${attempt}:`, sanitizeLog(error.message));
-                    if (attempt >= maxAttempts) {
-                        throw new Error('媒體處理超時，請稍後再試或檢查圖片格式');
+                    if (error.message?.startsWith('TERMINAL:') || attempt >= maxAttempts) {
+                        throw error;
                     }
                 }
             }
@@ -152,7 +152,10 @@ export class InstagramService {
 
         } catch (error: any) {
             console.error('Instagram Publish Error:', sanitizeLog(error.response?.data || error.message));
-            throw new Error('Failed to publish to Instagram: ' + (error.response?.data?.error?.message || error.message));
+            const cleanMessage = error.message?.startsWith('TERMINAL: ')
+                ? error.message.replace('TERMINAL: ', '')
+                : error.message;
+            throw new Error('Failed to publish to Instagram: ' + (error.response?.data?.error?.message || cleanMessage));
         }
     }
 }
