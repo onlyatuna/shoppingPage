@@ -45,6 +45,35 @@ evanchen316.com {
     }
 }
 
+linebot.evanchen316.com {
+    # 建立安全匹配器：僅允許 LINE Webhook 與健康檢查端點從公網存取
+    @bot_allowed {
+        path /callback
+        path /healthz
+    }
+
+    # 僅對安全端點進行反向代理
+    reverse_proxy @bot_allowed 172.17.0.1:8081 {
+        lb_policy round_robin
+        fail_timeout 10s
+        max_fails 3
+        
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+    }
+
+    # 未匹配的路徑（例如 /trigger）一律阻擋，回傳 403 Forbidden
+    respond "Access Denied" 403
+
+    tls internal
+    encode zstd gzip
+
+    log {
+        output file /data/linebot_access.log
+    }
+}
+
 sql.evanchen316.com {
     # 反向代理至另一套獨立的 Docker 容器 (Python ERP)
     # 利用 172.17.0.1 存取 Host 上綁定的 127.0.0.1:8000

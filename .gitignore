@@ -59,3 +59,10 @@ scripts/migrate-db.sh
 Dockerfile.dev
 docker-compose.dev.yml
 Caddyfile.dev
+
+# --- Security & Credentials ---
+certs/
+.npmrc
+
+# --- Custom Apps ---
+line-birthday-bot/
