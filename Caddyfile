@@ -59,7 +59,6 @@ linebot.evanchen316.com {
         header_up X-Forwarded-For {remote_host}
     }
 
-    tls internal
     encode zstd gzip
 
     log {
