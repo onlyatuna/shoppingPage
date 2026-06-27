@@ -49,7 +49,7 @@ linebot.evanchen316.com {
     # 暫時移除 403 阻擋，以確認是否為 Cloudflare 造成的 403
 
     # 僅對安全端點進行反向代理 (Caddy 預設會放行剩餘的請求)
-    reverse_proxy 172.17.0.1:8081 {
+    reverse_proxy host.docker.internal:8081 {
         lb_policy round_robin
         fail_duration 10s
         max_fails 3
@@ -69,8 +69,8 @@ linebot.evanchen316.com {
 
 sql.evanchen316.com {
     # 反向代理至另一套獨立的 Docker 容器 (Python ERP)
-    # 利用 172.17.0.1 存取 Host 上綁定的 127.0.0.1:8000
-    reverse_proxy 172.17.0.1:8000
+    # 利用 host.docker.internal 存取 Host 上綁定的 127.0.0.1:8000
+    reverse_proxy host.docker.internal:8000
 
     tls internal
     encode zstd gzip

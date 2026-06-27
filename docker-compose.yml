@@ -12,6 +12,8 @@ services:
       - ./certs:/etc/caddy/certs # 新增掛載憑證資料夾
       - caddy_data:/data # 持久化憑證
       - caddy_config:/config
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - app
     logging:
