@@ -10,7 +10,7 @@ evanchen316.com {
 
         # 當請求失敗時的容錯設定
         lb_policy round_robin
-        fail_timeout 10s
+        fail_duration 10s
         max_fails 3
         
         header_up Host {host}
@@ -55,7 +55,7 @@ linebot.evanchen316.com {
     # 僅對安全端點進行反向代理 (Caddy 預設會放行剩餘的請求)
     reverse_proxy 172.17.0.1:8081 {
         lb_policy round_robin
-        fail_timeout 10s
+        fail_duration 10s
         max_fails 3
         
         header_up Host {host}
